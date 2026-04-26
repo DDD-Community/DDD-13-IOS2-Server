@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-04-24T22:52:29+09:00
-- **Current Stage**: INCEPTION - Application Design
+- **Current Stage**: CONSTRUCTION - Unit 2 (Auth) - Code Generation
 
 ## Workspace State
 - **Existing Code**: No
@@ -30,7 +30,7 @@
 - [x] User Stories - SKIPPED (사용자 별도 요청 없음, MVP 단순 구조)
 - [x] Workflow Planning - 실행 8단계, 스킵 3단계
 - [x] Application Design - 5개 컨텍스트 컴포넌트/메서드/서비스/의존성 설계 완료
-- [ ] Units Generation - EXECUTE
+- [x] Units Generation - 3개 유닛 (Global → Auth → Member)
 
 ### 🟢 CONSTRUCTION PHASE
 - [ ] Functional Design - EXECUTE

@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgis/postgis:15-3.4
+    container_name: bangawo-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: bangawo
+      POSTGRES_USER: bangawo
+      POSTGRES_PASSWORD: bangawo
+    volumes:
+      - bangawo-data:/var/lib/postgresql/data
+
+volumes:
+  bangawo-data:

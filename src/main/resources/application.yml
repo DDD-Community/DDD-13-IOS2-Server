@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: bangawo
+
+  profiles:
+    active: local
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+jwt:
+  secret-key: ${JWT_SECRET_KEY}
+  access-token-expiration: 3600000      # 1시간
+  refresh-token-expiration: 2592000000  # 30일
+
+# 소셜 로그인 키는 .env에서 관리 (코드에서 직접 사용하지 않고 각 클라이언트가 API 호출 시 토큰을 전달받음)
+# 카카오/네이버: iOS가 SDK로 로그인 → Access Token을 서버에 전달 → 서버가 공급자 API 호출
+# 애플: iOS가 SDK로 로그인 → ID Token을 서버에 전달 → 서버가 토큰 디코딩
+
+server:
+  port: 8080

@@ -90,3 +90,48 @@
 **Context**: INCEPTION - Application Design redesign to MVP simple structure
 
 ---
+
+## Application Design - User Approval
+**Timestamp**: 2026-04-26T17:22:12+09:00
+**User Input**: "그럼 우선 너가 설게한거 그대로 가고 나중에 내가 한거 추가하는 방식으로 해도 괜찮다는거지?"
+**AI Response**: 맞다고 확인. Application Design 승인 처리. Units Generation 진행.
+**Context**: INCEPTION - Application Design approved, proceeding to Units Generation
+
+---
+
+## Units Generation - Start
+**Timestamp**: 2026-04-26T17:22:30+09:00
+**AI Response**: Units Generation 시작. 모놀리스 단일 서비스, 3개 유닛(global, auth, member)으로 분해. 질문 불필요 — 구현 순서 이미 확정.
+**Context**: INCEPTION - Units Generation
+
+---
+
+## Units Generation - Completion
+**Timestamp**: 2026-04-26T17:23:00+09:00
+**AI Response**: Units Generation 완료. 3개 유닛: Unit 1 Global (JWT, Security, Error), Unit 2 Auth (소셜 로그인, 토큰 관리), Unit 3 Member (프로필, 출발지, 약관, 디바이스 토큰). 모든 FR 매핑 완료. 사용자 승인 대기.
+**Context**: INCEPTION - Units Generation Step 16 (Approval Request)
+
+---
+
+## Units Generation - User Approval
+**Timestamp**: 2026-04-26T17:30:34+09:00
+**User Input**: "오케이 해줘 그리고 JWT 시크릿 키는 너가 적당한걸로 만들어줘 이거 인,디코딩 할때 쓰이는거자나"
+**AI Response**: Units Generation 승인. JWT 시크릿 키 생성 (64바이트 Base64) → .env에 설정. .gitignore + .env 템플릿 생성. Construction Phase 진행.
+**Context**: INCEPTION complete, proceeding to CONSTRUCTION PHASE
+
+---
+
+## Unit 1 Global - Code Generation Complete
+**Timestamp**: 2026-04-26T17:45:00+09:00
+**AI Response**: Unit 1 Global 코드 생성 완료. 19개 파일 생성, 6개 테스트 통과, 빌드 성공.
+**Context**: CONSTRUCTION - Unit 1 (Global) Code Generation complete
+
+---
+
+## Unit 1 Global - User Approval
+**Timestamp**: 2026-04-26T18:19:04+09:00
+**User Input**: "어쩐찌 JPA 엔티티나 이런게 없다했네 내가 외부 키값 가져오면 이제 2번 만드는거야? 그리고 참고로 쓸데없는 테스트는 안해도되고 웬만한 코드에 이해 할 수 있게 최소한의 주석은 달아두는쪽으로 진행해줘"
+**AI Response**: Unit 1 승인. Unit 2 Auth 진행. 불필요한 테스트 제거, 코드에 최소한의 주석 추가 방침 적용.
+**Context**: CONSTRUCTION - Unit 1 approved, proceeding to Unit 2 Auth
+
+---
