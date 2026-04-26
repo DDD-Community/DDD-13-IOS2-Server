@@ -105,15 +105,13 @@
 | 컨텍스트 간 통신 | 도메인 이벤트 / ACL |
 | 값 객체 | 불변 |
 
-### NFR-03: 바운디드 컨텍스트
+### NFR-03: 패키지 구조 (MVP)
 
-| 컨텍스트 | 책임 | 주요 애그리거트 |
+| 패키지 | 책임 | 주요 엔티티 |
 |---|---|---|
-| Identity | 소셜 로그인, JWT 발급 | Member, RefreshToken |
-| Member | 출발지 관리 | DeparturePlace |
-| Terms | 약관 + 동의 이력 | Terms, TermsAgreement |
-| Notification | 디바이스 토큰 | DeviceToken |
-| Shared Kernel | 공용 값객체 | Coordinate, Address |
+| auth | 소셜 로그인, JWT 발급 | RefreshToken |
+| member | 프로필, 출발지, 약관, 디바이스 토큰 | Member, DeparturePlace, Terms, TermsAgreement, DeviceToken |
+| global | JWT, Security, Error Handling, 공용 값객체 | Coordinate |
 
 ### NFR-04: API 규약
 
