@@ -1,8 +1,7 @@
-package com.bangawo.member.domain;
+package com.bangawo.member.domain.terms;
 
 import lombok.Builder;
 import lombok.Getter;
-
 import java.time.LocalDateTime;
 
 /** 약관 동의 이력. DELETE 금지 (법적 증적). */

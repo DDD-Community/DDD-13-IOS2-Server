@@ -1,4 +1,4 @@
-package com.bangawo.member.domain;
+package com.bangawo.member.domain.terms;
 
 public enum TermsType {
     TERMS_OF_SERVICE,   // 이용약관 (필수)
