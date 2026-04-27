@@ -5,7 +5,6 @@ CREATE TABLE departure_place (
     address     VARCHAR(255) NOT NULL,
     latitude    DOUBLE PRECISION NOT NULL,
     longitude   DOUBLE PRECISION NOT NULL,
-    geo_point   GEOGRAPHY(POINT, 4326) NOT NULL,
     is_default  BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
