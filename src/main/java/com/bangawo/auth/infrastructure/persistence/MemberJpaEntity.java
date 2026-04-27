@@ -1,19 +1,16 @@
 package com.bangawo.auth.infrastructure.persistence;
 
+import com.bangawo.auth.domain.Member;
 import com.bangawo.auth.domain.MemberStatus;
 import com.bangawo.auth.domain.SocialProvider;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/**
- * 회원 JPA 엔티티.
- * DB의 member 테이블과 매핑. 도메인 로직은 Member 도메인 엔티티에서 처리.
- */
+/** 회원 JPA 엔티티. DB member 테이블 매핑. */
 @Entity
 @Table(name = "member",
         uniqueConstraints = @UniqueConstraint(columnNames = {"social_provider", "social_user_id"}))
@@ -44,6 +41,9 @@ public class MemberJpaEntity {
     @Column(nullable = false, length = 20)
     private MemberStatus status;
 
+    @Column(name = "is_registered", nullable = false)
+    private boolean isRegistered;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -53,18 +53,35 @@ public class MemberJpaEntity {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    @Builder
-    public MemberJpaEntity(Long id, SocialProvider socialProvider, String socialUserId,
-                           String email, String nickname, String profileImageUrl,
-                           MemberStatus status, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.socialProvider = socialProvider;
-        this.socialUserId = socialUserId;
-        this.email = email;
-        this.nickname = nickname;
-        this.profileImageUrl = profileImageUrl;
-        this.status = status;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+    /** 도메인 → JPA 엔티티 */
+    public static MemberJpaEntity from(Member domain) {
+        MemberJpaEntity entity = new MemberJpaEntity();
+        entity.id = domain.getId();
+        entity.socialProvider = domain.getSocialProvider();
+        entity.socialUserId = domain.getSocialUserId();
+        entity.email = domain.getEmail();
+        entity.nickname = domain.getNickname();
+        entity.profileImageUrl = domain.getProfileImageUrl();
+        entity.status = domain.getStatus();
+        entity.isRegistered = domain.isRegistered();
+        entity.createdAt = domain.getCreatedAt();
+        entity.updatedAt = domain.getUpdatedAt();
+        return entity;
+    }
+
+    /** JPA 엔티티 → 도메인 */
+    public Member toDomain() {
+        return Member.builder()
+                .id(id)
+                .socialProvider(socialProvider)
+                .socialUserId(socialUserId)
+                .email(email)
+                .nickname(nickname)
+                .profileImageUrl(profileImageUrl)
+                .status(status)
+                .isRegistered(isRegistered)
+                .createdAt(createdAt)
+                .updatedAt(updatedAt)
+                .build();
     }
 }

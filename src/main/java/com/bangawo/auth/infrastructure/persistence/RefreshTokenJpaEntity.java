@@ -1,17 +1,14 @@
 package com.bangawo.auth.infrastructure.persistence;
 
+import com.bangawo.auth.domain.RefreshToken;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/**
- * Refresh Token JPA 엔티티.
- * 토큰 원문이 아닌 해시(token_hash)만 저장.
- */
+/** Refresh Token JPA 엔티티. 토큰 원문이 아닌 해시(token_hash)만 저장. */
 @Entity
 @Table(name = "refresh_token")
 @Getter
@@ -37,20 +34,27 @@ public class RefreshTokenJpaEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Builder
-    public RefreshTokenJpaEntity(Long id, Long memberId, String tokenHash,
-                                 LocalDateTime expiresAt, LocalDateTime revokedAt,
-                                 LocalDateTime createdAt) {
-        this.id = id;
-        this.memberId = memberId;
-        this.tokenHash = tokenHash;
-        this.expiresAt = expiresAt;
-        this.revokedAt = revokedAt;
-        this.createdAt = createdAt;
+    /** 도메인 → JPA 엔티티 */
+    public static RefreshTokenJpaEntity from(RefreshToken domain) {
+        RefreshTokenJpaEntity entity = new RefreshTokenJpaEntity();
+        entity.id = domain.getId();
+        entity.memberId = domain.getMemberId();
+        entity.tokenHash = domain.getTokenHash();
+        entity.expiresAt = domain.getExpiresAt();
+        entity.revokedAt = domain.getRevokedAt();
+        entity.createdAt = domain.getCreatedAt();
+        return entity;
     }
 
-    /** 토큰 폐기 처리 */
-    public void revoke() {
-        this.revokedAt = LocalDateTime.now();
+    /** JPA 엔티티 → 도메인 */
+    public RefreshToken toDomain() {
+        return RefreshToken.builder()
+                .id(id)
+                .memberId(memberId)
+                .tokenHash(tokenHash)
+                .expiresAt(expiresAt)
+                .revokedAt(revokedAt)
+                .createdAt(createdAt)
+                .build();
     }
 }

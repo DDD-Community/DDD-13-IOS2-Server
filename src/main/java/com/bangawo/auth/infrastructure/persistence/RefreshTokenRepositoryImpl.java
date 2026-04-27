@@ -7,25 +7,22 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-/** RefreshTokenRepository 도메인 인터페이스의 JPA 구현 */
 @Repository
 @RequiredArgsConstructor
 public class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
 
     private final RefreshTokenJpaRepository jpaRepository;
-    private final RefreshTokenMapper mapper;
 
     @Override
     public RefreshToken save(RefreshToken refreshToken) {
-        RefreshTokenJpaEntity entity = mapper.toEntity(refreshToken);
-        RefreshTokenJpaEntity saved = jpaRepository.save(entity);
-        return mapper.toDomain(saved);
+        RefreshTokenJpaEntity saved = jpaRepository.save(RefreshTokenJpaEntity.from(refreshToken));
+        return saved.toDomain();
     }
 
     @Override
     public Optional<RefreshToken> findByTokenHash(String tokenHash) {
         return jpaRepository.findByTokenHashAndRevokedAtIsNull(tokenHash)
-                .map(mapper::toDomain);
+                .map(RefreshTokenJpaEntity::toDomain);
     }
 
     @Override

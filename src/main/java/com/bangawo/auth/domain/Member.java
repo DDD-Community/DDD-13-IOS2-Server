@@ -20,13 +20,15 @@ public class Member {
     private String nickname;
     private String profileImageUrl;
     private MemberStatus status;
+    private boolean isRegistered;  // 회원가입 완료 여부
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     @Builder
     public Member(Long id, SocialProvider socialProvider, String socialUserId,
                   String email, String nickname, String profileImageUrl,
-                  MemberStatus status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                  MemberStatus status, boolean isRegistered,
+                  LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.socialProvider = socialProvider;
         this.socialUserId = socialUserId;
@@ -34,6 +36,7 @@ public class Member {
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
         this.status = status;
+        this.isRegistered = isRegistered;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -45,6 +48,7 @@ public class Member {
                 .socialUserId(socialUserId)
                 .email(email)
                 .status(MemberStatus.ACTIVE)
+                .isRegistered(false)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -53,6 +57,12 @@ public class Member {
     public void updateProfile(String nickname, String profileImageUrl) {
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /** 회원가입 완료 처리 */
+    public void completeRegistration() {
+        this.isRegistered = true;
         this.updatedAt = LocalDateTime.now();
     }
 }

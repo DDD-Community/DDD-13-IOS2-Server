@@ -73,7 +73,7 @@ public class AuthService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .isNewMember(isNewMember)
-                .registrationCompleted(member.getNickname() != null)  // 닉네임 있으면 가입 완료
+                .registrationCompleted(member.isRegistered())  // DB의 is_registered 컬럼
                 .build();
     }
 
@@ -113,7 +113,7 @@ public class AuthService {
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshToken)
                 .isNewMember(false)
-                .registrationCompleted(member.getNickname() != null)
+                .registrationCompleted(member.isRegistered())
                 .build();
     }
 
