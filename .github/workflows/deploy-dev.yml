@@ -30,6 +30,23 @@ jobs:
             app: java@17
             options:
               ports: 8080
+              env:
+                - name: SPRING_PROFILES_ACTIVE
+                  value: dev
+                - name: JWT_SECRET_KEY
+                  value: ${{ secrets.DEV_JWT_SECRET_KEY }}
+                - name: KAKAO_REST_API_KEY
+                  value: ${{ secrets.DEV_KAKAO_REST_API_KEY }}
+                - name: DB_HOST
+                  value: ${{ secrets.DEV_DB_HOST }}
+                - name: DB_PORT
+                  value: ${{ secrets.DEV_DB_PORT }}
+                - name: DB_NAME
+                  value: ${{ secrets.DEV_DB_NAME }}
+                - name: DB_USERNAME
+                  value: ${{ secrets.DEV_DB_USERNAME }}
+                - name: DB_PASSWORD
+                  value: ${{ secrets.DEV_DB_PASSWORD }}
             context:
               git:
                 url: git@github.com:${{ github.repository }}.git
