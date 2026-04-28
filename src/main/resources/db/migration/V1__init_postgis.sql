@@ -1,1 +1,2 @@
-CREATE EXTENSION IF NOT EXISTS postgis;
+-- PostGIS는 중간지점 계산 기능 구현 시 추가 예정
+-- CREATE EXTENSION IF NOT EXISTS postgis;
