@@ -1,0 +1,57 @@
+name: Deploy to Cloudtype (Dev)
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Connect deploy key
+        uses: cloudtype-github-actions/connect@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          ghtoken: ${{ secrets.GHP_TOKEN }}
+
+      - name: Deploy
+        uses: cloudtype-github-actions/deploy@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          project: ${{ secrets.CLOUDTYPE_PROJECT }}
+          stage: main
+          yaml: |
+            name: bangawo-server
+            app: java-springboot@17
+            options:
+              ports: 8080
+              env:
+                - name: SPRING_PROFILES_ACTIVE
+                  value: dev
+                - name: JWT_SECRET_KEY
+                  secret: jwt-secret-key
+                - name: KAKAO_REST_API_KEY
+                  secret: kakao-rest-api-key
+                - name: NAVER_CLIENT_ID
+                  secret: naver-client-id
+                - name: NAVER_CLIENT_SECRET
+                  secret: naver-client-secret
+                - name: DB_HOST
+                  secret: db-host
+                - name: DB_PORT
+                  secret: db-port
+                - name: DB_NAME
+                  secret: db-name
+                - name: DB_USERNAME
+                  secret: db-username
+                - name: DB_PASSWORD
+                  secret: db-password
+            context:
+              git:
+                url: git@github.com:${{ github.repository }}.git
+                ref: ${{ github.ref }}
+              preset: java-springboot
