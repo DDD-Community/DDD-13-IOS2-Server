@@ -17,12 +17,13 @@ jobs:
         with:
           token: ${{ secrets.CLOUDTYPE_TOKEN }}
           ghtoken: ${{ secrets.GHP_TOKEN }}
+          scope: tldldh1212
 
       - name: Deploy
         uses: cloudtype-github-actions/deploy@v1
         with:
           token: ${{ secrets.CLOUDTYPE_TOKEN }}
-          project: ${{ secrets.CLOUDTYPE_PROJECT }}
+          project: tldldh1212/ddd-dev-server
           stage: main
           yaml: |
             name: bangawo-server
