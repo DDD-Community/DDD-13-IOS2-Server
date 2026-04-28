@@ -26,7 +26,7 @@ jobs:
           project: tldldh1212/ddd-dev-server
           stage: main
           yaml: |
-            name: bangawo-server
+            name: bangawo-server-dev
             app: java-springboot@17
             options:
               ports: 8080
