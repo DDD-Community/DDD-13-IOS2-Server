@@ -50,7 +50,7 @@ public class AuthService {
         SocialUserInfo userInfo = client.getUserInfo(providerToken);
 
         // 기존 회원 조회 또는 신규 생성
-        boolean isNewMember = false;
+        boolean firstSocialLogin = false;
         Member member = memberRepository
                 .findByProviderAndSocialUserId(provider, userInfo.socialUserId())
                 .orElse(null);
@@ -58,7 +58,7 @@ public class AuthService {
         if (member == null) {
             member = Member.create(provider, userInfo.socialUserId(), userInfo.email());
             member = memberRepository.save(member);
-            isNewMember = true;
+            firstSocialLogin = true;
         }
 
         // JWT 발급
@@ -72,7 +72,7 @@ public class AuthService {
         return LoginResult.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .isNewMember(isNewMember)
+                .firstSocialLogin(firstSocialLogin)
                 .registrationCompleted(member.isRegistered())  // DB의 is_registered 컬럼
                 .build();
     }
@@ -112,7 +112,7 @@ public class AuthService {
         return LoginResult.builder()
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshToken)
-                .isNewMember(false)
+                .firstSocialLogin(false)
                 .registrationCompleted(member.isRegistered())
                 .build();
     }
@@ -151,7 +151,7 @@ public class AuthService {
     public static class LoginResult {
         private final String accessToken;
         private final String refreshToken;
-        private final boolean isNewMember;
+        private final boolean firstSocialLogin;
         private final boolean registrationCompleted;
     }
 }

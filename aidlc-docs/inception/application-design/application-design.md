@@ -45,7 +45,7 @@ com.bangawo
 ```
 POST /auth/login {provider, providerToken}
 → 공급자별 토큰 검증 → 회원 조회/생성 → JWT 발급
-→ {accessToken, refreshToken, isNewMember}
+→ {accessToken, refreshToken, firstSocialLogin, registrationCompleted}
 ```
 
 ### 회원가입
