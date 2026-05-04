@@ -23,7 +23,7 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @Operation(summary = "소셜 로그인", description = "iOS에서 받은 소셜 토큰으로 로그인. 신규 회원이면 isNewMember=true")
+    @Operation(summary = "소셜 로그인", description = "iOS에서 받은 소셜 토큰으로 로그인. 첫 소셜 로그인이면 firstSocialLogin=true")
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthService.LoginResult result = authService.socialLogin(
@@ -31,7 +31,7 @@ public class AuthController {
 
         return ResponseEntity.ok(new LoginResponse(
                 result.getAccessToken(), result.getRefreshToken(),
-                result.isNewMember(), result.isRegistrationCompleted()));
+                result.isFirstSocialLogin(), result.isRegistrationCompleted()));
     }
 
     @Operation(summary = "토큰 갱신", description = "Refresh Token으로 새 Access/Refresh Token 발급")

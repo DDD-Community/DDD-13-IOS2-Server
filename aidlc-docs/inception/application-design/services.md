@@ -12,7 +12,7 @@
 3. 없으면 → Member.create()로 신규 생성 + 저장
 4. JwtProvider로 Access/Refresh Token 생성
 5. RefreshToken 해시 저장
-6. LoginResponse 반환 (tokens + isNewMember 플래그)
+6. LoginResponse 반환 (tokens + firstSocialLogin 플래그)
 ```
 
 ### refreshToken

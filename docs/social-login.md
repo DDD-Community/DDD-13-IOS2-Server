@@ -65,7 +65,7 @@ Content-Type: application/json
 {
     "accessToken": "eyJ...",
     "refreshToken": "eyJ...",
-    "isNewMember": true,
+    "firstSocialLogin": true,
     "registrationCompleted": false
 }
 ```
@@ -74,7 +74,7 @@ Content-Type: application/json
 |---|---|
 | `accessToken` | API 호출용 JWT (1시간) |
 | `refreshToken` | 토큰 갱신용 JWT (30일) |
-| `isNewMember` | 이번 요청으로 최초 생성된 회원인지 |
+| `firstSocialLogin` | 이번 요청에서 회원이 새로 생성됐는지 (첫 소셜 로그인) |
 | `registrationCompleted` | 회원가입 완료 여부 (닉네임 설정 완료 = true) |
 
 ### iOS 분기 로직

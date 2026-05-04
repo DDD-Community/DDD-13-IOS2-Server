@@ -4,6 +4,6 @@ package com.bangawo.auth.presentation.dto;
 public record LoginResponse(
         String accessToken,
         String refreshToken,
-        boolean isNewMember,            // 최초 소셜 로그인 여부
+        boolean firstSocialLogin,       // 이번 요청에서 회원이 새로 생성됐는지 (첫 소셜 로그인)
         boolean registrationCompleted   // 회원가입 완료 여부 (닉네임 + 약관 동의 완료)
 ) {}
