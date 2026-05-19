@@ -20,3 +20,10 @@ build/
 
 # Logs
 *.log
+
+# MCP / Local env
+.mcp.json
+.env.local
+
+# ERD 문서 (스키마 노출 방지)
+docs/**/erd.md
