@@ -101,6 +101,17 @@ argument-hint: [추가 컨텍스트]
    ```
    - dev→main PR이면 출력 끝에 안내 추가:
      `⚠️ 이 PR은 승인 1명이 필요합니다 (브랜치 보호 규칙)`
+   - 항상 출력 맨 마지막에 머지 후 동기화 안내 추가 (브랜치에 따라 다르게):
+     - feature→dev PR인 경우:
+       ```
+       PR 머지 후 로컬 동기화:
+       git checkout dev && git pull
+       ```
+     - dev→main PR인 경우:
+       ```
+       PR 머지 후 로컬 동기화:
+       git checkout main && git pull && git checkout dev
+       ```
 
 ## 절대 하지 말 것
 
