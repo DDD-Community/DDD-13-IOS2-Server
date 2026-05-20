@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql:///bangawo_prod?socketFactory=com.google.cloud.sql.postgres.SocketFactory&cloudSqlInstance=project-bcdbc10f-15a5-46b6-bb3:asia-northeast3:bangawo-prod
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=require
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
