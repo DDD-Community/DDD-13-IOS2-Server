@@ -27,6 +27,12 @@ public enum ErrorCode {
 
     // Terms
     REQUIRED_TERMS_NOT_AGREED(HttpStatus.BAD_REQUEST, "TERMS_001", "필수 약관에 동의해야 합니다"),
+
+    // Group
+    GROUP_NAME_TOO_LONG(HttpStatus.BAD_REQUEST, "GROUP_001", "그룹명은 30자 이하여야 합니다"),
+    GROUP_NOT_FOUND(HttpStatus.NOT_FOUND, "GROUP_002", "그룹을 찾을 수 없습니다"),
+    NOT_GROUP_MEMBER(HttpStatus.FORBIDDEN, "GROUP_003", "해당 그룹의 구성원이 아닙니다"),
+    NOT_GROUP_HOST(HttpStatus.FORBIDDEN, "GROUP_004", "호스트만 수행할 수 있습니다"),
     ;
 
     private final HttpStatus status;
