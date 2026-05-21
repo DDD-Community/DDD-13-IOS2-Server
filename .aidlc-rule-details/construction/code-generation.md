@@ -21,6 +21,8 @@ Before proceeding, check `aidlc-docs/aidlc-state.md` under `## Extension Configu
 # PART 1: PLANNING
 
 ## Step 1: Analyze Unit Context
+- [ ] **MANDATORY**: Read `aidlc-docs/construction/review/{fc-name}/erd.md` — 테이블명, 컬럼명, 관계를 이 파일 기준으로 따른다. 사용자가 ERD를 직접 수정했을 경우 수정된 내용이 코드에 반영되어야 한다.
+- [ ] **MANDATORY**: Read `aidlc-docs/construction/review/{fc-name}/rules.md` — 비즈니스 규칙 확인
 - [ ] Read unit design artifacts from Unit Design Generation
 - [ ] Read unit story map to understand assigned stories
 - [ ] Identify unit dependencies and interfaces
@@ -61,7 +63,7 @@ Before proceeding, check `aidlc-docs/aidlc-state.md` under `## Extension Configu
   - Service boundaries and responsibilities
 
 ## Step 4: Create Unit Plan Document
-- [ ] Save complete plan as `aidlc-docs/construction/plans/{unit-name}-code-generation-plan.md`
+- [ ] Save complete plan as `aidlc-docs/construction/internal/plans/{unit-name}-code-generation-plan.md`
 - [ ] Include step numbering (Step 1, Step 2, etc.)
 - [ ] Include unit context and dependencies
 - [ ] Include story traceability
@@ -99,7 +101,7 @@ Before proceeding, check `aidlc-docs/aidlc-state.md` under `## Extension Configu
 # PART 2: GENERATION
 
 ## Step 10: Load Unit Code Generation Plan
-- [ ] Read the complete plan from `aidlc-docs/construction/plans/{unit-name}-code-generation-plan.md`
+- [ ] Read the complete plan from `aidlc-docs/construction/internal/plans/{unit-name}-code-generation-plan.md`
 - [ ] Identify the next uncompleted step (first [ ] checkbox)
 - [ ] Load the context for that step (unit, dependencies, stories)
 
@@ -111,7 +113,7 @@ Before proceeding, check `aidlc-docs/aidlc-state.md` under `## Extension Configu
   - **If file doesn't exist**: Create new file
 - [ ] Write to correct locations:
   - **Application Code**: Workspace root per project structure
-  - **Documentation**: `aidlc-docs/construction/{unit-name}/code/` (markdown only)
+  - **Documentation**: `aidlc-docs/construction/internal/{unit-name}/code/` (markdown only)
   - **Build/Config Files**: Workspace root
 - [ ] Follow unit story requirements
 - [ ] Respect dependencies and interfaces
@@ -125,7 +127,40 @@ Before proceeding, check `aidlc-docs/aidlc-state.md` under `## Extension Configu
 
 ## Step 13: Continue or Complete Generation
 - [ ] If more steps remain, return to Step 10
-- [ ] If all steps complete, proceed to present completion message
+- [ ] If all steps complete, generate Review API doc (Step 13.5), then proceed to present completion message
+
+## Step 13.5: Generate Review API Doc (MANDATORY)
+**CRITICAL**: Every unit with API endpoints MUST generate this review artifact.
+
+- 경로: `aidlc-docs/construction/review/{fc-name}/api.md`
+- **모든 엔드포인트 포함** — HTTP method, URL, 인증 여부, 요청 body, 응답 body
+- **요청/응답 예시 필수** — JSON 형태로 실제 예시 값 포함
+- **에러 케이스 포함** — 각 API에서 발생 가능한 에러코드와 HTTP 상태코드
+
+**API 명세 포맷 (반드시 준수)**:
+```
+## POST /api/v1/{path}
+
+**인증**: JWT 필수 / 불필요
+**권한**: 호스트만 / 구성원만 / 본인만 / 없음
+
+### 요청
+json
+{
+  "field": "타입 — 설명, 제약사항"
+}
+
+### 응답 (201 Created)
+json
+{
+  "field": "값 예시"
+}
+
+### 에러
+| 상태코드 | 에러코드 | 발생 조건 |
+|---|---|---|
+| 400 | GROUP_NAME_TOO_LONG | 이름 30자 초과 |
+```
 
 ## Step 14: Present Completion Message
 - Present completion message in this structure:
@@ -184,6 +219,20 @@ Before proceeding, check `aidlc-docs/aidlc-state.md` under `## Extension Configu
 - **Greenfield single unit**: `src/`, `tests/`, `config/` in workspace root
 - **Greenfield multi-unit (microservices)**: `{unit-name}/src/`, `{unit-name}/tests/`
 - **Greenfield multi-unit (monolith)**: `src/{unit-name}/`, `tests/{unit-name}/`
+
+### Swagger 네이밍 규칙 (Spring Boot)
+
+**@Tag**
+- `name`: 컨텍스트명 + 핵심 기능 목록 — 보는 사람이 어떤 API가 있는지 즉시 알 수 있어야 함
+- `description`: 이 태그에 속한 API가 하는 일을 한 줄로 설명
+- BAD: `@Tag(name = "그룹")`
+- GOOD: `@Tag(name = "그룹", description = "그룹 생성 · 초대 코드 발급 · 구성원 관리")`
+
+**@Operation**
+- `summary`: **동사 + 목적어** 형태, 이 엔드포인트가 하는 일을 명확하게
+- `description`: 요청/응답에서 중요한 동작이 있으면 한 줄 보충 설명
+- BAD: `summary = "그룹 생성"`
+- GOOD: `summary = "그룹 & 첫 모임 생성 — 이름·테마 입력 시 그룹/모임/호스트 멤버십 동시 생성"`
 
 ### Brownfield File Modification Rules
 - Check if file exists before generating
