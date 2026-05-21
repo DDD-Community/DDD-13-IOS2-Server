@@ -1,13 +1,16 @@
 # AI-DLC State Tracking
 
 ## Project Information
-- **Project Type**: Greenfield
-- **Start Date**: 2026-04-24T22:52:29+09:00
-- **Current Stage**: CONSTRUCTION - Unit 2 (Auth) - Code Generation
+- **Project**: Bangawo (반가워) — 모임 조율 서비스 백엔드
+- **Project Type**: Brownfield (기존 auth/member 컨텍스트 위에 MVP1 신규 기능 추가)
+- **Start Date**: 2026-05-20T21:40:00+09:00
+- **Current Stage**: INCEPTION - Workspace Detection
 
 ## Workspace State
-- **Existing Code**: No
-- **Reverse Engineering Needed**: No
+- **Existing Code**: Yes (Java 61 files, Spring Boot/DDD)
+- **Existing Contexts**: global, auth, member
+- **New Contexts (MVP1)**: group, meeting
+- **Reverse Engineering Needed**: Yes (기존 DDD 패턴 파악)
 - **Workspace Root**: /Users/ym/dev/DDD/Server
 
 ## Code Location Rules
@@ -18,34 +21,24 @@
 ## Extension Configuration
 | Extension | Enabled | Decided At |
 |---|---|---|
-| TDD Code Generation | No | Requirements Analysis |
-| Property-Based Testing | No | Requirements Analysis |
-| Security Baseline | Yes | Requirements Analysis |
+| Security Baseline | TBD | Requirements Analysis |
+| TDD Code Generation | TBD | Requirements Analysis |
+| Property-Based Testing | TBD | Requirements Analysis |
 
 ## Stage Progress
 
-### 🔵 INCEPTION PHASE
-- [x] Workspace Detection - Greenfield detected, no existing code
-- [x] Requirements Analysis - Standard depth, 13 decisions made, Security Baseline enabled
-- [x] User Stories - SKIPPED (사용자 별도 요청 없음, MVP 단순 구조)
-- [x] Workflow Planning - 실행 8단계, 스킵 3단계
-- [x] Application Design - 5개 컨텍스트 컴포넌트/메서드/서비스/의존성 설계 완료
-- [x] Units Generation - 3개 유닛 (Global → Auth → Member)
+### INCEPTION PHASE
+- [x] Workspace Detection — Brownfield, 기존 auth/member, MVP1은 신규 group/meeting
+- [x] Reverse Engineering — 기존 DDD 패턴 분석 완료 (61 Java files, 6 migrations)
+- [x] Requirements Analysis — SSE 투표, FCM 알림, Security Baseline 활성화, 8개 FR 확정
+- [x] User Stories — SKIP (PRD에 플로우 포함, 역할 2개 정의됨)
+- [x] Workflow Planning — FC순서 7개 유닛, 실행 8단계, 스킵 3단계, GCP 배포 Operations 포함
+- [ ] Application Design — EXECUTE
+- [ ] Units Generation — EXECUTE
 
-### 🟢 CONSTRUCTION PHASE
-- [ ] Functional Design - EXECUTE
-- [ ] NFR Requirements - EXECUTE
-- [ ] NFR Design - EXECUTE
-- [ ] Infrastructure Design - SKIP (MVP, 클라우드 미확정)
-- [ ] Code Generation - EXECUTE
-- [ ] Build and Test - EXECUTE
+### CONSTRUCTION PHASE
+- [ ] Per-Unit Loop (TBD)
+- [ ] Build and Test
 
-### 🟡 OPERATIONS PHASE
-- [ ] Operations - PLACEHOLDER
-
-## Execution Plan Summary
-- **Total Stages**: 12
-- **Stages to Execute**: 8
-- **Stages to Skip**: 3 (User Stories, Infrastructure Design, Operations)
-- **Stages Completed**: 2 (Workspace Detection, Requirements Analysis)
-- **Next Stage**: Application Design
+### OPERATIONS PHASE
+- [ ] Operations (PLACEHOLDER)

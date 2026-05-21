@@ -1,170 +1,120 @@
-# Execution Plan
+# Execution Plan — Bangawo MVP1
 
-> **생성일**: 2026-04-25  
-> **프로젝트**: 반가워(Bangawo) 서버 MVP 1차
+## Analysis Summary
 
----
-
-## Detailed Analysis Summary
+### Transformation Scope
+- **Type**: Multi-context feature addition (Brownfield)
+- **Primary Changes**: group, meeting 두 개 신규 바운디드 컨텍스트 추가
+- **Related Components**: global (ErrorCode, SecurityConfig 확장), auth (Member 참조)
 
 ### Change Impact Assessment
-
-| 영향 영역 | 해당 | 설명 |
-|---|---|---|
-| User-facing changes | ✅ | 소셜 로그인, 회원가입, 출발지 관리, 약관 동의 — iOS 앱 사용자 대면 API |
-| Structural changes | ✅ | 5개 바운디드 컨텍스트 기반 DDD 아키텍처 신규 구축 |
-| Data model changes | ✅ | 6개 테이블 신규 (member, refresh_token, departure_place, terms, terms_agreement, device_token) |
-| API changes | ✅ | REST API 전체 신규 설계 (`/api/v1/**`) |
-| NFR impact | ✅ | Security Baseline 15개 규칙, JWT 인증, PostGIS, Docker Compose |
+- **User-facing**: Yes — 그룹 생성/초대/모임/투표 전체 신규 API
+- **Structural**: Yes — group, meeting 패키지 신규 생성
+- **Data Model**: Yes — V7+ Flyway 마이그레이션 필요 (group, meeting, membership, date_vote 등)
+- **API**: Yes — /api/v1/groups, /api/v1/meetings 신규 엔드포인트
+- **NFR**: Yes — SSE 스트리밍, @Scheduled, FCM, Security Baseline 인가 규칙
 
 ### Risk Assessment
-
-| 항목 | 평가 |
-|---|---|
-| Risk Level | **Medium** — Greenfield이므로 기존 시스템 영향 없음, 5개 컨텍스트 + DDD 완전 분리 + 소셜 3사 연동은 중간 복잡도 |
-| Rollback Complexity | **Easy** — 신규 프로젝트, 롤백 불필요 |
-| Testing Complexity | **Moderate** — 소셜 로그인 외부 연동 Mock, PostGIS Testcontainers |
+- **Risk Level**: Medium-High
+- **이유**: SSE 구현, 투표 상태머신, 생명주기 스케줄러, FCM 연동 등 복잡도 있음
+- **Rollback**: 신규 컨텍스트라 기존 코드 영향 최소 — 롤백 상대적으로 용이
 
 ---
 
 ## Workflow Visualization
 
-```mermaid
-flowchart TD
-    Start(["🚀 User Request"])
-
-    subgraph INCEPTION["🔵 INCEPTION PHASE"]
-        WD["Workspace Detection<br/><b>COMPLETED</b>"]
-        RA["Requirements Analysis<br/><b>COMPLETED</b>"]
-        US["User Stories<br/><b>SKIP</b>"]
-        WP["Workflow Planning<br/><b>IN PROGRESS</b>"]
-        AD["Application Design<br/><b>EXECUTE</b>"]
-        UG["Units Generation<br/><b>EXECUTE</b>"]
-    end
-
-    subgraph CONSTRUCTION["🟢 CONSTRUCTION PHASE (Per-Unit Loop)"]
-        FD["Functional Design<br/><b>EXECUTE</b>"]
-        NFRR["NFR Requirements<br/><b>EXECUTE</b>"]
-        NFRD["NFR Design<br/><b>EXECUTE</b>"]
-        ID["Infrastructure Design<br/><b>SKIP</b>"]
-        CG["Code Generation<br/><b>EXECUTE</b>"]
-        BT["Build and Test<br/><b>EXECUTE</b>"]
-    end
-
-    subgraph OPERATIONS["🟡 OPERATIONS PHASE"]
-        OPS["Operations<br/><b>PLACEHOLDER</b>"]
-    end
-
-    Start --> WD
-    WD --> RA
-    RA --> WP
-    WP --> AD
-    AD --> UG
-    UG --> FD
-    FD --> NFRR
-    NFRR --> NFRD
-    NFRD --> CG
-    CG --> BT
-    BT --> End(["✅ Complete"])
-
-    style WD fill:#4CAF50,stroke:#1B5E20,stroke-width:3px,color:#fff
-    style RA fill:#4CAF50,stroke:#1B5E20,stroke-width:3px,color:#fff
-    style US fill:#BDBDBD,stroke:#424242,stroke-width:2px,stroke-dasharray: 5 5,color:#000
-    style WP fill:#FFA726,stroke:#E65100,stroke-width:3px,color:#000
-    style AD fill:#FFA726,stroke:#E65100,stroke-width:3px,stroke-dasharray: 5 5,color:#000
-    style UG fill:#FFA726,stroke:#E65100,stroke-width:3px,stroke-dasharray: 5 5,color:#000
-    style FD fill:#FFA726,stroke:#E65100,stroke-width:3px,stroke-dasharray: 5 5,color:#000
-    style NFRR fill:#FFA726,stroke:#E65100,stroke-width:3px,stroke-dasharray: 5 5,color:#000
-    style NFRD fill:#FFA726,stroke:#E65100,stroke-width:3px,stroke-dasharray: 5 5,color:#000
-    style ID fill:#BDBDBD,stroke:#424242,stroke-width:2px,stroke-dasharray: 5 5,color:#000
-    style CG fill:#4CAF50,stroke:#1B5E20,stroke-width:3px,color:#fff
-    style BT fill:#4CAF50,stroke:#1B5E20,stroke-width:3px,color:#fff
-    style OPS fill:#FFF59D,stroke:#F57F17,stroke-width:2px,color:#000
-    style Start fill:#CE93D8,stroke:#6A1B9A,stroke-width:3px,color:#000
-    style End fill:#CE93D8,stroke:#6A1B9A,stroke-width:3px,color:#000
-    style INCEPTION fill:#BBDEFB,stroke:#1565C0,stroke-width:2px,color:#000
-    style CONSTRUCTION fill:#C8E6C9,stroke:#2E7D32,stroke-width:2px,color:#000
-    style OPERATIONS fill:#FFF59D,stroke:#F57F17,stroke-width:2px,color:#000
-
-    linkStyle default stroke:#333,stroke-width:2px
 ```
-
-### Text Alternative
-
-```
-Phase 1: INCEPTION
-  - Workspace Detection      (COMPLETED)
-  - Requirements Analysis     (COMPLETED)
-  - User Stories              (SKIP)
-  - Workflow Planning         (IN PROGRESS)
-  - Application Design        (EXECUTE)
-  - Units Generation          (EXECUTE)
-
-Phase 2: CONSTRUCTION (Per-Unit Loop)
-  - Functional Design         (EXECUTE)
-  - NFR Requirements          (EXECUTE)
-  - NFR Design                (EXECUTE)
-  - Infrastructure Design     (SKIP)
-  - Code Generation           (EXECUTE)
-  - Build and Test            (EXECUTE)
-
-Phase 3: OPERATIONS
-  - Operations                (PLACEHOLDER)
+INCEPTION PHASE
++----------------------------------+
+| [완료] Workspace Detection       |
+| [완료] Reverse Engineering       |
+| [완료] Requirements Analysis     |
+| [SKIP] User Stories              |
+| [진행] Workflow Planning         |
+| [실행] Application Design        |
+| [실행] Units Generation          |
++----------------------------------+
+              |
+              v
+CONSTRUCTION PHASE (유닛별 반복)
++----------------------------------+
+| [실행] Functional Design         |
+| [실행] NFR Requirements          |
+| [실행] NFR Design                |
+| [SKIP] Infrastructure Design     |
+| [실행] Code Generation           |
+| [실행] Build and Test            |
++----------------------------------+
 ```
 
 ---
 
-## Phases to Execute
+## 실행 단계 목록
 
-### 🔵 INCEPTION PHASE
-- [x] Workspace Detection (COMPLETED)
-- [x] Requirements Analysis (COMPLETED) — Standard depth, 13 decisions
-- [x] User Stories — SKIPPED (MVP 단순 구조, 사용자 별도 요청 없음)
-- [x] Workflow Planning (IN PROGRESS)
-- [ ] Application Design — **EXECUTE**
-  - **Rationale**: 5개 바운디드 컨텍스트의 컴포넌트 구조, 메서드, 비즈니스 규칙 정의 필요. DDD 완전 분리 모델(Domain + JPA Entity + DTO + Mapper) 설계.
-- [ ] Units Generation — **EXECUTE**
-  - **Rationale**: 5개 컨텍스트를 구현 가능한 단위로 분해. 의존성 순서 결정 (Shared Kernel → Identity → Member → Terms → Notification).
+### INCEPTION PHASE
+- [x] Workspace Detection — COMPLETED
+- [x] Reverse Engineering — COMPLETED
+- [x] Requirements Analysis — COMPLETED
+- [x] User Stories — SKIP (PRD가 이미 상세 플로우 포함, 두 역할 정의됨)
+- [x] Workflow Planning — IN PROGRESS
+- [ ] Application Design — EXECUTE (신규 컴포넌트/서비스 설계 필요)
+- [ ] Units Generation — EXECUTE (3개 유닛으로 분해)
 
-### 🟢 CONSTRUCTION PHASE (Per-Unit Loop)
-- [ ] Functional Design — **EXECUTE**
-  - **Rationale**: 6개 테이블 데이터 모델, 소셜 로그인 검증 로직, 약관 재동의 플로우, 금칙어 필터 등 복잡한 비즈니스 로직 상세 설계 필요.
-- [ ] NFR Requirements — **EXECUTE**
-  - **Rationale**: Security Baseline 15개 규칙 적용, JWT 보안 정책, 입력 검증 전략, Rate Limiting 등 NFR 요구사항 정의.
-- [ ] NFR Design — **EXECUTE**
-  - **Rationale**: NFR Requirements에서 정의된 보안/성능 패턴을 구체적 설계로 반영.
-- [ ] Infrastructure Design — **SKIP**
-  - **Rationale**: MVP 단계에서 Docker Compose 로컬 개발만. 클라우드 인프라(Oracle Cloud) 미확정. 배포 시점에 별도 진행.
-- [ ] Code Generation — **EXECUTE** (항상)
-  - **Rationale**: 구현 필수. Planning + Generation 2단계.
-- [ ] Build and Test — **EXECUTE** (항상)
-  - **Rationale**: 빌드 지침, 단위/통합 테스트 지침 생성.
+### CONSTRUCTION PHASE (유닛별)
+- [ ] Functional Design — EXECUTE (투표 상태머신, 도메인 모델 상세 설계)
+- [ ] NFR Requirements — EXECUTE (SSE, Scheduler, Security Baseline, FCM)
+- [ ] NFR Design — EXECUTE (NFR 패턴 적용 설계)
+- [ ] Infrastructure Design — SKIP (클라우드 인프라 변경 없음)
+- [ ] Code Generation — EXECUTE (항상)
+- [ ] Build and Test — EXECUTE (항상)
 
-### 🟡 OPERATIONS PHASE
-- [ ] Operations — **PLACEHOLDER**
-  - **Rationale**: 향후 배포/모니터링 워크플로우 확장 예정.
+### OPERATIONS PHASE
+- [ ] Operations — PLACEHOLDER
 
 ---
 
-## Execution Summary
+## 유닛 분해 — FC 순서 기준 (협업 역할 분담용)
 
-| 항목 | 값 |
-|---|---|
-| 총 단계 | 12 |
-| 실행 단계 | 8 (Application Design, Units Generation, Functional Design, NFR Requirements, NFR Design, Code Generation, Build and Test + Workflow Planning) |
-| 스킵 단계 | 3 (User Stories, Infrastructure Design, Operations) |
-| 완료 단계 | 2 (Workspace Detection, Requirements Analysis) |
+| 유닛 | FC | 내용 | 핵심 복잡도 |
+|---|---|---|---|
+| **Unit 1** | FC-4 | 그룹 & 첫 모임 생성 (그룹 생성 시 모임 동시 생성, 테마 태그) | 그룹/모임 동시 트랜잭션 |
+| **Unit 2** | FC-5 | 구성원 초대 & 합류 (초대 코드 발급/검증, 멤버십 등록) | 초대 코드 만료 처리 |
+| **Unit 3** | FC-6 | 모임 리스트 — 홈 화면 (상태별 정렬, 본인 모임만 조회) | 상태 계산 로직 |
+| **Unit 4** | FC-7 | 모임 상세 + 날짜 투표 A/B + SSE 실시간 현황 + 자동 종료 스케줄러 | SSE, 투표 상태머신, @Scheduled |
+| **Unit 5** | FC-7-1 | 내 정보 수정 (참석여부, 출발지, 수정 잠금) | 날짜 투표 종료 후 잠금 |
+| **Unit 6** | FC-8 | 그룹 생명주기 (그룹 종료, 새 모임 시작, 호스트 탈퇴/위임) | 호스트 랜덤 배정 |
+| **Unit 7** | 공통 | FCM 푸시 알림 (투표 시작/마감/확정/초대) | FCM 인터페이스 설계 |
 
-## Success Criteria
+---
 
-- **Primary Goal**: Bangawo 서버 MVP 1차 — 소셜 로그인, 회원가입, 출발지 관리, 약관 관리, 디바이스 토큰 저장 API 완성
-- **Key Deliverables**:
-  - Spring Boot 3.x 기반 REST API 서버
-  - PostgreSQL + PostGIS 데이터베이스 스키마 (Flyway 마이그레이션)
-  - Docker Compose 로컬 개발 환경
-  - JUnit 5 + Testcontainers 테스트
-  - Swagger UI API 문서
-- **Quality Gates**:
-  - Security Baseline SECURITY-01~15 준수
-  - 모든 단위 테스트 통과
-  - 빌드 성공
+## 의존성 & 병렬 작업 가능 범위
+
+```
+Unit 1 (FC-4: 그룹 생성) ← 모든 유닛의 기반, 선행 필수
+    ├── Unit 2 (FC-5: 초대)   ─┐
+    ├── Unit 3 (FC-6: 리스트)  ├── Unit 1 완료 후 병렬 가능
+    ├── Unit 5 (FC-7-1: 내정보)─┘
+    ├── Unit 4 (FC-7: 투표/SSE) ← Unit 1 완료 후
+    └── Unit 6 (FC-8: 생명주기) ← Unit 1 완료 후
+Unit 7 (Notification) ← Unit 4, 6 완료 후 (이벤트 트리거 확정 필요)
+```
+
+---
+
+## 별도 태스크 (코드와 독립)
+
+| 태스크 | 담당 | 내용 |
+|---|---|---|
+| Firebase 설정 | iOS 팀 협업 | 서비스 계정 키 발급, APNs 인증서 등록 |
+| **GCP 배포** | 백엔드 | GCP MCP로 Cloud Run / GKE 서버 배포 (MVP1 코드 완성 후) |
+
+---
+
+## 성공 기준
+- group, meeting 바운디드 컨텍스트 DDD 패턴 준수
+- 모든 API Security Baseline 인가 규칙 적용 (호스트/구성원 분리)
+- SSE 날짜 투표 현황 정상 동작
+- @Scheduled 모임 자동 종료 동작
+- FCM 코드 구현 완료 (Firebase 키 없이도 인터페이스 완성)
+- V7+ Flyway 마이그레이션 스크립트 완성
+- GCP 서버 배포 완료 (Operations 단계)

@@ -1,138 +1,98 @@
-# Requirements Verification Questions
+# Requirements Clarification Questions — MVP1
 
-아래 질문에 답변해 주세요. 각 질문의 `[Answer]:` 태그 뒤에 선택지 알파벳을 기입하시면 됩니다.
-"Other"를 선택한 경우 `[Answer]:` 뒤에 설명을 추가해 주세요.
+PRD(docs/prd/mvp1.md) 기반으로 백엔드 구현에 필요한 결정사항입니다.
+각 질문의 `[Answer]:` 태그 뒤에 알파벳으로 답변해주세요.
 
 ---
 
 ## Question 1
-프로젝트 루트 패키지명을 어떻게 할까요? (예: `com.bangawo`)
+날짜 투표 현황(FC-7)은 "실시간 또는 준실시간"으로 표시된다고 명시됩니다. 백엔드 구현 방식은?
 
-A) `com.bangawo` (가칭 그대로 사용)
-B) 다른 패키지명 사용
-X) Other (please describe after [Answer]: tag below)
+A) 클라이언트 Polling — 앱이 주기적으로 REST API 호출 (구현 단순, MVP 적합)
+B) SSE(Server-Sent Events) — 서버가 이벤트 스트림 푸시 (단방향 실시간)
+C) WebSocket — 양방향 실시간 (구현 복잡도 높음)
+D) Other (please describe after [Answer]: tag below)
 
-[Answer]: A
-
-## Question 2
-소셜 로그인 시 iOS가 전달하는 "공급자 토큰"은 어떤 것인가요?
-
-A) OAuth Access Token — 서버가 각 공급자 API를 호출하여 사용자 정보를 검증
-B) OIDC ID Token (JWT) — 서버가 토큰 자체를 검증하여 사용자 정보 추출
-C) 공급자별로 다름 (카카오/네이버는 Access Token, 애플은 ID Token)
-X) Other (please describe after [Answer]: tag below)
-
-[Answer]: 뭔말인지 모르겠어 나는 그냥 JWT로 인증하려했는데
-
-## Question 3
-에러 응답 포맷을 어떻게 할까요?
-
-A) RFC 7807 Problem Details (`application/problem+json`) 표준 사용
-B) 커스텀 에러 포맷 (`{ "code": "...", "message": "..." }`)
-C) Spring Boot 기본 에러 포맷 사용
-X) Other (please describe after [Answer]: tag below)
-
-[Answer]: IOS에서 보려면 B가 좋으려나? 잘몰라서 되물어볼꼐
-
-## Question 4
-페이징이 필요한 API가 있나요? (예: 출발지 목록, 약관 목록 등)
-
-A) 페이징 불필요 — MVP 범위에서 데이터 양이 적어 전체 조회로 충분
-B) 커서 기반 페이징 적용
-C) 오프셋 기반 페이징 적용
-X) Other (please describe after [Answer]: tag below)
-
-[Answer]: A
-
-## Question 5
-열린 이슈 O8: 도메인 모델과 영속 모델 분리 수준은?
-
-A) 완전 분리 — 도메인 엔티티와 JPA 엔티티를 별도 클래스로 유지, 매퍼로 변환
-B) 부분 분리 — JPA 엔티티에 도메인 로직 포함하되, DTO는 별도 분리
-C) 통합 — JPA 엔티티가 곧 도메인 모델 (실용적 접근)
-X) Other (please describe after [Answer]: tag below)
-
-[Answer]: 이것도 무슨 말인지 모르겠네 근데 그건있어 나중에 모임장만 할 수 있는 기능이 있어
-
-## Question 6
-열린 이슈 O9: 금칙어 사전 소스는?
-
-A) 직접 작성한 정적 리스트 + 정규식 (MVP에서는 소규모 목록으로 시작)
-B) 외부 오픈소스 금칙어 사전 활용 (예: korean-bad-words 등)
-C) MVP에서는 금칙어 필터 구현 생략, 후순위로 이동
-X) Other (please describe after [Answer]: tag below)
-
-[Answer]: A
-
-## Question 7
-회원가입 시 프로필 이미지 "저장만"이라고 했는데, 구체적으로 어떤 형태인가요?
-
-A) iOS가 소셜 공급자에서 받은 프로필 이미지 URL을 서버에 전달 → 서버는 URL만 저장
-B) iOS가 이미지 파일을 서버에 업로드 → 서버가 저장소에 저장 후 URL 기록
-C) MVP에서는 프로필 이미지 필드 자체를 nullable로 두고 실제 저장 로직은 후순위
-X) Other (please describe after [Answer]: tag below)
-
-[Answer]: C
-
-## Question 8
-로컬 개발 환경에서 PostgreSQL + PostGIS는 어떻게 구동할 예정인가요?
-
-A) Docker Compose로 PostgreSQL + PostGIS 컨테이너 구동
-B) 로컬에 직접 PostgreSQL + PostGIS 설치
-C) Testcontainers만 사용 (테스트 시에만 DB 구동)
-X) Other (please describe after [Answer]: tag below)
-
-[Answer]: 일단 A가 제일 좋겠지?
-
-## Question 9
-약관 재동의 플로우에서, 새 버전 약관이 등록되면 기존 사용자에게 어떻게 알릴 건가요?
-
-A) 로그인/API 호출 시 서버가 미동의 필수 약관 존재 여부를 응답에 포함 → iOS가 재동의 화면 표시
-B) 푸시 알림으로 재동의 요청 (MVP 후순위 - 푸시 발송 기능 없음)
-C) MVP에서는 재동의 플로우 구현 생략, 약관 버전 관리 구조만 준비
-X) Other (please describe after [Answer]: tag below)
-
-[Answer]: 아 이것도 뭔말인지 모르겠네 설명좀해줘봐
-
-## Question 10
-Swagger UI 외에 API 문서 관련 추가 요구사항이 있나요?
-
-A) Swagger UI만으로 충분
-B) Swagger UI + API 문서 자동 export (예: OpenAPI JSON/YAML)
-X) Other (please describe after [Answer]: tag below)
-
-[Answer]: A 근데 B에 API 문서 자동은 뭐야?
+[Answer]: 실시간으로 표시된다고 표기는 해놨는데 사실 단순 날짜 투표를 실시간으로 하기위에서 웹소켓으로 만드는게 맞나 싶네 리소스 너무 차지하는게 아닌가 싶고? 이거는 너의 설명이 필요하니 설명해주고 다시 정하기로 해보자
 
 ---
 
-## Extension Opt-In Questions
+## Question 2
+초대 링크(FC-5) 생성 방식은? 서버가 링크를 생성하고 iOS가 카카오톡으로 전송합니다.
 
-아래는 프로젝트에 적용할 수 있는 확장 규칙입니다. 활성화 여부를 선택해 주세요.
+A) 서버가 단순 토큰 발급 (예: `/invite/{token}`) — iOS가 딥링크 URL 조합해서 공유
+B) 서버가 완성된 딥링크 URL 반환 (예: `bangawo://invite?token=xxx`)
+C) 서버가 완성된 카카오 공유 URL까지 생성
+D) Other (please describe after [Answer]: tag below)
 
-## Question 11: TDD Code Generation Extension
-코드 생성 시 Test-Driven Development (TDD) 방식을 사용할까요?
+[Answer]: D 아마 IOS쪽에서 서버로 모임 코드와 함꼐 던져줄꺼야 그럼 그 초대코드 받고 해당 그룹 페이지로 이동할 수 있게 IOS로 다시 던져주면 될텐데?
 
-A) Yes — TDD 워크플로우로 코드 생성 (복잡한 비즈니스 로직, 데이터 변환, 장기 유지보수가 필요한 프로젝트에 권장; ~1.5-2x 토큰 비용이지만 기능 누락 방지 및 거의 무결점 결과물 생산)
-B) No — 표준 코드 생성 워크플로우 사용 (단순 프로토타입, 일회성 스크립트, 비즈니스 로직이 적은 프로젝트에 적합)
-X) Other (please describe after [Answer]: tag below)
+---
 
-[Answer]: 일단 B로 하고 나중에 필요하면 A로 변경하자
+## Question 3
+푸시 알림(FC-7 투표 시작·마감·확정 알림)을 MVP1에서 실제로 구현하나요? device_token 테이블은 이미 존재합니다.
 
-## Question 12: Property-Based Testing Extension
-Property-Based Testing (PBT) 규칙을 이 프로젝트에 적용할까요?
+A) 실제 FCM 연동까지 완전 구현 (서버 → FCM → iOS 디바이스)
+B) 알림 전송 로직만 구현 (FCM 키 설정은 나중에)
+C) MVP1에서는 스킵 — 데이터 변경 API만 구현, 알림은 MVP2
+D) Other (please describe after [Answer]: tag below)
 
-A) Yes — 모든 PBT 규칙을 blocking 제약으로 적용 (비즈니스 로직, 데이터 변환, 직렬화, 상태 관리 컴포넌트가 있는 프로젝트에 권장)
-B) Partial — 순수 함수와 직렬화 round-trip에만 PBT 규칙 적용 (알고리즘 복잡도가 제한적인 프로젝트에 적합)
-C) No — 모든 PBT 규칙 건너뛰기 (단순 CRUD, UI 전용, 비즈니스 로직이 없는 프로젝트에 적합)
-X) Other (please describe after [Answer]: tag below)
+[Answer]: A 해야하는데 FCM 이 뭔지 잘 모르겠어서 추가 설명 해주고 필요한게있으면 따로 뺴서 추가 구현할수있게 계획, 일정 짜줘야해
 
-[Answer]: PBT가 뭔지 모른다..
+---
 
-## Question 13: Security Baseline Extension
-보안 확장 규칙을 이 프로젝트에 적용할까요?
+## Question 4
+모임 자동 종료(FC-8 "모임 날짜가 지나면 자동 종료") 처리 방식은?
 
-A) Yes — 모든 보안 규칙을 blocking 제약으로 적용 (프로덕션 수준 애플리케이션에 권장)
-B) No — 모든 보안 규칙 건너뛰기 (PoC, 프로토타입, 실험적 프로젝트에 적합)
-X) Other (please describe after [Answer]: tag below)
+A) 스케줄러(@Scheduled) — 매일 자정 배치로 상태 업데이트
+B) 조회 시점 Lazy 계산 — 리스트 조회 시 날짜 비교해서 status 계산 (DB 상태값 미변경)
+C) 두 가지 모두 — 조회는 Lazy, 배치로 주기적 정리
+D) Other (please describe after [Answer]: tag below)
 
-[Answer]:  보안 확장 규칙이 뭐야 ...
+[Answer]: A
+
+---
+
+## Question 5
+FC-6 모임 리스트의 상태(진행 중/확정/종료) 정렬 시, 그룹에 "현재 진행 중인 모임"이 없는 경우 (모임이 아직 생성 안 됨) 어떻게 처리하나요?
+
+A) 그룹 생성 시 모임도 자동으로 함께 생성 (그룹과 모임 항상 1:1로 존재)
+B) 그룹만 생성, 모임은 호스트가 별도로 시작할 때 생성
+C) Other (please describe after [Answer]: tag below)
+
+[Answer]: C PRD에 나와있어. 그룹 생성하면 첫번째 모임도 자동으로 생성되고 모임마다 날짜가 있으면 그날이 지나면 그 모임은 종료되도록 할꺼야. 화면에서는 그룹 = 모임 같은 용도로쓸꺼고 모임이 종료되면 종료됨으로 표시될꺼고 그 그룹(모임) 들어가면 다시 모임을 만들 수 있게 해야겠지.
+
+---
+
+## Question 6 (Extension Opt-In)
+보안 확장(Security Baseline) 규칙을 이 프로젝트에 적용할까요?
+— JWT/인증 이미 구현되어 있으나 group/meeting API에 대한 보안 검증 룰 추가 적용 여부
+
+A) Yes — 보안 규칙을 블로킹 제약으로 적용 (프로덕션 수준)
+B) No — 스킵 (MVP 빠른 구현 우선)
+C) Other (please describe after [Answer]: tag below)
+
+[Answer]: 보안 확장이 뭔지 모르겠으니 우선 설명해봐 인가를 말하는건가?
+
+---
+
+## Question 7 (Extension Opt-In)
+TDD 방식으로 코드를 생성할까요? (테스트 먼저 작성 후 구현)
+
+A) Yes — TDD 워크플로우 적용 (토큰 비용 1.5~2배, 결함 최소화)
+B) No — 표준 코드 생성 (빠른 구현)
+C) Other (please describe after [Answer]: tag below)
+
+[Answer]: C 주요 기능들은 테스트 하도록하고 중요하지않은건 스킵
+
+---
+
+## Question 8 (Extension Opt-In)
+Property-Based Testing 규칙을 적용할까요?
+
+A) Yes — 전체 적용
+B) Partial — 순수 함수·직렬화에만 적용
+C) No — 스킵
+D) Other (please describe after [Answer]: tag below)
+
+[Answer]: 7번과 같은 내용이지?
