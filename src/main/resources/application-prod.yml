@@ -9,6 +9,7 @@ spring:
     show-sql: false
 
 springdoc:
+  server-url: https://bangawo-server-gzfcbbuf4q-du.a.run.app
   swagger-ui:
     enabled: true
     path: /swagger-ui.html

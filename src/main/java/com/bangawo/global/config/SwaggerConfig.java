@@ -2,19 +2,23 @@ package com.bangawo.global.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class SwaggerConfig {
 
-    /** Swagger UI 상단에 Authorize 버튼 추가 — Bearer 토큰 입력 가능 */
+    @Value("${springdoc.server-url:}")
+    private String serverUrl;
+
     @Bean
     public OpenAPI openAPI() {
         String schemeName = "bearerAuth";
-        return new OpenAPI()
+        OpenAPI openAPI = new OpenAPI()
                 .addSecurityItem(new SecurityRequirement().addList(schemeName))
                 .components(new Components()
                         .addSecuritySchemes(schemeName, new SecurityScheme()
@@ -22,5 +26,11 @@ public class SwaggerConfig {
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
                                 .bearerFormat("JWT")));
+
+        if (!serverUrl.isEmpty()) {
+            openAPI.addServersItem(new Server().url(serverUrl));
+        }
+
+        return openAPI;
     }
 }
