@@ -53,7 +53,7 @@ Design detailed business logic for the unit, technology-agnostic and focused pur
 - **Frontend Components** (if applicable) - Ask about UI component structure, user interactions, state management, and form handling
 
 ### Step 4: Store Plan
-- Save as `aidlc-docs/construction/plans/{unit-name}-functional-design-plan.md`
+- Save as `aidlc-docs/construction/internal/plans/{unit-name}-functional-design-plan.md`
 - Include all [Answer]: tags for user input
 
 ### Step 5: Collect and Analyze Answers
@@ -64,16 +64,68 @@ Design detailed business logic for the unit, technology-agnostic and focused pur
 - Create clarification questions file if ANY ambiguities are detected
 - **Do not proceed until ALL ambiguities are resolved**
 
-### Step 6: Generate Functional Design Artifacts
-- Create `aidlc-docs/construction/{unit-name}/functional-design/business-logic-model.md`
-- Create `aidlc-docs/construction/{unit-name}/functional-design/business-rules.md`
-- Create `aidlc-docs/construction/{unit-name}/functional-design/domain-entities.md`
-- If unit includes frontend/UI: Create `aidlc-docs/construction/{unit-name}/functional-design/frontend-components.md`
+### Step 6: Generate Functional Design Artifacts (Internal)
+- Create `aidlc-docs/construction/internal/{unit-name}/functional-design/business-logic-model.md`
+- Create `aidlc-docs/construction/internal/{unit-name}/functional-design/business-rules.md`
+- Create `aidlc-docs/construction/internal/{unit-name}/functional-design/domain-entities.md`
+- If unit includes frontend/UI: Create `aidlc-docs/construction/internal/{unit-name}/functional-design/frontend-components.md`
   - Component hierarchy and structure
   - Props and state definitions for each component
   - User interaction flows
   - Form validation rules
   - API integration points (which backend endpoints each component uses)
+
+### Step 6.5: Generate Review ERD (MANDATORY)
+**CRITICAL**: Every unit with a data model MUST generate these review artifacts.
+
+#### erd.md 생성 규칙
+- 경로: `aidlc-docs/construction/review/{fc-name}/erd.md`
+- **Mermaid erDiagram 필수** — 텍스트 테이블만으로는 부족함
+- **모든 컬럼에 코멘트 필수** — 컬럼이 무엇을 저장하는지 한 줄 설명
+- **외래 키 관계선 필수** — 테이블 간 관계를 erDiagram 표기법으로 표현
+- **이 기능 개발 시점의 전체 테이블 모두 포함** (기존 테이블 + 이번 기능 신규 테이블)
+- 기존 테이블은 `%% [기존]`, 이번 기능 신규 테이블은 `%% [FC-N 신규]` 코멘트로 구분
+
+**ERD 포맷 (반드시 준수)**:
+```
+erDiagram
+    TABLE_NAME {
+        BIGINT id PK "auto increment, PK"
+        VARCHAR(30) name "설명 (제약사항 포함)"
+        VARCHAR status "ACTIVE 또는 CLOSED"
+        TIMESTAMP created_at "레코드 생성 시각"
+    }
+    TABLE_A ||--o{ TABLE_B : "관계 설명"
+```
+
+#### rules.md 생성 규칙
+- 경로: `aidlc-docs/construction/review/{fc-name}/rules.md`
+- **비즈니스 규칙을 사람이 읽기 쉬운 형태로 작성** — 코드 없이 동작 방식을 이해할 수 있어야 함
+- **검증 규칙 포함** — 입력값 제약, 상태 전이 조건, 에러 발생 조건
+- **인가 규칙 포함** — 누가 이 API를 호출할 수 있는지 (호스트만/구성원만/본인만/누구나)
+- **예외 케이스 포함** — 엣지 케이스와 처리 방법
+
+**rules.md 포맷 (반드시 준수)**:
+```
+## [기능명] 비즈니스 규칙
+
+### 생성/변경 규칙
+- 규칙 설명 (위반 시 동작 명시)
+
+### 인가 규칙
+- 누가 할 수 있는가
+
+### 제약사항
+| 항목 | 제약 | 위반 시 |
+|---|---|---|
+```
+
+#### 마스터 ERD 업데이트 규칙
+- 경로: `aidlc-docs/construction/review/project-erd.md`
+- **기능이 추가될 때마다 이 파일을 업데이트** (append 후 Mermaid 전체 재작성)
+- 모든 기능의 테이블을 하나의 erDiagram에 포함
+- 새 테이블 추가 시 기존 테이블과의 관계선도 함께 추가
+- 각 테이블 위에 `%% [FC-N] 테이블명 — 담당 기능` 코멘트 추가
 
 ### Step 7: Present Completion Message
 - Present completion message in this structure:
@@ -94,7 +146,7 @@ Design detailed business logic for the unit, technology-agnostic and focused pur
 
 ```markdown
 > **📋 <u>**REVIEW REQUIRED:**</u>**  
-> Please examine the functional design artifacts at: `aidlc-docs/construction/[unit-name]/functional-design/`
+> Please examine the review artifacts at: `aidlc-docs/construction/review/[fc-name]/`
 
 
 

@@ -11,7 +11,7 @@ Determine non-functional requirements for the unit and make tech stack choices.
 ## Steps to Execute
 
 ### Step 1: Analyze Functional Design
-- Read functional design artifacts from `aidlc-docs/construction/{unit-name}/functional-design/`
+- Read functional design artifacts from `aidlc-docs/construction/internal/{unit-name}/functional-design/`
 - Understand business logic complexity and requirements
 
 ### Step 2: Create NFR Requirements Plan
@@ -40,7 +40,7 @@ Determine non-functional requirements for the unit and make tech stack choices.
 - **Usability Requirements** - Ask about user experience, accessibility, and interface requirements
 
 ### Step 4: Store Plan
-- Save as `aidlc-docs/construction/plans/{unit-name}-nfr-requirements-plan.md`
+- Save as `aidlc-docs/construction/internal/plans/{unit-name}-nfr-requirements-plan.md`
 - Include all [Answer]: tags for user input
 
 ### Step 5: Collect and Analyze Answers
@@ -52,8 +52,8 @@ Determine non-functional requirements for the unit and make tech stack choices.
 - **Do not proceed until ALL ambiguities are resolved**
 
 ### Step 6: Generate NFR Requirements Artifacts
-- Create `aidlc-docs/construction/{unit-name}/nfr-requirements/nfr-requirements.md`
-- Create `aidlc-docs/construction/{unit-name}/nfr-requirements/tech-stack-decisions.md`
+- Create `aidlc-docs/construction/internal/{unit-name}/nfr-requirements/nfr-requirements.md`
+- Create `aidlc-docs/construction/internal/{unit-name}/nfr-requirements/tech-stack-decisions.md`
 
 ### Step 7: Present Completion Message
 - Present completion message in this structure:
@@ -74,7 +74,7 @@ Determine non-functional requirements for the unit and make tech stack choices.
 
 ```markdown
 > **📋 <u>**REVIEW REQUIRED:**</u>**  
-> Please examine the NFR requirements at: `aidlc-docs/construction/[unit-name]/nfr-requirements/`
+> Please examine the NFR requirements at: `aidlc-docs/construction/internal/[unit-name]/nfr-requirements/`
 
 
 

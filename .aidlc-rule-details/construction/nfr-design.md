@@ -11,7 +11,7 @@ Incorporate NFR requirements into unit design using patterns and logical compone
 ## Steps to Execute
 
 ### Step 1: Analyze NFR Requirements
-- Read NFR requirements from `aidlc-docs/construction/{unit-name}/nfr-requirements/`
+- Read NFR requirements from `aidlc-docs/construction/internal/{unit-name}/nfr-requirements/`
 - Understand scalability, performance, availability, security needs
 
 ### Step 2: Create NFR Design Plan
@@ -39,7 +39,7 @@ Incorporate NFR requirements into unit design using patterns and logical compone
 - **Logical Components** - Ask about infrastructure components (queues, caches, circuit breakers, etc.) and their integration patterns
 
 ### Step 4: Store Plan
-- Save as `aidlc-docs/construction/plans/{unit-name}-nfr-design-plan.md`
+- Save as `aidlc-docs/construction/internal/plans/{unit-name}-nfr-design-plan.md`
 - Include all [Answer]: tags for user input
 
 ### Step 5: Collect and Analyze Answers
@@ -48,8 +48,8 @@ Incorporate NFR requirements into unit design using patterns and logical compone
 - Add follow-up questions if needed
 
 ### Step 6: Generate NFR Design Artifacts
-- Create `aidlc-docs/construction/{unit-name}/nfr-design/nfr-design-patterns.md`
-- Create `aidlc-docs/construction/{unit-name}/nfr-design/logical-components.md`
+- Create `aidlc-docs/construction/internal/{unit-name}/nfr-design/nfr-design-patterns.md`
+- Create `aidlc-docs/construction/internal/{unit-name}/nfr-design/logical-components.md`
 
 ### Step 7: Present Completion Message
 - Present completion message in this structure:
