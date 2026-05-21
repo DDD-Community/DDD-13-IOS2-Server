@@ -36,3 +36,32 @@
 **Context**: INCEPTION - Reverse Engineering 완료, 사용자 승인 대기
 
 ---
+
+---
+## [2026-05-21] Application Design — 질문 파일 생성
+
+**타임스탬프**: 2026-05-21T00:00:00+09:00
+**단계**: INCEPTION - Application Design
+**액션**: 설계 질문 파일 생성 → 사용자 답변 대기
+
+생성된 파일: `aidlc-docs/inception/plans/application-design-plan.md`
+질문 항목: Q1(FCM 위치), Q2(SSE 위치), Q3(MeetingStatus 저장), Q4(구성원 조회), Q5(DateVote 경계), Q6(InviteCode 저장), Q7(스케줄러 분리)
+
+---
+## [2026-05-21] Unit 1 (FC-4) Functional Design 완료
+
+**타임스탬프**: 2026-05-21T00:00:00+09:00
+**단계**: CONSTRUCTION - Unit 1 (FC-4) Functional Design
+**사용자 입력 (원문)**: "모임 상세 화면으로 바로 이동" (Q3 답변)
+**결정 사항**:
+- GroupService 단일 @Transactional로 Group + Meeting + Membership 동시 생성
+- MeetingStatus DB 컬럼 없음, locationStatus + dateVoteStatus + confirmedDate로 Java 계산
+- 응답: groupId + meetingId (모임 상세 화면 이동용)
+
+---
+## [2026-05-21] Unit 1 (FC-4) Code Generation Plan 생성 — 승인 대기
+
+**타임스탬프**: 2026-05-21T00:00:00+09:00
+**단계**: CONSTRUCTION - Unit 1 (FC-4) Code Generation Part 1 (Planning)
+**플랜 파일**: aidlc-docs/construction/plans/unit-1-fc4-code-generation-plan.md
+**총 스텝**: 17개 (enum → 도메인 → 서비스 → API → 인프라 → DB 마이그레이션)

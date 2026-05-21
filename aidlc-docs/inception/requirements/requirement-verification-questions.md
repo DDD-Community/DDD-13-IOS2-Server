@@ -72,7 +72,7 @@ A) Yes — 보안 규칙을 블로킹 제약으로 적용 (프로덕션 수준)
 B) No — 스킵 (MVP 빠른 구현 우선)
 C) Other (please describe after [Answer]: tag below)
 
-[Answer]: 보안 확장이 뭔지 모르겠으니 우선 설명해봐 인가를 말하는건가?
+[Answer]: A
 
 ---
 
@@ -95,4 +95,4 @@ B) Partial — 순수 함수·직렬화에만 적용
 C) No — 스킵
 D) Other (please describe after [Answer]: tag below)
 
-[Answer]: 7번과 같은 내용이지?
+[Answer]: C
