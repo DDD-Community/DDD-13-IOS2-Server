@@ -6,7 +6,9 @@ import com.bangawo.auth.domain.SocialProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
@@ -30,5 +32,12 @@ public class MemberRepositoryImpl implements MemberRepository {
     public Member save(Member member) {
         MemberJpaEntity saved = jpaRepository.save(MemberJpaEntity.from(member));
         return saved.toDomain();
+    }
+
+    @Override
+    public List<Member> findAllById(Set<Long> ids) {
+        return jpaRepository.findAllById(ids).stream()
+                .map(MemberJpaEntity::toDomain)
+                .toList();
     }
 }

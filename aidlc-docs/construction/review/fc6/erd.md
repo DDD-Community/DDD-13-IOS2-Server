@@ -1,10 +1,10 @@
-# 마스터 ERD — Bangawo 전체 테이블
+# ERD — FC-6 모임 리스트
 
-> 기능이 추가될 때마다 이 파일을 업데이트합니다.
+> FC-6은 신규 테이블 없음. 기존 테이블(FC-4까지)을 조회 전용으로 사용합니다.
 
 ```mermaid
 erDiagram
-    %% [기존] member — 회원
+    %% [기존] member
     member {
         BIGINT id PK "회원 고유 ID"
         VARCHAR(20) social_provider "소셜 공급자 (KAKAO/NAVER/APPLE)"
@@ -19,7 +19,7 @@ erDiagram
         TIMESTAMPTZ deleted_at "탈퇴 시각 (null이면 활동 중)"
     }
 
-    %% [기존] refresh_token — JWT 리프레시 토큰
+    %% [기존] refresh_token
     refresh_token {
         BIGINT id PK "토큰 고유 ID"
         BIGINT member_id FK "토큰 소유 회원 ID"
@@ -29,7 +29,7 @@ erDiagram
         TIMESTAMPTZ created_at "토큰 발급 시각"
     }
 
-    %% [기존] departure_place — 출발지
+    %% [기존] departure_place
     departure_place {
         BIGINT id PK "출발지 고유 ID"
         BIGINT member_id FK "소유 회원 ID"
@@ -42,7 +42,7 @@ erDiagram
         TIMESTAMPTZ updated_at "수정 시각"
     }
 
-    %% [기존] terms — 약관
+    %% [기존] terms
     terms {
         BIGINT id PK "약관 고유 ID"
         VARCHAR(30) type "약관 유형 (TERMS_OF_SERVICE/PRIVACY_POLICY/MARKETING)"
@@ -54,7 +54,7 @@ erDiagram
         TIMESTAMPTZ created_at "등록 시각"
     }
 
-    %% [기존] terms_agreement — 약관 동의 이력
+    %% [기존] terms_agreement
     terms_agreement {
         BIGINT id PK "동의 이력 고유 ID"
         BIGINT member_id FK "동의한 회원 ID"
@@ -62,7 +62,7 @@ erDiagram
         TIMESTAMPTZ agreed_at "동의 시각"
     }
 
-    %% [기존] device_token — 푸시 알림 디바이스 토큰
+    %% [기존] device_token
     device_token {
         BIGINT id PK "토큰 고유 ID"
         BIGINT member_id FK "소유 회원 ID"
@@ -73,7 +73,7 @@ erDiagram
         TIMESTAMPTZ updated_at "갱신 시각"
     }
 
-    %% [FC-4] theme_tag — 테마 태그
+    %% [FC-4] theme_tag
     theme_tag {
         BIGINT id PK "태그 고유 ID"
         VARCHAR(30) code "태그 코드 UNIQUE (예: BUSINESS)"
@@ -82,37 +82,37 @@ erDiagram
         BOOLEAN is_active "활성 여부 (false면 신규 선택 불가)"
     }
 
-    %% [FC-4] group_info — 그룹
+    %% [FC-4] group_info — FC-6에서 name, theme_tag_code, status 조회
     group_info {
         BIGINT id PK "그룹 고유 ID"
-        VARCHAR(30) name "그룹명 (모임명과 동일한 값)"
+        VARCHAR(30) name "그룹명 (= 모임명, 카드 제목으로 사용)"
         VARCHAR(30) theme_tag_code "테마 태그 코드 (theme_tag.code 참조)"
-        VARCHAR(10) status "그룹 상태 (ACTIVE/CLOSED)"
+        VARCHAR(10) status "그룹 상태 (ACTIVE/CLOSED) — FC-6은 상태 무관 전체 조회"
         TIMESTAMPTZ created_at "생성 시각"
         TIMESTAMPTZ updated_at "수정 시각"
     }
 
-    %% [FC-4] meeting — 모임
+    %% [FC-4] meeting — FC-6에서 listStatus 계산에 사용
     meeting {
         BIGINT id PK "모임 고유 ID"
         BIGINT group_id FK "소속 그룹 ID"
-        VARCHAR(30) name "모임명 (그룹명과 동일한 값으로 생성)"
-        VARCHAR(30) theme_tag_code "테마 태그 코드 (theme_tag.code 참조)"
+        VARCHAR(30) name "모임명"
+        VARCHAR(30) theme_tag_code "테마 태그 코드"
         VARCHAR(15) location_status "장소 선정 상태 (BEFORE/IN_PROGRESS/COMPLETED)"
         VARCHAR(15) date_vote_status "날짜 투표 상태 (BEFORE/IN_PROGRESS/COMPLETED)"
-        DATE confirmed_date "확정된 모임 날짜 (미확정 시 null)"
-        TIMESTAMPTZ created_at "생성 시각"
+        DATE confirmed_date "확정된 모임 날짜 — CLOSED 판단 기준 (null이면 미확정)"
+        TIMESTAMPTZ created_at "생성 시각 — 정렬 기준"
         TIMESTAMPTZ updated_at "수정 시각"
     }
 
-    %% [FC-4] group_member — 그룹 구성원
+    %% [FC-4] group_member — FC-6에서 소속 그룹 탐색 및 구성원 목록 조회
     group_member {
-        BIGINT id PK "구성원 고유 ID (surrogate key)"
+        BIGINT id PK "구성원 고유 ID"
         BIGINT group_id FK "소속 그룹 ID"
         BIGINT member_id FK "구성원 회원 ID"
         VARCHAR(10) role "역할 (HOST/MEMBER)"
-        VARCHAR(10) attendance_status "참석여부 (JOIN/LATE/ABSENT), 기본값 JOIN"
-        TIMESTAMPTZ joined_at "그룹 합류 시각"
+        VARCHAR(10) attendance_status "참석여부 (JOIN/LATE/ABSENT)"
+        TIMESTAMPTZ joined_at "그룹 합류 시각 — 구성원 정렬 기준"
     }
 
     member ||--o{ refresh_token : "1회원 N토큰"
@@ -127,18 +127,13 @@ erDiagram
     member ||--o{ group_member : "1회원 N그룹참여"
 ```
 
-## 테이블 목록
+## FC-6 조회 흐름 요약
 
-| 테이블 | 추가된 시점 | 설명 |
-|---|---|---|
-| `member` | 기존 (V2) | 회원 (소셜 로그인 + 프로필) |
-| `refresh_token` | 기존 (V2) | JWT 리프레시 토큰 |
-| `departure_place` | 기존 (V3) | 출발지 |
-| `terms` | 기존 (V4) | 약관 |
-| `terms_agreement` | 기존 (V4) | 약관 동의 이력 |
-| `device_token` | 기존 (V5) | 푸시 알림 디바이스 토큰 |
-| `theme_tag` | FC-4 | 테마 태그 (DB 관리) |
-| `group_info` | FC-4 | 그룹 |
-| `meeting` | FC-4 | 모임 |
-| `group_member` | FC-4 | 그룹 구성원 |
-| *(FC-6 신규 테이블 없음)* | FC-6 | 기존 테이블 조회 전용 |
+```
+group_member (memberId=나)
+  → group_info (name, themeTagCode)
+  → meeting (최신 1개, locationStatus, dateVoteStatus, confirmedDate)
+  → group_member (전체 구성원, attendanceStatus, joinedAt)
+  → member (nickname, profileImageUrl)
+  → theme_tag (displayName)
+```
