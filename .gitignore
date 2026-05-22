@@ -25,5 +25,8 @@ build/
 .mcp.json
 .env.local
 
+# Claude Code 로컬 설정 (개인 권한/환경 설정)
+.claude/settings.local.json
+
 # ERD 문서 (스키마 노출 방지)
 docs/**/erd.md
