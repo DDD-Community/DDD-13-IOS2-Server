@@ -5,6 +5,7 @@ import com.bangawo.group.domain.GroupMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -27,5 +28,19 @@ public class GroupMemberRepositoryImpl implements GroupMemberRepository {
     @Override
     public int countByGroupId(Long groupId) {
         return jpaRepository.countByGroupId(groupId);
+    }
+
+    @Override
+    public List<GroupMember> findByMemberId(Long memberId) {
+        return jpaRepository.findByMemberId(memberId).stream()
+                .map(GroupMemberJpaEntity::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<GroupMember> findByGroupIdIn(List<Long> groupIds) {
+        return jpaRepository.findByGroupIdIn(groupIds).stream()
+                .map(GroupMemberJpaEntity::toDomain)
+                .toList();
     }
 }

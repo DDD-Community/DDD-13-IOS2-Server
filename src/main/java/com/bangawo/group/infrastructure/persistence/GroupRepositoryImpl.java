@@ -5,6 +5,7 @@ import com.bangawo.group.domain.GroupRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -21,5 +22,12 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Override
     public Optional<Group> findById(Long id) {
         return jpaRepository.findById(id).map(GroupJpaEntity::toDomain);
+    }
+
+    @Override
+    public List<Group> findAllById(List<Long> ids) {
+        return jpaRepository.findAllById(ids).stream()
+                .map(GroupJpaEntity::toDomain)
+                .toList();
     }
 }
