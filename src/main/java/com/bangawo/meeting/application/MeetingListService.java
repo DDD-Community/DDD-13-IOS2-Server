@@ -2,6 +2,7 @@ package com.bangawo.meeting.application;
 
 import com.bangawo.auth.domain.Member;
 import com.bangawo.auth.domain.MemberRepository;
+import com.bangawo.group.domain.Group;
 import com.bangawo.group.domain.GroupMember;
 import com.bangawo.group.domain.GroupMemberRepository;
 import com.bangawo.group.domain.GroupRepository;
@@ -42,8 +43,8 @@ public class MeetingListService {
                 .map(GroupMember::getGroupId)
                 .toList();
 
-        Map<Long, com.bangawo.group.domain.Group> groupMap = groupRepository.findAllById(groupIds)
-                .stream().collect(Collectors.toMap(com.bangawo.group.domain.Group::getId, g -> g));
+        Map<Long, Group> groupMap = groupRepository.findAllById(groupIds)
+                .stream().collect(Collectors.toMap(Group::getId, g -> g));
 
         Map<Long, Meeting> latestMeetingMap = meetingRepository.findLatestByGroupIdIn(groupIds)
                 .stream().collect(Collectors.toMap(Meeting::getGroupId, m -> m));
@@ -60,7 +61,7 @@ public class MeetingListService {
                 .stream().collect(Collectors.toMap(Member::getId, m -> m));
 
         Set<String> themeCodes = groupMap.values().stream()
-                .map(com.bangawo.group.domain.Group::getThemeTagCode)
+                .map(Group::getThemeTagCode)
                 .collect(Collectors.toSet());
 
         Map<String, ThemeTag> themeTagMap = themeTagRepository.findByCodeIn(themeCodes)
@@ -72,7 +73,7 @@ public class MeetingListService {
                 .filter(groupMap::containsKey)
                 .filter(latestMeetingMap::containsKey)
                 .map(groupId -> {
-                    com.bangawo.group.domain.Group group = groupMap.get(groupId);
+                    Group group = groupMap.get(groupId);
                     Meeting meeting = latestMeetingMap.get(groupId);
                     ThemeTag themeTag = themeTagMap.get(group.getThemeTagCode());
                     List<GroupMember> groupMembers = membersByGroup.getOrDefault(groupId, List.of());
@@ -81,10 +82,11 @@ public class MeetingListService {
                             .sorted(Comparator.comparing(GroupMember::getJoinedAt))
                             .map(gm -> {
                                 Member m = memberMap.get(gm.getMemberId());
+                                boolean active = m != null && m.isActive();
                                 return new MeetingCardResponse.MemberInfo(
                                         gm.getMemberId(),
-                                        m != null ? m.getNickname() : null,
-                                        m != null ? m.getProfileImageUrl() : null,
+                                        active ? m.getNickname() : null,
+                                        active ? m.getProfileImageUrl() : null,
                                         gm.getAttendanceStatus()
                                 );
                             })
