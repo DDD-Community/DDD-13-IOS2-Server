@@ -65,4 +65,8 @@ public class Member {
         this.isRegistered = true;
         this.updatedAt = LocalDateTime.now();
     }
+
+    public boolean isActive() {
+        return this.status == MemberStatus.ACTIVE;
+    }
 }

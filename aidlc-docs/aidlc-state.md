@@ -45,8 +45,10 @@
 - [ ] Units Generation — EXECUTE
 
 ### CONSTRUCTION PHASE
-- [ ] Per-Unit Loop (TBD)
-- [ ] Build and Test
+- [x] Per-Unit Loop — Unit 3 (FC-6) 완료
+  - [x] Functional Design — FC-6 모임 리스트 설계
+  - [x] Code Generation — 17 steps, compileJava BUILD SUCCESSFUL
+- [x] Build and Test — 유닛 테스트 17개 ALL PASS
 
 ### OPERATIONS PHASE
 - [ ] Operations (PLACEHOLDER)

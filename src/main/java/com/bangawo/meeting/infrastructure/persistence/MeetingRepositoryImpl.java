@@ -5,6 +5,7 @@ import com.bangawo.meeting.domain.MeetingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -21,5 +22,12 @@ public class MeetingRepositoryImpl implements MeetingRepository {
     @Override
     public Optional<Meeting> findById(Long id) {
         return jpaRepository.findById(id).map(MeetingJpaEntity::toDomain);
+    }
+
+    @Override
+    public List<Meeting> findLatestByGroupIdIn(List<Long> groupIds) {
+        return jpaRepository.findLatestByGroupIdIn(groupIds).stream()
+                .map(MeetingJpaEntity::toDomain)
+                .toList();
     }
 }

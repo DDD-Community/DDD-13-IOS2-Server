@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
@@ -16,13 +17,24 @@ public class ThemeTagRepositoryImpl implements ThemeTagRepository {
     @Override
     public List<ThemeTag> findAllActive() {
         return themeTagJpaRepository.findByActiveTrueOrderBySortOrderAsc().stream()
-                .map(e -> ThemeTag.builder()
-                        .id(e.getId())
-                        .code(e.getCode())
-                        .displayName(e.getDisplayName())
-                        .sortOrder(e.getSortOrder())
-                        .active(e.isActive())
-                        .build())
+                .map(this::toDomain)
                 .toList();
+    }
+
+    @Override
+    public List<ThemeTag> findByCodeIn(Set<String> codes) {
+        return themeTagJpaRepository.findByCodeIn(codes).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    private ThemeTag toDomain(ThemeTagJpaEntity e) {
+        return ThemeTag.builder()
+                .id(e.getId())
+                .code(e.getCode())
+                .displayName(e.getDisplayName())
+                .sortOrder(e.getSortOrder())
+                .active(e.isActive())
+                .build();
     }
 }
