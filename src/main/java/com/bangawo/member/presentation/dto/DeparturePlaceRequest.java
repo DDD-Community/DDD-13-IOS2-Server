@@ -9,5 +9,5 @@ public record DeparturePlaceRequest(
         @NotBlank String address,
         @NotNull Double latitude,
         @NotNull Double longitude,
-        @NotNull Boolean isDefault
+        Boolean isDefault
 ) {}
