@@ -46,6 +46,15 @@ public class DeparturePlaceService {
         return repository.save(place);
     }
 
+    @Transactional
+    public DeparturePlace setDefault(Long memberId, Long placeId) {
+        DeparturePlace place = repository.findByIdAndMemberId(placeId, memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DEPARTURE_PLACE_NOT_FOUND));
+        repository.clearDefaultByMemberId(memberId);
+        place.markAsDefault();
+        return repository.save(place);
+    }
+
     public List<DeparturePlace> getAll(Long memberId) {
         return repository.findAllByMemberId(memberId);
     }

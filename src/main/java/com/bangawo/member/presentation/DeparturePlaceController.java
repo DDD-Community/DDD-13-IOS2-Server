@@ -52,6 +52,14 @@ public class DeparturePlaceController {
                         request.latitude(), request.longitude())));
     }
 
+    @Operation(summary = "기본 출발지 설정", description = "해당 출발지를 기본으로 설정하고 기존 기본 출발지를 해제합니다")
+    @PatchMapping("/{id}/default")
+    public ResponseEntity<DeparturePlaceResponse> setDefault(Authentication auth,
+                                                              @PathVariable Long id) {
+        Long memberId = (Long) auth.getPrincipal();
+        return ResponseEntity.ok(DeparturePlaceResponse.from(service.setDefault(memberId, id)));
+    }
+
     @Operation(summary = "출발지 삭제", description = "기본 출발지는 삭제 불가")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(Authentication auth, @PathVariable Long id) {
