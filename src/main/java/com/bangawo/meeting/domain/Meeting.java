@@ -1,5 +1,7 @@
 package com.bangawo.meeting.domain;
 
+import com.bangawo.global.error.BusinessException;
+import com.bangawo.global.error.ErrorCode;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -44,6 +46,25 @@ public class Meeting {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
+    }
+
+    public void startVote() {
+        if (this.dateVoteStatus != DateVoteStatus.BEFORE) {
+            throw new BusinessException(ErrorCode.VOTE_ALREADY_STARTED);
+        }
+        this.dateVoteStatus = DateVoteStatus.IN_PROGRESS;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void confirmDate(LocalDate date) {
+        this.confirmedDate = date;
+        this.dateVoteStatus = DateVoteStatus.COMPLETED;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void resetVote() {
+        this.dateVoteStatus = DateVoteStatus.BEFORE;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public MeetingListStatus computeListStatus(LocalDate today) {
