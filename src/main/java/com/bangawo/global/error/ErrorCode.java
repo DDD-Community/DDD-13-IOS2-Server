@@ -21,7 +21,7 @@ public enum ErrorCode {
     // Member
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_001", "회원을 찾을 수 없습니다"),
     NICKNAME_FORBIDDEN_WORD(HttpStatus.BAD_REQUEST, "MEMBER_002", "사용할 수 없는 닉네임입니다"),
-    DEPARTURE_PLACE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "MEMBER_003", "출발지는 최대 10개까지 등록 가능합니다"),
+    DEPARTURE_PLACE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "MEMBER_003", "출발지는 최대 3개까지 등록 가능합니다"),
     DEFAULT_DEPARTURE_PLACE_CANNOT_DELETE(HttpStatus.BAD_REQUEST, "MEMBER_004", "기본 출발지는 삭제할 수 없습니다"),
     DEPARTURE_PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_005", "출발지를 찾을 수 없습니다"),
 

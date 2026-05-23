@@ -133,3 +133,47 @@
 - `src/test/.../MeetingListServiceTest.java` (4 tests)
 
 ---
+
+## Functional Design Stage — FC-7-1
+**Timestamp**: 2026-05-22T22:00:00+09:00
+**User Input**: "A" (이어서 진행), 질문 답변: Q1=A, Q2=A(+BE방어), Q3=A, Q4=B
+**Files Generated**:
+- `aidlc-docs/construction/internal/plans/unit-4-fc7-1-functional-design-plan.md`
+- `aidlc-docs/construction/internal/unit-4-fc7-1/functional-design/business-logic-model.md`
+- `aidlc-docs/construction/internal/unit-4-fc7-1/functional-design/business-rules.md`
+- `aidlc-docs/construction/internal/unit-4-fc7-1/functional-design/domain-entities.md`
+- `aidlc-docs/construction/review/fc7-1/erd.md`
+- `aidlc-docs/construction/review/fc7-1/rules.md`
+- `aidlc-docs/construction/review/project-erd.md` (업데이트)
+
+---
+
+## Code Generation Stage — FC-7-1
+**Timestamp**: 2026-05-22T23:00:00+09:00
+**User Input**: "ㄱㄱ" (코드 생성 계획 승인)
+**Build Status**: SUCCESS (./gradlew build)
+**Files Generated**:
+- `src/main/java/.../group/domain/GroupMember.java` (updateAttendance 추가)
+- `src/main/java/.../member/domain/departure/DeparturePlace.java` (update 추가)
+- `src/main/java/.../group/application/GroupMemberService.java` (신규)
+- `src/main/java/.../member/application/DeparturePlaceService.java` (MAX_PLACES=3, update 추가)
+- `src/main/java/.../global/error/ErrorCode.java` (MEMBER_003 메시지 수정)
+- `src/main/java/.../group/presentation/dto/AttendanceUpdateRequest.java` (신규)
+- `src/main/java/.../member/presentation/dto/DeparturePlaceRequest.java` (신규)
+- `src/main/java/.../group/presentation/GroupMemberController.java` (신규)
+- `src/main/java/.../member/presentation/DeparturePlaceController.java` (POST+PUT 추가)
+- `aidlc-docs/construction/review/fc7-1/api.md` (신규)
+
+---
+
+## Build and Test Stage — FC-7-1
+**Timestamp**: 2026-05-22T23:10:00+09:00
+**User Input**: "승인, Build and Test 진행해줘"
+**Build Status**: SUCCESS
+**Test Status**: PASS (24/24)
+**Files Generated**:
+- `src/test/.../group/application/GroupMemberServiceTest.java` (2 tests)
+- `src/test/.../member/application/DeparturePlaceServiceTest.java` (5 tests)
+- `aidlc-docs/construction/build-and-test/` (파일 업데이트 — FC-7-1 포함)
+
+---
