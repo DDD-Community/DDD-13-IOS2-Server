@@ -177,3 +177,74 @@
 - `aidlc-docs/construction/build-and-test/` (파일 업데이트 — FC-7-1 포함)
 
 ---
+
+## [2026-05-23] Unit 4 (FC-7) Functional Design 시작
+
+**사용자 요청 (원문)**: 지금 다른 친구가 FC6 모임리스트조회 기능만든거 pull받고 이제 FC7 모임상세 해야하는데 prd읽고 스킬 진행해줘
+
+**진행 내용**:
+- 기존 세션 복원 (aidlc-state.md 확인)
+- PRD mvp1.md FC-7 섹션 읽음
+- 기존 코드 분석: Meeting.java, GroupMember.java, V7 마이그레이션, FC-6 완료 코드
+- Functional Design Plan 생성: aidlc-docs/construction/internal/plans/unit-4-fc7-functional-design-plan.md
+- 설계 질문 5개 포함 (출발지 설계, 투표 세션 저장, 방식 A API, 스케줄러 주기, SSE URL)
+
+**상태**: 사용자 답변 대기 중
+
+---
+## [2026-05-23] Unit 4 (FC-7) Functional Design 완료
+
+**최종 설계 결정 (Q1~Q5)**:
+- Q1: 출발지 전체 목록 표시 (N개)
+- Q2: date_vote_session 별도 테이블
+- Q3: API 2개 분리 (host-pick / vote)
+- Q4: 매일 자정 배치, 마감일 = 시작일 + N일
+- Q5: SSE 미사용, GET 폴링 방식
+- 참석여부 잠금: MVP1 없음, MVP2 location=COMPLETED 시 추가
+- 출발지 잠금: date_vote_status=COMPLETED 이후
+
+**생성 아티팩트**:
+- aidlc-docs/construction/internal/unit-4-fc7/functional-design/domain-entities.md
+- aidlc-docs/construction/internal/unit-4-fc7/functional-design/business-logic-model.md
+- aidlc-docs/construction/internal/unit-4-fc7/functional-design/business-rules.md
+- aidlc-docs/construction/review/fc-7/erd.md
+- aidlc-docs/construction/review/fc-7/rules.md
+- aidlc-docs/construction/review/project-erd.md (업데이트)
+- aidlc-docs/inception/requirements/requirements.md (SSE → GET 폴링 수정, 참석여부 잠금 MVP2 명시)
+
+**상태**: 사용자 승인 대기
+
+---
+## [2026-05-23] Unit 4 (FC-7) NFR Requirements 완료
+
+**사용자 응답 (원문)**:
+- Q1: A + "실패하면 직접 투표 종료 버튼을 누르게 하던가 해야겠네 투표 종료 API하나 있어야겠다"
+- Q2: "FCM은 지금 안할꺼야 나중에 할꺼야"
+
+**결정 사항**:
+- 스케줄러 실패 시 별도 API 불필요 — confirm/host-pick API로 수동 처리 가능
+- FCM MVP1 제외 — no-op 처리
+- requirements.md FR-8 수정
+
+**상태**: 사용자 승인 대기
+
+---
+## [2026-05-23] Unit 4 (FC-7) NFR Design 완료
+
+**결정 사항**:
+- 인가 패턴: 서비스 레이어 Guard 패턴 (FC-7에서 최초 정립)
+- 트랜잭션: 스케줄러 건별 @Transactional 분리
+- 스케줄러: 루프 + try-catch, 로깅 후 계속 진행
+- 상태 전이: Meeting 도메인 메서드로 캡슐화
+- FCM: no-op
+
+**상태**: 사용자 승인 대기
+
+---
+## [2026-05-23] Unit 4 (FC-7) Code Generation Plan 작성 완료
+
+**플랜 파일**: aidlc-docs/construction/internal/plans/unit-4-fc7-code-generation-plan.md
+**총 스텝**: 39개 (Group A~J)
+**API**: GET 모임상세, POST host-pick, POST 투표시작, POST 투표참여, GET 현황조회, PATCH 수동확정
+
+**승인 대기 중**

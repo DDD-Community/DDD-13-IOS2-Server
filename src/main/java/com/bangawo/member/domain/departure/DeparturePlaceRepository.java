@@ -6,6 +6,7 @@ import java.util.Optional;
 public interface DeparturePlaceRepository {
     DeparturePlace save(DeparturePlace place);
     List<DeparturePlace> findAllByMemberId(Long memberId);
+    List<DeparturePlace> findAllByMemberIdIn(List<Long> memberIds);
     Optional<DeparturePlace> findByIdAndMemberId(Long id, Long memberId);
     int countByMemberId(Long memberId);
     void deleteById(Long id);

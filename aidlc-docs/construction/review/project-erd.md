@@ -115,16 +115,47 @@ erDiagram
         TIMESTAMPTZ joined_at "그룹 합류 시각"
     }
 
+    %% [FC-7 신규] date_vote_session — 투표 세션
+    date_vote_session {
+        BIGINT id PK "투표 세션 고유 ID"
+        BIGINT meeting_id FK "소속 모임 ID (UNIQUE)"
+        VARCHAR(10) method "투표 방식 (HOST_PICK/VOTE)"
+        DATE deadline "투표 마감일 (VOTE 방식만 유효, null 가능)"
+        INT duration_days "투표 기간 일수 (1/3/7, HOST_PICK 시 null)"
+        VARCHAR(10) status "세션 상태 (ACTIVE/EXPIRED/CONFIRMED)"
+        TIMESTAMPTZ created_at "세션 생성 시각"
+    }
+
+    %% [FC-7 신규] date_vote_option — 투표 후보 날짜
+    date_vote_option {
+        BIGINT id PK "후보 날짜 고유 ID"
+        BIGINT session_id FK "소속 투표 세션 ID"
+        DATE candidate_date "후보 날짜"
+        INT sort_order "정렬 순서 (호스트 입력 순서, 0부터)"
+    }
+
+    %% [FC-7 신규] date_vote_record — 투표 기록
+    date_vote_record {
+        BIGINT id PK "투표 기록 고유 ID"
+        BIGINT option_id FK "투표한 후보 날짜 ID"
+        BIGINT member_id FK "투표한 회원 ID"
+        TIMESTAMPTZ voted_at "투표 시각"
+    }
+
     member ||--o{ refresh_token : "1회원 N토큰"
     member ||--o{ departure_place : "1회원 N출발지"
     member ||--o{ terms_agreement : "1회원 N약관동의"
     member ||--o{ device_token : "1회원 N디바이스토큰"
+    member ||--o{ date_vote_record : "1회원 N투표기록"
     terms ||--o{ terms_agreement : "1약관 N동의이력"
     theme_tag ||--o{ group_info : "1태그 N그룹"
     theme_tag ||--o{ meeting : "1태그 N모임"
     group_info ||--o{ meeting : "1그룹 N모임"
     group_info ||--o{ group_member : "1그룹 N구성원"
     member ||--o{ group_member : "1회원 N그룹참여"
+    meeting ||--o| date_vote_session : "1모임 0~1세션"
+    date_vote_session ||--o{ date_vote_option : "1세션 N후보"
+    date_vote_option ||--o{ date_vote_record : "1후보 N투표기록"
 ```
 
 ## 테이블 목록
@@ -143,3 +174,6 @@ erDiagram
 | `group_member` | FC-4 | 그룹 구성원 |
 | *(FC-6 신규 테이블 없음)* | FC-6 | 기존 테이블 조회 전용 |
 | *(FC-7-1 신규 테이블 없음)* | FC-7-1 | `group_member.attendance_status` UPDATE, `departure_place` INSERT/UPDATE |
+| `date_vote_session` | FC-7 | 날짜 투표 세션 (방식 A/B, 마감일) |
+| `date_vote_option` | FC-7 | 투표 후보 날짜 (세션당 최대 3개) |
+| `date_vote_record` | FC-7 | 구성원 투표 기록 |

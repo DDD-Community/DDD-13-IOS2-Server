@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Repository
@@ -26,6 +27,11 @@ public class ThemeTagRepositoryImpl implements ThemeTagRepository {
         return themeTagJpaRepository.findByCodeIn(codes).stream()
                 .map(this::toDomain)
                 .toList();
+    }
+
+    @Override
+    public Optional<ThemeTag> findByCode(String code) {
+        return themeTagJpaRepository.findByCode(code).map(this::toDomain);
     }
 
     private ThemeTag toDomain(ThemeTagJpaEntity e) {

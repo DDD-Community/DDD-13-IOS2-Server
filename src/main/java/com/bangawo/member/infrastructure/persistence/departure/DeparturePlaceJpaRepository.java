@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface DeparturePlaceJpaRepository extends JpaRepository<DeparturePlaceJpaEntity, Long> {
     List<DeparturePlaceJpaEntity> findAllByMemberId(Long memberId);
+    List<DeparturePlaceJpaEntity> findAllByMemberIdIn(List<Long> memberIds);
     Optional<DeparturePlaceJpaEntity> findByIdAndMemberId(Long id, Long memberId);
     int countByMemberId(Long memberId);
 
