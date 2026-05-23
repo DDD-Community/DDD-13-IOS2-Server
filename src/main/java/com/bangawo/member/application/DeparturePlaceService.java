@@ -27,7 +27,7 @@ public class DeparturePlaceService {
             throw new BusinessException(ErrorCode.DEPARTURE_PLACE_LIMIT_EXCEEDED);
 
         if (count == 0) isDefault = true;
-        if (isDefault) repository.clearDefaultByMemberId(memberId);
+        if (isDefault && count > 0) repository.clearDefaultByMemberId(memberId);
 
         return repository.save(DeparturePlace.builder()
                 .memberId(memberId).label(label).address(address)
