@@ -31,6 +31,13 @@ public class GroupMemberRepositoryImpl implements GroupMemberRepository {
     }
 
     @Override
+    public List<GroupMember> findByGroupId(Long groupId) {
+        return jpaRepository.findByGroupId(groupId).stream()
+                .map(GroupMemberJpaEntity::toDomain)
+                .toList();
+    }
+
+    @Override
     public List<GroupMember> findByMemberId(Long memberId) {
         return jpaRepository.findByMemberId(memberId).stream()
                 .map(GroupMemberJpaEntity::toDomain)
