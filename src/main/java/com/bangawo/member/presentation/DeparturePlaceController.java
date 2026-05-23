@@ -3,6 +3,7 @@ package com.bangawo.member.presentation;
 import com.bangawo.member.application.DeparturePlaceService;
 import com.bangawo.member.presentation.dto.DeparturePlaceRequest;
 import com.bangawo.member.presentation.dto.DeparturePlaceResponse;
+import com.bangawo.member.presentation.dto.DeparturePlaceUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -41,11 +42,11 @@ public class DeparturePlaceController {
                         request.latitude(), request.longitude(), request.isDefault()));
     }
 
-    @Operation(summary = "출발지 수정", description = "label / address / 좌표 수정 가능. isDefault는 변경 불가")
+    @Operation(summary = "출발지 수정", description = "label / address / 좌표 수정 가능")
     @PutMapping("/{id}")
     public ResponseEntity<DeparturePlaceResponse> update(Authentication auth,
                                                           @PathVariable Long id,
-                                                          @Valid @RequestBody DeparturePlaceRequest request) {
+                                                          @Valid @RequestBody DeparturePlaceUpdateRequest request) {
         Long memberId = (Long) auth.getPrincipal();
         return ResponseEntity.ok(DeparturePlaceResponse.from(
                 service.update(memberId, id, request.label(), request.address(),
