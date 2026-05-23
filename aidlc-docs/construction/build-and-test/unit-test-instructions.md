@@ -1,19 +1,17 @@
-# Unit Test Execution — FC-6 모임 리스트
+# Unit Test Execution
 
 ## 테스트 파일 목록
 
-| 파일 | 테스트 수 | 검증 범위 |
-|---|---|---|
-| `MeetingComputeListStatusTest` | 7 | `Meeting.computeListStatus()` 도메인 로직 |
-| `MeetingListServiceTest` | 4 | `MeetingListService.getMyMeetingList()` 애플리케이션 로직 |
+| 파일 | 테스트 수 | 검증 범위 | FC |
+|---|---|---|---|
+| `GlobalExceptionHandlerTest` | 2 | BusinessException → HTTP 응답 변환 | 공통 |
+| `JwtProviderTest` | 4 | JWT 발급 · 검증 · 만료 | 공통 |
+| `MeetingComputeListStatusTest` | 7 | `Meeting.computeListStatus()` 도메인 로직 | FC-6 |
+| `MeetingListServiceTest` | 4 | `MeetingListService.getMyMeetingList()` 애플리케이션 로직 | FC-6 |
+| `GroupMemberServiceTest` | 2 | 참석여부 수정 · 미구성원 예외 | FC-7-1 |
+| `DeparturePlaceServiceTest` | 5 | 출발지 추가(방어로직) · 수정 · 한도초과 예외 | FC-7-1 |
 
 ## 실행 방법
-
-### FC-6 관련 테스트만 실행
-
-```bash
-./gradlew test --tests "com.bangawo.meeting.*"
-```
 
 ### 전체 유닛 테스트 실행
 
@@ -21,35 +19,31 @@
 ./gradlew test
 ```
 
-### 특정 테스트 클래스 실행
+### FC-7-1 관련 테스트만 실행
 
 ```bash
-./gradlew test --tests "com.bangawo.meeting.domain.MeetingComputeListStatusTest"
-./gradlew test --tests "com.bangawo.meeting.application.MeetingListServiceTest"
+./gradlew test --tests "com.bangawo.group.application.GroupMemberServiceTest"
+./gradlew test --tests "com.bangawo.member.application.DeparturePlaceServiceTest"
 ```
 
 ## 성공 기준
 
-- Total 17개, Failures 0, Errors 0
+- Total 24개, Failures 0, Errors 0
 - 리포트 위치: `build/reports/tests/test/index.html`
 
-## MeetingComputeListStatusTest 커버리지
-
-| 케이스 | 조건 | 기대 결과 |
-|---|---|---|
-| CLOSED | confirmedDate < 오늘 | CLOSED |
-| CLOSED 아님 | confirmedDate = 오늘 | CONFIRMED |
-| CLOSED 아님 | confirmedDate null + 날짜 지남 | IN_PROGRESS |
-| IN_PROGRESS | locationStatus = IN_PROGRESS | IN_PROGRESS |
-| IN_PROGRESS | dateVoteStatus = IN_PROGRESS | IN_PROGRESS |
-| CONFIRMED | 둘 다 COMPLETED | CONFIRMED |
-| IN_PROGRESS | 둘 다 BEFORE (초기) | IN_PROGRESS |
-
-## MeetingListServiceTest 커버리지
+## GroupMemberServiceTest 커버리지
 
 | 케이스 | 기대 결과 |
 |---|---|
-| 소속 그룹 없음 | 빈 리스트 반환 |
-| 3개 그룹 (각기 다른 status) | IN_PROGRESS → CONFIRMED → CLOSED 정렬 |
-| 탈퇴 회원 포함 | nickname/profileImageUrl null |
-| 2명 구성원 (joinedAt 순서 역전) | 선합류자 먼저 정렬 |
+| 정상 요청 | attendanceStatus 변경 후 save 호출 |
+| 미구성원 | `403 GROUP_003` BusinessException |
+
+## DeparturePlaceServiceTest 커버리지
+
+| 케이스 | 기대 결과 |
+|---|---|
+| 첫 등록 (isDefault=false 전달) | isDefault 강제 true로 저장 |
+| 최대 3개 초과 | `400 MEMBER_003` BusinessException |
+| isDefault=true 요청 | clearDefaultByMemberId 호출 |
+| 수정 성공 | label/address/좌표 변경, isDefault 유지 |
+| 타인 소유 수정 시도 | `404 MEMBER_005` BusinessException |

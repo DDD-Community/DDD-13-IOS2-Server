@@ -48,7 +48,10 @@
 - [x] Per-Unit Loop — Unit 3 (FC-6) 완료
   - [x] Functional Design — FC-6 모임 리스트 설계
   - [x] Code Generation — 17 steps, compileJava BUILD SUCCESSFUL
-- [x] Build and Test — 유닛 테스트 17개 ALL PASS
+- [x] Per-Unit Loop — Unit 4 (FC-7-1) 완료
+  - [x] Functional Design — 참석여부 수정 + 출발지 추가/수정 설계
+  - [x] Code Generation — 9 steps, compileJava BUILD SUCCESSFUL
+- [x] Build and Test — 유닛 테스트 24개 ALL PASS (FC-6 11개 + FC-7-1 7개 + 공통 6개)
 
 ### OPERATIONS PHASE
 - [ ] Operations (PLACEHOLDER)

@@ -35,4 +35,8 @@ public class GroupMember {
                 .joinedAt(LocalDateTime.now())
                 .build();
     }
+
+    public void updateAttendance(AttendanceStatus status) {
+        this.attendanceStatus = status;
+    }
 }

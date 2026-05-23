@@ -35,4 +35,15 @@ public class DeparturePlace {
     public void clearDefault() {
         this.isDefault = false;
     }
+
+    public void markAsDefault() {
+        this.isDefault = true;
+    }
+
+    public void update(String label, String address, double latitude, double longitude) {
+        this.label = label;
+        this.address = address;
+        this.coordinate = new Coordinate(latitude, longitude);
+        this.updatedAt = LocalDateTime.now();
+    }
 }

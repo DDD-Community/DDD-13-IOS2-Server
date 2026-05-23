@@ -142,3 +142,4 @@ erDiagram
 | `meeting` | FC-4 | 모임 |
 | `group_member` | FC-4 | 그룹 구성원 |
 | *(FC-6 신규 테이블 없음)* | FC-6 | 기존 테이블 조회 전용 |
+| *(FC-7-1 신규 테이블 없음)* | FC-7-1 | `group_member.attendance_status` UPDATE, `departure_place` INSERT/UPDATE |

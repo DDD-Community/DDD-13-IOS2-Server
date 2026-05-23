@@ -16,17 +16,18 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class DeparturePlaceService {
 
-    private static final int MAX_PLACES = 10;
+    private static final int MAX_PLACES = 3;
     private final DeparturePlaceRepository repository;
 
-    /** 출발지 추가 (최대 10개, 기본 출발지면 기존 기본 해제) */
     @Transactional
     public DeparturePlace create(Long memberId, String label, String address,
                                   double latitude, double longitude, boolean isDefault) {
-        if (repository.countByMemberId(memberId) >= MAX_PLACES)
+        int count = repository.countByMemberId(memberId);
+        if (count >= MAX_PLACES)
             throw new BusinessException(ErrorCode.DEPARTURE_PLACE_LIMIT_EXCEEDED);
 
-        if (isDefault) repository.clearDefaultByMemberId(memberId);
+        if (count == 0) isDefault = true;
+        if (isDefault && count > 0) repository.clearDefaultByMemberId(memberId);
 
         return repository.save(DeparturePlace.builder()
                 .memberId(memberId).label(label).address(address)
@@ -34,6 +35,24 @@ public class DeparturePlaceService {
                 .isDefault(isDefault)
                 .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now())
                 .build());
+    }
+
+    @Transactional
+    public DeparturePlace update(Long memberId, Long placeId, String label, String address,
+                                  double latitude, double longitude) {
+        DeparturePlace place = repository.findByIdAndMemberId(placeId, memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DEPARTURE_PLACE_NOT_FOUND));
+        place.update(label, address, latitude, longitude);
+        return repository.save(place);
+    }
+
+    @Transactional
+    public DeparturePlace setDefault(Long memberId, Long placeId) {
+        DeparturePlace place = repository.findByIdAndMemberId(placeId, memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DEPARTURE_PLACE_NOT_FOUND));
+        repository.clearDefaultByMemberId(memberId);
+        place.markAsDefault();
+        return repository.save(place);
     }
 
     public List<DeparturePlace> getAll(Long memberId) {
