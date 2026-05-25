@@ -1,8 +1,8 @@
 package com.bangawo.meeting.infrastructure.persistence;
 
-import com.bangawo.meeting.domain.DateVoteStatus;
 import com.bangawo.meeting.domain.Meeting;
 import com.bangawo.meeting.domain.MeetingRepository;
+import com.bangawo.meeting.domain.MeetingStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -34,8 +34,13 @@ public class MeetingRepositoryImpl implements MeetingRepository {
     }
 
     @Override
-    public List<Meeting> findExpiredMeetings(LocalDate today) {
-        return jpaRepository.findByConfirmedDateBeforeAndDateVoteStatus(today, DateVoteStatus.COMPLETED)
+    public Optional<Meeting> findLatestByGroupId(Long groupId) {
+        return jpaRepository.findLatestByGroupId(groupId).map(MeetingJpaEntity::toDomain);
+    }
+
+    @Override
+    public List<Meeting> findActiveByConfirmedDateBefore(LocalDate today) {
+        return jpaRepository.findByStatusAndConfirmedDateBefore(MeetingStatus.ACTIVE, today)
                 .stream()
                 .map(MeetingJpaEntity::toDomain)
                 .toList();
