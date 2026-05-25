@@ -98,7 +98,7 @@ public class MeetingListService {
                             group.getName(),
                             group.getThemeTagCode(),
                             themeTag != null ? themeTag.getDisplayName() : group.getThemeTagCode(),
-                            meeting.computeListStatus(today),
+                            meeting.computeListStatus(),
                             meeting.getLocationStatus(),
                             meeting.getDateVoteStatus(),
                             null,

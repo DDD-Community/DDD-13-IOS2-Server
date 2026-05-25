@@ -3,6 +3,7 @@ package com.bangawo.meeting.infrastructure.persistence;
 import com.bangawo.meeting.domain.DateVoteStatus;
 import com.bangawo.meeting.domain.LocationStatus;
 import com.bangawo.meeting.domain.Meeting;
+import com.bangawo.meeting.domain.MeetingStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -31,6 +32,10 @@ public class MeetingJpaEntity {
     private String themeTagCode;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private MeetingStatus status;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "location_status", nullable = false, length = 15)
     private LocationStatus locationStatus;
 
@@ -53,6 +58,7 @@ public class MeetingJpaEntity {
         entity.groupId = meeting.getGroupId();
         entity.name = meeting.getName();
         entity.themeTagCode = meeting.getThemeTagCode();
+        entity.status = meeting.getStatus();
         entity.locationStatus = meeting.getLocationStatus();
         entity.dateVoteStatus = meeting.getDateVoteStatus();
         entity.confirmedDate = meeting.getConfirmedDate();
@@ -67,6 +73,7 @@ public class MeetingJpaEntity {
                 .groupId(groupId)
                 .name(name)
                 .themeTagCode(themeTagCode)
+                .status(status)
                 .locationStatus(locationStatus)
                 .dateVoteStatus(dateVoteStatus)
                 .confirmedDate(confirmedDate)
