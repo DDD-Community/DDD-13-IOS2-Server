@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.http.ResponseEntity;
+
 @Tag(name = "그룹", description = "그룹 생성 · 초대 코드 발급 · 구성원 관리")
 @RestController
 @RequestMapping("/api/v1/groups")
@@ -31,6 +33,14 @@ public class GroupController {
                                            @Valid @RequestBody CreateGroupRequest request) {
         Long memberId = (Long) auth.getPrincipal();
         return groupService.createGroupWithMeeting(memberId, request.getName(), request.getThemeTagCode());
+    }
+
+    @Operation(summary = "그룹 종료 — 호스트가 그룹을 수동으로 종료 (호스트 전용)")
+    @PatchMapping("/{groupId}/close")
+    public ResponseEntity<Void> closeGroup(@PathVariable Long groupId, Authentication auth) {
+        Long memberId = (Long) auth.getPrincipal();
+        groupService.closeGroup(groupId, memberId);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "새 모임 생성 — 현재 모임이 종료된 그룹에서 다음 모임 생성 (호스트 전용)")

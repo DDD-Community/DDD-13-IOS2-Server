@@ -33,6 +33,7 @@ public enum ErrorCode {
     GROUP_NOT_FOUND(HttpStatus.NOT_FOUND, "GROUP_002", "그룹을 찾을 수 없습니다"),
     NOT_GROUP_MEMBER(HttpStatus.FORBIDDEN, "GROUP_003", "해당 그룹의 구성원이 아닙니다"),
     NOT_GROUP_HOST(HttpStatus.FORBIDDEN, "GROUP_004", "호스트만 수행할 수 있습니다"),
+    GROUP_ALREADY_CLOSED(HttpStatus.BAD_REQUEST, "GROUP_005", "이미 종료된 그룹입니다"),
 
     // Meeting
     MEETING_NOT_FOUND(HttpStatus.NOT_FOUND, "MEETING_001", "모임을 찾을 수 없습니다"),

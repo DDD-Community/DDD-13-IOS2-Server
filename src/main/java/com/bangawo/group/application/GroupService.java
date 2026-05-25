@@ -52,6 +52,19 @@ public class GroupService {
         return newMeeting.getId();
     }
 
+    public void closeGroup(Long groupId, Long memberId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.GROUP_NOT_FOUND));
+        groupMemberRepository.findByGroupIdAndMemberId(groupId, memberId)
+                .filter(gm -> gm.getRole() == GroupMemberRole.HOST)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_GROUP_HOST));
+        if (!group.isActive()) {
+            throw new BusinessException(ErrorCode.GROUP_ALREADY_CLOSED);
+        }
+        group.close();
+        groupRepository.save(group);
+    }
+
     @Transactional(readOnly = true)
     public List<ThemeTagResponse> getActiveThemeTags() {
         return themeTagRepository.findAllActive().stream()

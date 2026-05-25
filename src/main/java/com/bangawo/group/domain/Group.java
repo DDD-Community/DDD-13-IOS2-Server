@@ -28,6 +28,15 @@ public class Group {
         this.updatedAt = updatedAt;
     }
 
+    public void close() {
+        this.status = GroupStatus.CLOSED;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public boolean isActive() {
+        return this.status == GroupStatus.ACTIVE;
+    }
+
     public static Group create(String name, String themeTagCode) {
         if (name == null || name.isBlank() || name.length() > 30) {
             throw new BusinessException(ErrorCode.GROUP_NAME_TOO_LONG);
