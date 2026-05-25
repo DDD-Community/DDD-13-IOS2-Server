@@ -67,6 +67,7 @@ erDiagram
         BIGINT group_id FK "소속 그룹 ID"
         VARCHAR(30) name "모임명"
         VARCHAR(30) theme_tag_code "테마 태그 코드"
+        VARCHAR(10) status "모임 진행 상태 (ACTIVE: 진행 중 / CLOSED: 종료됨)"
         VARCHAR(15) location_status "장소 선정 상태 (BEFORE/IN_PROGRESS/COMPLETED)"
         VARCHAR(15) date_vote_status "날짜 투표 상태 (BEFORE: 시작 전 / IN_PROGRESS: 투표 중 / COMPLETED: 날짜 확정)"
         DATE confirmed_date "확정된 모임 날짜 (미확정 시 null)"

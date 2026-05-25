@@ -98,6 +98,7 @@ erDiagram
         BIGINT group_id FK "소속 그룹 ID"
         VARCHAR(30) name "모임명 (그룹명과 동일한 값으로 생성)"
         VARCHAR(30) theme_tag_code "테마 태그 코드 (theme_tag.code 참조)"
+        VARCHAR(10) status "모임 진행 상태 (ACTIVE: 진행 중 / CLOSED: 종료됨)"
         VARCHAR(15) location_status "장소 선정 상태 (BEFORE/IN_PROGRESS/COMPLETED)"
         VARCHAR(15) date_vote_status "날짜 투표 상태 (BEFORE/IN_PROGRESS/COMPLETED)"
         DATE confirmed_date "확정된 모임 날짜 (미확정 시 null)"
@@ -177,3 +178,4 @@ erDiagram
 | `date_vote_session` | FC-7 | 날짜 투표 세션 (방식 A/B, 마감일) |
 | `date_vote_option` | FC-7 | 투표 후보 날짜 (세션당 최대 3개) |
 | `date_vote_record` | FC-7 | 구성원 투표 기록 |
+| `meeting.status` 컬럼 추가 | FC-7 (V9) | 모임 진행 상태 (ACTIVE/CLOSED) — 자동 종료 스케줄러 및 새 모임 생성 조건 체크 용도 |

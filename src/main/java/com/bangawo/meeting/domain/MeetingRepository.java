@@ -8,5 +8,6 @@ public interface MeetingRepository {
     Meeting save(Meeting meeting);
     Optional<Meeting> findById(Long id);
     List<Meeting> findLatestByGroupIdIn(List<Long> groupIds);
-    List<Meeting> findExpiredMeetings(LocalDate today);
+    Optional<Meeting> findLatestByGroupId(Long groupId);
+    List<Meeting> findActiveByConfirmedDateBefore(LocalDate today);
 }

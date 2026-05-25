@@ -182,9 +182,20 @@ Step 2  각 세션별 처리 (VoteSchedulerService.processExpiredSession)
           // 다음 세션으로 계속 진행
         }
 
-        ※ 모임 종료(CLOSED) 처리는 별도 배치 불필요.
-           meeting.computeListStatus()가 confirmedDate < today 이면 CLOSED를 동적으로 반환하므로
-           스케줄러에서 별도 처리하지 않는다.
+Step 3  모임 자동 종료 대상 조회
+        SELECT * FROM meeting
+        WHERE status = 'ACTIVE'
+          AND confirmed_date < 오늘 날짜
+        결과: List<Meeting>
+
+Step 4  각 모임별 처리 (MeetingSchedulerService.closeMeeting)
+        try {
+          meeting.status = CLOSED
+          meeting 저장
+        } catch (Exception e) {
+          log.error("모임 자동 종료 실패 meetingId={}", meeting.getId(), e)
+          // 다음 모임으로 계속 진행
+        }
 ```
 
 ### 미래 알림 추가 포인트 (FCM 유닛 완료 후)
@@ -199,7 +210,34 @@ Step 2  각 세션별 처리 (VoteSchedulerService.processExpiredSession)
 
 ---
 
+## 8. 새 모임 생성
+
+```
+POST /api/v1/groups/{groupId}/meetings
+body: { "name": "2차 회식", "themeTagCode": "DINING" }
+
+[Controller] → [GroupService.createNextMeeting]
+  1. JWT에서 memberId 추출
+  2. groupMember 조회 → HOST 확인 (아니면 403)
+  3. 해당 그룹의 최신 meeting 조회
+  4. meeting.status == CLOSED 확인 (아니면 400 — 현재 모임 진행 중)
+  5. 새 meeting 생성 (status=ACTIVE, dateVoteStatus=BEFORE, locationStatus=BEFORE)
+  6. meetingId 반환
+```
+
+---
+
 ## 상태 전이 요약
+
+```
+MeetingStatus:
+
+ACTIVE : 모임 생성 시 기본값. 진행 중인 모임.
+CLOSED : 자정 스케줄러가 confirmedDate < 오늘 이면 자동으로 CLOSED 처리.
+         CLOSED여야 같은 그룹에서 새 모임 생성 가능.
+
+ACTIVE ──[스케줄러: confirmedDate 지남]──────────→ CLOSED
+```
 
 ```
 DateVoteStatus:
