@@ -8,6 +8,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 public record StartVoteRequest(
-        @NotEmpty @Size(min = 1, max = 3) List<@NotNull LocalDate> candidateDates,
+        @NotEmpty @Size(min = 1, max = 10) List<@NotNull LocalDate> candidateDates,
         @NotNull Integer durationDays
 ) {}
