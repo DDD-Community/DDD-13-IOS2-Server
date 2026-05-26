@@ -42,7 +42,7 @@ public enum ErrorCode {
     VOTE_CLOSED(HttpStatus.BAD_REQUEST, "MEETING_004", "투표 마감일이 지났습니다"),
     VOTE_OPTION_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING_005", "유효하지 않은 투표 옵션입니다"),
     INVALID_CANDIDATE_DATE(HttpStatus.BAD_REQUEST, "MEETING_006", "후보 날짜는 오늘 이후여야 합니다"),
-    INVALID_CANDIDATE_COUNT(HttpStatus.BAD_REQUEST, "MEETING_007", "후보 날짜는 1~3개여야 합니다"),
+    INVALID_CANDIDATE_COUNT(HttpStatus.BAD_REQUEST, "MEETING_007", "후보 날짜는 1~10개여야 합니다"),
     INVALID_DURATION_DAYS(HttpStatus.BAD_REQUEST, "MEETING_008", "투표 기간은 1, 3, 7일 중 하나여야 합니다"),
     MEETING_NOT_CLOSED(HttpStatus.BAD_REQUEST, "MEETING_009", "현재 모임이 종료되지 않아 새 모임을 생성할 수 없습니다"),
     ;
