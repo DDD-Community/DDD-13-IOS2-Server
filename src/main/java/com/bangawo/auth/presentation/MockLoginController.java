@@ -4,14 +4,12 @@ import com.bangawo.global.security.JwtProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "[LOCAL] Mock 인증", description = "로컬 개발 전용 — 소셜 로그인 없이 JWT 발급")
-@Profile("local")
+@Tag(name = "Mock 인증", description = "소셜 로그인 없이 JWT 발급")
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
