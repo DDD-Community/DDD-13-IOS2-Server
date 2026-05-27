@@ -56,7 +56,7 @@ public class DateVoteService {
         requireHost(meeting.getGroupId(), memberId);
 
         List<LocalDate> candidateDates = request.candidateDates();
-        if (candidateDates == null || candidateDates.isEmpty() || candidateDates.size() > 3) {
+        if (candidateDates == null || candidateDates.isEmpty() || candidateDates.size() > 10) {
             throw new BusinessException(ErrorCode.INVALID_CANDIDATE_COUNT);
         }
 

@@ -49,7 +49,7 @@ body: { "candidateDates": ["2026-06-10", "2026-06-14", "2026-06-17"], "durationD
   2. meeting 조회
   3. groupMember 조회 → HOST 확인 (아니면 403)
   4. meeting.dateVoteStatus == BEFORE 확인 (아니면 400)
-  5. candidateDates 검증 (1~3개, 오늘 이후, 중복 없음)
+  5. candidateDates 검증 (1~10개, 오늘 이후, 중복 없음)
   6. durationDays 검증 (1/3/7 중 하나)
   7. date_vote_session 생성
        method=VOTE, deadline=오늘+durationDays, status=ACTIVE

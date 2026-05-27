@@ -101,7 +101,7 @@ POST /api/v1/meetings/{meetingId}/date-vote
 | 그룹 구성원 아님 | GROUP_003 | 403 |
 | 호스트 아님 | GROUP_004 | 403 |
 | 이미 투표 시작됨 | MEETING_002 | 400 |
-| 후보 날짜 개수 오류 (1~3개 아님) | MEETING_007 | 400 |
+| 후보 날짜 개수 오류 (1~10개 아님) | MEETING_007 | 400 |
 | 후보 날짜가 오늘 이전이거나 중복 | MEETING_006 | 400 |
 | durationDays가 1/3/7 아님 | MEETING_008 | 400 |
 
