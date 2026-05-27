@@ -23,6 +23,13 @@ public class RegisterRequest {
     @NotBlank(message = "출발지 주소는 필수입니다")
     private String departureAddress;
 
+    @NotBlank(message = "출발지 도로명 주소는 필수입니다")
+    private String departureRoadAddress;
+
+    private String departurePlaceName;
+
+    private Boolean departureIsDefault;
+
     @NotNull(message = "위도는 필수입니다")
     private Double latitude;
 

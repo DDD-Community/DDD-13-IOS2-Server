@@ -39,10 +39,11 @@ public class DeparturePlaceController {
         Long memberId = (Long) auth.getPrincipal();
         return DeparturePlaceResponse.from(
                 service.create(memberId, request.label(), request.address(),
+                        request.roadAddress(), request.placeName(),
                         request.latitude(), request.longitude(), request.isDefault()));
     }
 
-    @Operation(summary = "출발지 수정", description = "label / address / 좌표 수정 가능")
+    @Operation(summary = "출발지 수정", description = "label / address / roadAddress / placeName / 좌표 수정 가능. isDefault는 수정 불가")
     @PutMapping("/{id}")
     public ResponseEntity<DeparturePlaceResponse> update(Authentication auth,
                                                           @PathVariable Long id,
@@ -50,6 +51,7 @@ public class DeparturePlaceController {
         Long memberId = (Long) auth.getPrincipal();
         return ResponseEntity.ok(DeparturePlaceResponse.from(
                 service.update(memberId, id, request.label(), request.address(),
+                        request.roadAddress(), request.placeName(),
                         request.latitude(), request.longitude())));
     }
 
