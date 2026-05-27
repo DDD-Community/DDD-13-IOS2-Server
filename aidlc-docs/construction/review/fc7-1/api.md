@@ -46,7 +46,9 @@
 ```json
 {
   "label": "집",
-  "address": "서울시 강남구 테헤란로 1길",
+  "address": "서울 강남구 삼성동 159",
+  "roadAddress": "서울 강남구 영동대로 513",
+  "placeName": "카카오프렌즈 코엑스점",
   "latitude": 37.5665,
   "longitude": 126.9780,
   "isDefault": true
@@ -56,10 +58,12 @@
 | 필드 | 타입 | 필수 | 제약 | 설명 |
 |---|---|---|---|---|
 | label | String | Y | 최대 10자 | 출발지 별칭 |
-| address | String | Y | - | 주소 |
-| latitude | Double | Y | -90~90 | 위도 |
-| longitude | Double | Y | -180~180 | 경도 |
-| isDefault | Boolean | Y | - | 기본 출발지 여부 (첫 등록 시 서버가 강제 true) |
+| address | String | Y | - | 지번 주소 (카카오 `address_name`) |
+| roadAddress | String | Y | - | 도로명 주소 (카카오 `road_address_name`) |
+| placeName | String | N | - | 장소명 (카카오 `place_name`, nullable) |
+| latitude | Double | Y | -90~90 | 위도 (카카오 `y`) |
+| longitude | Double | Y | -180~180 | 경도 (카카오 `x`) |
+| isDefault | Boolean | N | - | 기본 출발지 여부 (첫 등록 시 서버가 강제 true) |
 
 **Response** `201 Created`
 
@@ -67,7 +71,9 @@
 {
   "id": 1,
   "label": "집",
-  "address": "서울시 강남구 테헤란로 1길",
+  "address": "서울 강남구 삼성동 159",
+  "roadAddress": "서울 강남구 영동대로 513",
+  "placeName": "카카오프렌즈 코엑스점",
   "latitude": 37.5665,
   "longitude": 126.9780,
   "isDefault": true
@@ -105,14 +111,24 @@
 ```json
 {
   "label": "회사",
-  "address": "서울시 중구 세종대로 99",
+  "address": "서울 중구 태평로1가 31",
+  "roadAddress": "서울 중구 세종대로 110",
+  "placeName": null,
   "latitude": 37.5640,
-  "longitude": 126.9750,
-  "isDefault": false
+  "longitude": 126.9750
 }
 ```
 
-> isDefault 필드는 요청에 포함되어도 수정에 반영되지 않습니다.
+| 필드 | 타입 | 필수 | 제약 | 설명 |
+|---|---|---|---|---|
+| label | String | Y | 최대 10자 | 출발지 별칭 |
+| address | String | Y | - | 지번 주소 (카카오 `address_name`) |
+| roadAddress | String | Y | - | 도로명 주소 (카카오 `road_address_name`) |
+| placeName | String | N | - | 장소명 (카카오 `place_name`, nullable) |
+| latitude | Double | Y | -90~90 | 위도 |
+| longitude | Double | Y | -180~180 | 경도 |
+
+> isDefault는 수정 불가 (장소 정보만 변경)
 
 **Response** `200 OK`
 
@@ -120,7 +136,9 @@
 {
   "id": 1,
   "label": "회사",
-  "address": "서울시 중구 세종대로 99",
+  "address": "서울 중구 태평로1가 31",
+  "roadAddress": "서울 중구 세종대로 110",
+  "placeName": null,
   "latitude": 37.5640,
   "longitude": 126.9750,
   "isDefault": true
