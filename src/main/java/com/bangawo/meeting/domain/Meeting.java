@@ -79,8 +79,11 @@ public class Meeting {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public MeetingListStatus computeListStatus() {
+    public MeetingListStatus computeListStatus(java.time.LocalDate today) {
         if (this.status == MeetingStatus.CLOSED) {
+            return MeetingListStatus.CLOSED;
+        }
+        if (confirmedDate != null && confirmedDate.isBefore(today)) {
             return MeetingListStatus.CLOSED;
         }
         if (locationStatus == LocationStatus.COMPLETED && dateVoteStatus == DateVoteStatus.COMPLETED) {

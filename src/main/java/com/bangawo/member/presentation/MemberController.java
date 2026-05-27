@@ -34,7 +34,9 @@ public class MemberController {
         Long memberId = (Long) auth.getPrincipal();
         Member member = memberService.register(memberId, req.getNickname(),
                 req.getAgreedTermsIds(), req.getDepartureLabel(), req.getDepartureAddress(),
-                req.getLatitude(), req.getLongitude());
+                req.getDepartureRoadAddress(), req.getDeparturePlaceName(),
+                req.getLatitude(), req.getLongitude(),
+                Boolean.TRUE.equals(req.getDepartureIsDefault()));
         return ResponseEntity.ok(MemberResponse.from(member));
     }
 

@@ -35,7 +35,9 @@ GET /api/v1/meetings/{meetingId}
         {
           "id": 1,
           "label": "집",
-          "address": "서울시 강남구 ...",
+          "address": "서울 강남구 삼성동 159",
+          "roadAddress": "서울 강남구 영동대로 513",
+          "placeName": "카카오프렌즈 코엑스점",
           "latitude": 37.123,
           "longitude": 127.456,
           "isDefault": true

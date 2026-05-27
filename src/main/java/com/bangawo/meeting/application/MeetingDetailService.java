@@ -73,6 +73,8 @@ public class MeetingDetailService {
                                     p.getId(),
                                     p.getLabel(),
                                     p.getAddress(),
+                                    p.getRoadAddress(),
+                                    p.getPlaceName(),
                                     p.getCoordinate().getLatitude(),
                                     p.getCoordinate().getLongitude(),
                                     p.isDefault()

@@ -11,8 +11,10 @@ public class DeparturePlace {
 
     private Long id;
     private Long memberId;
-    private String label;        // "집", "회사" 등
-    private String address;
+    private String label;
+    private String address;       // 지번 주소
+    private String roadAddress;   // 도로명 주소
+    private String placeName;     // 카카오 장소명 (nullable)
     private Coordinate coordinate;
     private boolean isDefault;
     private LocalDateTime createdAt;
@@ -20,12 +22,15 @@ public class DeparturePlace {
 
     @Builder
     public DeparturePlace(Long id, Long memberId, String label, String address,
+                          String roadAddress, String placeName,
                           Coordinate coordinate, boolean isDefault,
                           LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.memberId = memberId;
         this.label = label;
         this.address = address;
+        this.roadAddress = roadAddress;
+        this.placeName = placeName;
         this.coordinate = coordinate;
         this.isDefault = isDefault;
         this.createdAt = createdAt;
@@ -40,9 +45,12 @@ public class DeparturePlace {
         this.isDefault = true;
     }
 
-    public void update(String label, String address, double latitude, double longitude) {
+    public void update(String label, String address, String roadAddress, String placeName,
+                       double latitude, double longitude) {
         this.label = label;
         this.address = address;
+        this.roadAddress = roadAddress;
+        this.placeName = placeName;
         this.coordinate = new Coordinate(latitude, longitude);
         this.updatedAt = LocalDateTime.now();
     }

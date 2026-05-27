@@ -34,7 +34,9 @@ erDiagram
         BIGINT id PK "출발지 고유 ID"
         BIGINT member_id FK "소유 회원 ID"
         VARCHAR(10) label "출발지 별칭 (예: 집, 회사)"
-        VARCHAR(255) address "주소"
+        VARCHAR(255) address "지번 주소 (카카오 address_name)"
+        VARCHAR(255) road_address "도로명 주소 (카카오 road_address_name)"
+        VARCHAR(100) place_name "장소명 (카카오 place_name, nullable)"
         DOUBLE latitude "위도"
         DOUBLE longitude "경도"
         BOOLEAN is_default "기본 출발지 여부"
@@ -179,3 +181,4 @@ erDiagram
 | `date_vote_option` | FC-7 | 투표 후보 날짜 (세션당 최대 3개) |
 | `date_vote_record` | FC-7 | 구성원 투표 기록 |
 | `meeting.status` 컬럼 추가 | FC-7 (V9) | 모임 진행 상태 (ACTIVE/CLOSED) — 자동 종료 스케줄러 및 새 모임 생성 조건 체크 용도 |
+| `departure_place.road_address`, `place_name` 컬럼 추가 | FC-7-1 수정 (V10) | 카카오 API 도로명 주소 및 장소명 저장 |

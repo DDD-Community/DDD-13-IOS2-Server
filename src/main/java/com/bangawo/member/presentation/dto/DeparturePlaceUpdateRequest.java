@@ -7,6 +7,8 @@ import jakarta.validation.constraints.Size;
 public record DeparturePlaceUpdateRequest(
         @NotBlank @Size(max = 10) String label,
         @NotBlank String address,
+        @NotBlank String roadAddress,
+        String placeName,
         @NotNull Double latitude,
         @NotNull Double longitude
 ) {}
