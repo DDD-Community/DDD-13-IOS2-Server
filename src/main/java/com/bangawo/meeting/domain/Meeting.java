@@ -79,6 +79,14 @@ public class Meeting {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public void startLocationPhase() {
+        if (this.locationStatus != LocationStatus.BEFORE) {
+            throw new BusinessException(ErrorCode.LOCATION_PHASE_ALREADY_STARTED);
+        }
+        this.locationStatus = LocationStatus.IN_PROGRESS;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public MeetingListStatus computeListStatus(java.time.LocalDate today) {
         if (this.status == MeetingStatus.CLOSED) {
             return MeetingListStatus.CLOSED;

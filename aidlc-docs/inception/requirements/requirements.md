@@ -1,117 +1,108 @@
-# Requirements — Bangawo MVP1
+# Requirements — 중간지점 역 후보 추출 (MVP2 첫 번째 기능)
 
 ## Intent Analysis
-- **User Request**: docs/prd/mvp1.md 기반 MVP1 백엔드 구현 (Inception ~ Units Generation)
-- **Request Type**: New Feature (기존 auth/member 위에 group/meeting 컨텍스트 추가)
-- **Scope**: Multiple Components (group, meeting 두 개 신규 바운디드 컨텍스트)
-- **Complexity**: Complex (날짜 투표 SSE, 생명주기 스케줄러, 초대 링크, 푸시 알림 포함)
+- **User Request**: 모임 참여자들의 출발지 기반으로 기하학적 중심을 계산하고, 2km 이내 지하철역 중 거리순 상위 3개를 후보로 저장 및 조회
+- **Request Type**: New Feature (새로운 도메인 도입 — subway 컨텍스트)
+- **Scope Estimate**: Multiple Components (meeting, subway, member 컨텍스트 연동)
+- **Complexity Estimate**: Complex (PostGIS 쿼리, 새 테이블 3개, 상태 전이 트리거)
+
+---
+
+## 결정 사항 요약
+
+| 항목 | 결정 |
+|---|---|
+| 출발지 소스 | `meeting_participant` 신규 테이블 (모임별 출발지 스냅샷) |
+| 출발지 없는 멤버 | 에러 반환 (회원가입 시 기본 출발지 필수이므로 정상 플로우에서 발생 안 함) |
+| 역 정렬 기준 | 중심 거리순 (dist_m ASC) |
+| 역 점수 컬럼 | 없음 — 추후 ALTER TABLE로 추가 |
+| subway_station 데이터 | DDL만 생성, 데이터는 직접 import |
+| 역 후보 저장 | location 단계 시작 시 1회 계산 + DB 저장 |
+| 역 후보 조회 API | 있음 (GET /meetings/{meetingId}/midpoint-stations) |
+| 역 후보 개수 | 서비스 상수 3개 |
 
 ---
 
 ## Functional Requirements
 
-### FR-1: 그룹 & 첫 모임 생성 (FC-4)
-- 호스트가 모임 이름(최대 30자)과 테마 태그를 입력하면 **그룹과 첫 번째 모임이 동시에 생성**된다
-- 그룹명 = 모임명 (동일한 이름으로 각각 저장)
-- 테마 태그: 비즈니스 / 친목 / 가족모임 / 회식 / 간단한 식사 / 스터디 / 생일파티 / 청첩장 모임
-- 생성자가 자동으로 호스트(Membership에 HOST 역할)
-- 최대 구성원: 20명
+### FR-1: meeting_participant 테이블 도입
+- meeting_participant (id, meeting_id, member_id, location_point GEOGRAPHY(Point,4326), attendance_status)
+- 모임 생성 시 group_member의 모든 멤버를 자동 복사
+  - location_point: 해당 멤버의 departure_place(is_default=true) 좌표를 PostGIS 포인트로 변환
+  - attendance_status: group_member.attendance_status 그대로 복사
+- 제약: UNIQUE(meeting_id, member_id)
 
-### FR-2: 구성원 초대 및 합류 (FC-5)
-- 서버는 그룹 ID 기반으로 **초대 코드(단순 토큰)**를 생성·반환한다
-- iOS가 초대 코드를 딥링크에 포함해 카카오톡으로 공유 (링크 조합은 iOS 담당)
-- 피초대자가 앱에서 초대 코드를 서버로 전달하면 서버는 그룹 정보를 반환하고 멤버십에 등록한다
-- 초대 코드 유효기간: 발급 후 최대 2일 AND 모임 종료일 이전
+### FR-2: subway_station 테이블 DDL
+- 컬럼: station_id (PK), station_name VARCHAR, line_name VARCHAR, location_point GEOGRAPHY(Point,4326), latitude DOUBLE, longitude DOUBLE
+- 점수 컬럼 없음 (추후 ALTER TABLE)
+- Flyway V11 마이그레이션으로 테이블만 생성 (데이터 INSERT 없음)
+- GIST 인덱스: location_point
 
-### FR-3: 모임 리스트 (FC-6)
-- 본인이 속한 그룹(모임)만 조회된다
-- 정렬 기준:
-  1. 상태 순: 진행 중 → 확정 → 종료
-  2. 같은 상태 내 모임 생성 최신순
-- 상태 정의:
-  - **진행 중**: 장소·투표 중 하나라도 "선정 중"
-  - **확정**: 장소·투표 모두 "선정 완료"
-  - **종료**: 모임 날짜가 지남
+### FR-3: midpoint_station_candidate 테이블
+- 컬럼: id, meeting_id (FK → meeting), rank (1/2/3), station_name, lines (복수 노선 ", " 연결), distance_km NUMERIC(6,3)
+- 제약: UNIQUE(meeting_id, rank)
+- Flyway V12 마이그레이션
 
-### FR-4: 모임 상세 (FC-7)
-- 모임명, 테마 태그, 장소 선정 상태 제공
-- 참여인원 목록: 프로필 이미지, 이름, 출발지, 참석여부(참여/늦참/불참)
-- 참석여부 초기값: 참여
+### FR-4: location 단계 시작 API
+- POST /meetings/{meetingId}/location/start (호스트 전용)
+- meeting.locationStatus BEFORE → IN_PROGRESS 전이
+- 전이 시 중간지점 역 계산 + midpoint_station_candidate 저장 트리거
+- 계산 로직:
+  1. meeting_participant WHERE meeting_id = X AND attendance_status != 'ABSENT' 에서 location_point 수집
+  2. ST_Centroid(ST_Collect(location_point)) 로 기하학적 중심 계산
+  3. subway_station에서 중심 2km 이내 역, 역명 기준 그룹화(중복 노선 통합)
+  4. dist_m ASC 정렬, 상위 3개 저장
+- 오류: location_point 가 null인 참여자 존재 시 BusinessException(PARTICIPANT_DEPARTURE_NOT_SET)
 
-### FR-5: 날짜 투표 (FC-7)
-**방식 A — 호스트 단독 선택**
-- 호스트가 달력에서 날짜 1개 선택 → 즉시 확정, 별도 알림 없음
-
-**방식 B — 투표**
-- 호스트가 날짜 후보 최대 3개 선택 + 투표 기간(1일/3일/7일) 설정
-- 저장 즉시 투표 시작, 구성원 전체에 푸시 알림 발송
-- 구성원은 가능한 날짜 복수 선택 가능 (마감일까지)
-- 투표 현황 조회: GET API로 현재 투표 상태(날짜별 투표자 수, 프로필, 득표 순 정렬) 확인 (SSE 미사용)
-- 마감일 도래 시 투표 자동 종료, 호스트에게 확정 요청 알림
-- 확정: 호스트가 직접 확정하거나 마감일에 1위 날짜 자동 확정 → 전체 알림
-- 투표자 없이 마감 시: "투표자 없음" 알림 발송, 호스트가 직접 날짜 선택
-
-### FR-6: 내 정보 수정 (FC-7-1)
-- 참석여부 변경 (참여/늦참/불참)
-  - **참석여부 잠금**: `location_status = COMPLETED` 이후 변경 불가 (MVP2 장소 확정 시 잠금 — MVP1에서는 잠금 없음)
-- 출발지 수정/추가 (최대 3개)
-- **출발지 수정 잠금 시점**: `date_vote_status = COMPLETED` (날짜 투표 종료) 이후 변경 불가
-- 본인 정보만 수정 가능
-
-### FR-7: 그룹 생명주기 관리 (FC-8)
-- **모임 자동 종료**: `@Scheduled` 매일 자정 배치 — 날짜가 지난 모임을 CLOSED 상태로 업데이트
-- **그룹 종료**: 호스트만 가능, 종료 후 "종료됨" 상태
-- **새 모임 시작**: 호스트가 기존 그룹에서 새 모임 생성, 멤버십(구성원 목록) 그대로 유지
-- **호스트 탈퇴**:
-  - 직접 위임 후 나가기 → 지정 구성원이 호스트 승계
-  - 위임 없이 나가기 → 시스템이 남은 구성원 중 랜덤 배정
-
-### FR-8: 푸시 알림
-- 대상 이벤트: 투표 시작, 투표 마감, 날짜 확정, 그룹 초대
-- **MVP1 제외** — FCM 구현은 추후 별도 유닛으로 진행
-- FC-7 코드에서 FCM 호출부는 주석 또는 no-op으로 처리
+### FR-5: 중간지점 역 후보 조회 API
+- GET /meetings/{meetingId}/midpoint-stations
+- midpoint_station_candidate 조회 → rank 순 반환
+- Response: { candidates: [{ rank, stationName, lines, distanceKm }] }
+- 미계산 상태(locationStatus = BEFORE)이면 빈 배열 반환
 
 ---
 
 ## Non-Functional Requirements
 
-### NFR-1: 투표 현황 조회
-- 날짜 투표 현황은 **GET API 폴링** 방식으로 구현 (SSE 미사용 — 클라이언트가 필요 시 요청)
-- 엔드포인트: GET /api/v1/meetings/{meetingId}/date-vote
+### NFR-1: 성능
+- PostGIS 쿼리는 Cloud SQL에서 실행 (PostGIS 이미 활성화)
+- subway_station.location_point에 GIST 인덱스 필수
+- meeting_participant.location_point에도 GIST 인덱스
 
-### NFR-2: 보안 (Security Baseline 활성화)
-- 모든 group/meeting API에서 **인가(Authorization) 검증** 필수:
-  - 호스트 전용 API: 호스트 여부 검증
-  - 구성원 전용 API: 해당 그룹 멤버십 보유 여부 검증
-  - 본인 정보 수정: 본인 여부 검증
-- 미인가 접근 시 403 반환
+### NFR-2: 보안
+- POST /meetings/{meetingId}/location/start — 호스트(HOST 역할)만 호출 가능
+- GET /meetings/{meetingId}/midpoint-stations — 그룹 멤버만 조회 가능
 
-### NFR-3: 데이터 제약
-- 그룹명/모임명: 최대 30자
-- 구성원: 최대 20명
-- 출발지: 구성원당 최대 3개
-- 날짜 투표 후보: 최대 3개
-- 투표 기간: 1일/3일/7일 중 선택
+### NFR-3: 데이터 일관성
+- 역 후보는 location 단계 시작 시 1회 스냅샷 → 이후 출발지 변경 영향 없음
+- midpoint_station_candidate는 INSERT-only (location 단계 재시작 불가 가정)
 
 ---
 
-## Extension Configuration
-| Extension | Enabled | 근거 |
-|---|---|---|
-| Security Baseline | Yes | 호스트/구성원 인가 규칙이 핵심 비즈니스 로직 |
-| TDD Code Generation | No | 표준 구현 + 주요 기능 선택적 테스트 |
-| Property-Based Testing | No | MVP 스킵 |
+## Out of Scope (이번 기능에서 제외)
+- MeetingDetailService 리팩토링 (meeting_participant 기반으로 변경) — 별도 태스크
+- 출석 변경 API의 meeting_participant 연동 — 별도 태스크
+- 모임별 출발지 변경 API (PUT /meetings/{meetingId}/participants/my-departure) — 별도 태스크
+- subway_station 데이터 import — 사용자 직접 처리
 
 ---
 
-## MVP2 제외 범위
-- 장소 선정 플로우 (FC-7의 "장소 정하기" 이후 단계)
-- 모임 이력 조회
-- 리마인더 탭
+## 신규 DB 스키마 (3개 테이블)
 
----
+```
+meeting_participant
+  id, meeting_id (FK), member_id (FK), location_point (GEOGRAPHY), attendance_status
 
-## 별도 태스크 (MVP1 코드와 독립)
-| 태스크 | 내용 |
-|---|---|
-| Firebase 설정 | 프로젝트 생성, 서비스 계정 키 발급, iOS 팀과 APNs 인증서 등록 |
+subway_station
+  station_id, station_name, line_name, location_point (GEOGRAPHY), latitude, longitude
+
+midpoint_station_candidate
+  id, meeting_id (FK), rank, station_name, lines, distance_km
+```
+
+## 신규 API (2개)
+
+```
+POST /meetings/{meetingId}/location/start     — 호스트, location 단계 시작 + 역 계산
+GET  /meetings/{meetingId}/midpoint-stations  — 그룹 멤버, 역 후보 조회
+```

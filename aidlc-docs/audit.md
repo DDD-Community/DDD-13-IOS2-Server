@@ -248,3 +248,52 @@
 **API**: GET 모임상세, POST host-pick, POST 투표시작, POST 투표참여, GET 현황조회, PATCH 수동확정
 
 **승인 대기 중**
+
+---
+
+## MVP2 Session Start — 2026-05-28T00:00:00+09:00
+
+### User Request (원문)
+```
+지금 MVP1은 완료했어 
+/ai-dlc 모임초대 -> 날짜후보 등록 -> 날짜투표 -> 날짜 확정 까지 한거야
+MVP2 들어가기전에 중간장소 후보에대한 로직을 개발해야하는데 
+(참여자들의 출발지로 계산해서 중간지역인 역을 3개 후보 뽑기) -> 이 지역 근처 Nkm 장소들을 테마와 필터등 옵션 점수(이거는 나중에말해줌)대로 15개 뽑아 N일간(기본3일) 참여자들이 후보등록 -> 후보등록이 완료되면 이후 N일간 투표 -> 투표완료 후 장소선정 완료(프로세스끝) 이렇게 가는데 
+지금 맨앞에 중간 지역인 역을 뽑을꺼야
+```
+
+### 추가 컨텍스트
+```
+새로 시작할라고 clear 했는데 너가 이전 내용이 필요하다면 이어서해 근데 없을거같은데
+아 맞다 근데 사용자 출발지는 역 데이터로 하지 않아서 이것도 같이 고민이 필요해 그냥 사용자랑 가장 가까운 역으로 해야하나
+```
+
+### Workspace Detection
+- 기존 RE 아티팩트 stale (61→139 Java files, 6→10 migrations)
+- RE 재실행 결정
+- departure_place: latitude/longitude 더블 컬럼 (PostGIS geometry 아님)
+- subway_station 테이블 미존재
+- meeting_participant 테이블 미존재 (group_member + departure_place 으로 대체 필요)
+
+### Requirements Clarification Answers (2026-05-28)
+
+Q1 원문: "B로 하는게 깔끔할것 같은데 이렇게 하면 모임별 참가자들 데이터가 너무 많이 쌓일까봐 걱정이긴해 로직도 많은부분 변경이 있어야하고 이부분은 상의해줄꺼지?"
+Q2 원문: "D 회원가입할때 기본 출발지는 필수 입력이라 없지는 않을텐데 없다고하면 에러로 하자"
+Q3 원문: "D 사실 역마다 스코어를 넣으려고했는데 지금은 일단 거리순으로 해야할것 같아"
+Q4 원문: "C 우선 거리기반으로만 하자"
+Q5 원문: "C 내가 일단 준 헤더와 데이터가 있으니 너가 테이블 만들어주면 내가 따로 넣을께"
+Q6 원문: "C 내가 생각한건 우선 장소후보 추려주기전 필요한 중요 데이터라 메모리나 DB에 따로 저장하고 API는 필요없다 생각했는데 간단하게 B처럼 해놔야하나"
+Q7 원문: "A API로 가져올 데이터가 아니긴해서 일단은 서비스에 고정으로 3개 해놔야할것 같아"
+
+Clarification 1 원문: "B로 가야겠다 A안으로가면 무조건 기본 출발지로만 해야하는거자나 이건 아니지"
+Clarification 2 원문: "A가 가장 괜찮아보이네 역 후보도 보여줘야할 수 있으니"
+
+### Workflow Planning Approval — 2026-05-28
+**User Response**: "알아서 잘 해줬겠지 진행시켜"
+**Status**: Approved
+**Context**: 3유닛 플랜, User Stories SKIP, Application Design + Units Generation EXECUTE
+
+### Application Design + Units Generation Approval — 2026-05-28
+**User Response**: "알아서 잘 해줬겠지 진행시켜"
+**Status**: Approved (implicit — user approved at Workflow Planning)
+**Context**: Application Design (subway 신규 컨텍스트 + meeting 확장) + Units Generation (3유닛) 완료

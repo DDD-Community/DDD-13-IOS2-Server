@@ -94,7 +94,47 @@
 
 ---
 
-## 3. 출발지 수정
+## 3. 모임별 출발지 변경
+
+### `PATCH /api/v1/meetings/{meetingId}/participants/me/departure`
+
+**인증**: JWT 필수
+
+**Path Parameters**
+
+| 파라미터 | 타입 | 설명 |
+|---|---|---|
+| meetingId | Long | 모임 ID |
+
+**Request Body**
+
+```json
+{
+  "departurePlaceId": 2
+}
+```
+
+| 필드 | 타입 | 필수 | 설명 |
+|---|---|---|---|
+| departurePlaceId | Long | Y | 적용할 departure_place ID (본인 소유여야 함) |
+
+**Response**
+
+| 상태코드 | 설명 |
+|---|---|
+| 200 OK | 변경 성공 (body 없음) |
+| 401 AUTH_001 | JWT 없음 |
+| 404 MEETING_001 | 모임 없음 |
+| 404 MEMBER_005 | 출발지 없음 또는 타인 소유 |
+| 404 MEETING_013 | meeting_participant 레코드 없음 (합류 안 된 상태) |
+
+**비즈니스 규칙**
+- `departure_place`가 아닌 `meeting_participant.latitude/longitude`를 업데이트
+- location/start 전에만 변경하는 것이 의도이나 API 자체는 상태 제한 없음
+
+---
+
+## 4. 출발지 수정
 
 ### `PUT /api/v1/departure-places/{id}`
 
