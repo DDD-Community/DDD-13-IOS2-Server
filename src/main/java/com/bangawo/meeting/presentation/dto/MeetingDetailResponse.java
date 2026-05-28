@@ -29,6 +29,8 @@ public record MeetingDetailResponse(
             Long id,
             String label,
             String address,
+            String roadAddress,
+            String placeName,
             double latitude,
             double longitude,
             boolean isDefault

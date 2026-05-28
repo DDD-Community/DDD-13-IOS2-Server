@@ -49,4 +49,10 @@ public class DeparturePlaceRepositoryImpl implements DeparturePlaceRepository {
     public void clearDefaultByMemberId(Long memberId) {
         jpaRepository.clearDefaultByMemberId(memberId);
     }
+
+    @Override
+    public Optional<DeparturePlace> findDefaultByMemberId(Long memberId) {
+        return jpaRepository.findByMemberIdAndIsDefaultTrue(memberId)
+                .map(DeparturePlaceJpaEntity::toDomain);
+    }
 }

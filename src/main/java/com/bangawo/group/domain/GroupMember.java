@@ -28,9 +28,17 @@ public class GroupMember {
 
     public static GroupMember createHost(Long groupId, Long memberId) {
         return GroupMember.builder()
-                .groupId(groupId)
-                .memberId(memberId)
+                .groupId(groupId).memberId(memberId)
                 .role(GroupMemberRole.HOST)
+                .attendanceStatus(AttendanceStatus.JOIN)
+                .joinedAt(LocalDateTime.now())
+                .build();
+    }
+
+    public static GroupMember createMember(Long groupId, Long memberId) {
+        return GroupMember.builder()
+                .groupId(groupId).memberId(memberId)
+                .role(GroupMemberRole.MEMBER)
                 .attendanceStatus(AttendanceStatus.JOIN)
                 .joinedAt(LocalDateTime.now())
                 .build();

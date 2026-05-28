@@ -34,6 +34,9 @@ public enum ErrorCode {
     NOT_GROUP_MEMBER(HttpStatus.FORBIDDEN, "GROUP_003", "해당 그룹의 구성원이 아닙니다"),
     NOT_GROUP_HOST(HttpStatus.FORBIDDEN, "GROUP_004", "호스트만 수행할 수 있습니다"),
     GROUP_ALREADY_CLOSED(HttpStatus.BAD_REQUEST, "GROUP_005", "이미 종료된 그룹입니다"),
+    INVITE_CODE_NOT_FOUND(HttpStatus.NOT_FOUND, "GROUP_006", "유효하지 않은 초대 코드입니다"),
+    INVITE_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "GROUP_007", "만료된 초대 코드입니다"),
+    ALREADY_GROUP_MEMBER(HttpStatus.BAD_REQUEST, "GROUP_008", "이미 이 그룹의 구성원입니다"),
 
     // Meeting
     MEETING_NOT_FOUND(HttpStatus.NOT_FOUND, "MEETING_001", "모임을 찾을 수 없습니다"),
@@ -45,6 +48,10 @@ public enum ErrorCode {
     INVALID_CANDIDATE_COUNT(HttpStatus.BAD_REQUEST, "MEETING_007", "후보 날짜는 1~10개여야 합니다"),
     INVALID_DURATION_DAYS(HttpStatus.BAD_REQUEST, "MEETING_008", "투표 기간은 1, 3, 7일 중 하나여야 합니다"),
     MEETING_NOT_CLOSED(HttpStatus.BAD_REQUEST, "MEETING_009", "현재 모임이 종료되지 않아 새 모임을 생성할 수 없습니다"),
+    LOCATION_PHASE_ALREADY_STARTED(HttpStatus.BAD_REQUEST, "MEETING_010", "장소 선정이 이미 시작되었습니다"),
+    PARTICIPANT_DEPARTURE_NOT_SET(HttpStatus.BAD_REQUEST, "MEETING_011", "출발지를 등록하지 않은 참여자가 있습니다"),
+    MIDPOINT_STATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING_012", "중간지점 근처에 지하철역을 찾을 수 없습니다"),
+    MEETING_PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND, "MEETING_013", "모임 참여자를 찾을 수 없습니다"),
     ;
 
     private final HttpStatus status;

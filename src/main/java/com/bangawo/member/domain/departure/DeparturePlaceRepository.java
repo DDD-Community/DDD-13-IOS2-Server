@@ -12,4 +12,5 @@ public interface DeparturePlaceRepository {
     void deleteById(Long id);
     /** 해당 회원의 기본 출발지 해제 */
     void clearDefaultByMemberId(Long memberId);
+    java.util.Optional<DeparturePlace> findDefaultByMemberId(Long memberId);
 }

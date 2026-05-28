@@ -20,8 +20,9 @@ public class DeparturePlaceService {
     private final DeparturePlaceRepository repository;
 
     @Transactional
-    public DeparturePlace create(Long memberId, String label, String address,
-                                  double latitude, double longitude, boolean isDefault) {
+    public DeparturePlace create(Long memberId, String label, String address, String roadAddress,
+                                  String placeName, double latitude, double longitude,
+                                  boolean isDefault) {
         int count = repository.countByMemberId(memberId);
         if (count >= MAX_PLACES)
             throw new BusinessException(ErrorCode.DEPARTURE_PLACE_LIMIT_EXCEEDED);
@@ -31,6 +32,7 @@ public class DeparturePlaceService {
 
         return repository.save(DeparturePlace.builder()
                 .memberId(memberId).label(label).address(address)
+                .roadAddress(roadAddress).placeName(placeName)
                 .coordinate(new Coordinate(latitude, longitude))
                 .isDefault(isDefault)
                 .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now())
@@ -39,10 +41,11 @@ public class DeparturePlaceService {
 
     @Transactional
     public DeparturePlace update(Long memberId, Long placeId, String label, String address,
+                                  String roadAddress, String placeName,
                                   double latitude, double longitude) {
         DeparturePlace place = repository.findByIdAndMemberId(placeId, memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEPARTURE_PLACE_NOT_FOUND));
-        place.update(label, address, latitude, longitude);
+        place.update(label, address, roadAddress, placeName, latitude, longitude);
         return repository.save(place);
     }
 

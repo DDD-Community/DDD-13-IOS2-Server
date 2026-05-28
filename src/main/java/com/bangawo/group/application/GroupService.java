@@ -11,7 +11,9 @@ import com.bangawo.group.domain.ThemeTagRepository;
 import com.bangawo.group.presentation.dto.CreateGroupResponse;
 import com.bangawo.group.presentation.dto.ThemeTagResponse;
 import com.bangawo.meeting.domain.Meeting;
+import com.bangawo.meeting.domain.MeetingParticipant;
 import com.bangawo.meeting.domain.MeetingRepository;
+import com.bangawo.member.domain.departure.DeparturePlaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,11 +29,22 @@ public class GroupService {
     private final GroupMemberRepository groupMemberRepository;
     private final MeetingRepository meetingRepository;
     private final ThemeTagRepository themeTagRepository;
+    private final com.bangawo.meeting.domain.MeetingParticipantRepository meetingParticipantRepository;
+    private final DeparturePlaceRepository departurePlaceRepository;
 
     public CreateGroupResponse createGroupWithMeeting(Long memberId, String name, String themeTagCode) {
         Group group = groupRepository.save(Group.create(name, themeTagCode));
         Meeting meeting = meetingRepository.save(Meeting.create(group.getId(), name, themeTagCode));
         groupMemberRepository.save(GroupMember.createHost(group.getId(), memberId));
+
+        var departure = departurePlaceRepository.findDefaultByMemberId(memberId);
+        Double lat = departure.map(d -> d.getCoordinate().getLatitude()).orElse(null);
+        Double lng = departure.map(d -> d.getCoordinate().getLongitude()).orElse(null);
+        meetingParticipantRepository.save(
+                MeetingParticipant.create(meeting.getId(), memberId, lat, lng,
+                        com.bangawo.group.domain.AttendanceStatus.JOIN.name())
+        );
+
         return new CreateGroupResponse(group.getId(), meeting.getId(), group.getName(), group.getThemeTagCode());
     }
 

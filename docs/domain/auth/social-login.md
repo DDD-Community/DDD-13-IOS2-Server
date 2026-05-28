@@ -211,20 +211,31 @@ Content-Type: application/json
     "nickname": "홍길동",
     "agreedTermsIds": [1, 2, 3],
     "departureLabel": "집",
-    "departureAddress": "서울시 강남구 테헤란로 123",
+    "departureAddress": "서울 강남구 삼성동 159",
+    "departureRoadAddress": "서울 강남구 영동대로 513",
+    "departurePlaceName": "카카오프렌즈 코엑스점",
+    "departureIsDefault": true,
     "latitude": 37.4979,
     "longitude": 127.0276
 }
 ```
 
+> `departureAddress`: 카카오 API `address_name` (지번 주소)
+> `departureRoadAddress`: 카카오 API `road_address_name` (도로명 주소)
+> `departurePlaceName`: 카카오 API `place_name` (장소명, 없으면 null)
+> `departureIsDefault`: 첫 등록은 항상 서버가 강제 true로 설정
+
 | 필드 | 필수 | 설명 |
 |---|---|---|
 | `nickname` | ✅ | 2~20자, 금칙어 불가, 중복 허용 |
 | `agreedTermsIds` | ✅ | 동의한 약관 ID 목록 (필수 약관 미포함 시 거부) |
-| `departureLabel` | ✅ | 출발지 라벨 ("집", "회사" 등) |
-| `departureAddress` | ✅ | 주소 원문 |
-| `latitude` | ✅ | 위도 |
-| `longitude` | ✅ | 경도 |
+| `departureLabel` | ✅ | 출발지 라벨 ("집", "회사" 등, 최대 10자) |
+| `departureAddress` | ✅ | 지번 주소 (카카오 `address_name`) |
+| `departureRoadAddress` | ✅ | 도로명 주소 (카카오 `road_address_name`) |
+| `departurePlaceName` | ❌ | 장소명 (카카오 `place_name`, nullable) |
+| `departureIsDefault` | ❌ | 기본 출발지 여부 (첫 등록 시 서버가 항상 true 강제) |
+| `latitude` | ✅ | 위도 (카카오 `y`) |
+| `longitude` | ✅ | 경도 (카카오 `x`) |
 
 **성공 응답 (200)**
 ```json

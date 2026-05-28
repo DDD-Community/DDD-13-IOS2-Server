@@ -1,54 +1,42 @@
-# System Architecture
+# System Architecture (MVP2 기준 갱신 — 2026-05-28)
 
 ## System Overview
-
-Spring Boot 3.4.4 / Java 17 기반 DDD 모놀리스. iOS 클라이언트에 REST API를 제공.
-JWT 기반 인증, PostgreSQL + PostGIS 데이터 저장, Flyway 마이그레이션.
-
-## Architecture: Layered DDD (Bounded Context 단위)
-
-```
-Presentation  →  Application  →  Domain  ←  Infrastructure
-(Controller)     (Service)      (Model,       (JpaEntity,
-(DTO)            (UseCase)       Repository    JpaRepository,
-                  Txn 경계)       Interface)    RepositoryImpl,
-                                               External Client)
-```
+Spring Boot 3.4.4 / Java 17, DDD 레이어 아키텍처. PostgreSQL 15 + PostGIS + JPA + Flyway.
+모임 조율 서비스 (Bangawo): 그룹 생성 → 모임 생성 → 날짜 투표 → 장소 선정 → 모임 확정.
 
 ## Bounded Contexts
 
+| Context | 역할 |
+|---|---|
+| auth | 소셜 로그인 (Kakao/Naver/Apple), JWT 발급 |
+| member | 회원 정보, 출발지(departure_place) 관리, 약관 동의 |
+| group | 그룹/그룹멤버 관리, 테마태그 |
+| meeting | 모임 CRUD, 날짜투표, 스케줄러 |
+| subway (신규 MVP2) | 지하철역 데이터, 중간지점 역 후보 계산 |
+| global | 공통 설정, 보안, 예외 처리 |
+
+## Layer Dependency
 ```
-com.bangawo
-├── global/         공통 설정·보안·예외처리
-├── auth/           소셜 로그인·JWT 인증
-├── member/         회원 프로필·출발지·약관
-├── group/          [MVP1 신규] 그룹 생성·초대·멤버십
-└── meeting/        [MVP1 신규] 모임·날짜투표·생명주기
+presentation → application → domain ← infrastructure
 ```
 
-## Data Flow (소셜 로그인 예시)
+## Data Flow: 중간지점 역 후보 계산 (신규)
+```
+Client → GET /meetings/{id}/midpoint-stations
+  → MeetingController (또는 SubwayController)
+  → SubwayService
+    → group_member JOIN departure_place (default) → centroid 계산 (PostGIS)
+    → subway_station → 2km 이내 역 후보 → 상위 3개
+  → StationCandidateResponse
+```
 
-```
-iOS App
-  → POST /api/v1/auth/login (providerToken)
-  → JwtAuthenticationFilter (공개 엔드포인트 통과)
-  → AuthController
-  → AuthService.socialLogin()
-      → KakaoAuthClient.getUserInfo(token)     [외부 소셜 API]
-      → MemberRepository.findBy...()            [domain interface]
-          → MemberRepositoryImpl                [infra 구현체]
-              → MemberJpaRepository             [Spring Data JPA]
-                  → PostgreSQL
-      → JwtProvider.generateAccessToken()
-  → LoginResponse (accessToken, refreshToken)
-```
+## Key Infrastructure
+- **PostGIS**: V1__init_postgis.sql 로 활성화 완료
+- **departure_place**: latitude/longitude (DOUBLE 컬럼, PostGIS geometry 아님)
+- **subway_station**: 미존재 → 신규 테이블 생성 필요 (PostGIS geometry 포함)
+- **meeting_participant**: 미존재 → group_member + departure_place 활용
 
 ## Integration Points
-
-| 종류 | 대상 | 목적 |
-|---|---|---|
-| 외부 API | 카카오 OAuth | 소셜 로그인 토큰 검증 |
-| 외부 API | 네이버 OAuth | 소셜 로그인 토큰 검증 |
-| 외부 API | 애플 Sign In | 소셜 로그인 토큰 검증 |
-| DB | PostgreSQL + PostGIS | 데이터 저장, 좌표 타입 |
-| 마이그레이션 | Flyway | 스키마 버전 관리 |
+- **External APIs**: Kakao/Naver/Apple OAuth
+- **Database**: PostgreSQL 15 + PostGIS (Cloud SQL)
+- **Subway Data**: 공공데이터 (역사_ID, 역사명, 호선, 위도, 경도) → Flyway로 import

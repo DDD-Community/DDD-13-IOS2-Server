@@ -15,4 +15,6 @@ public interface DeparturePlaceJpaRepository extends JpaRepository<DeparturePlac
     @Modifying
     @Query("UPDATE DeparturePlaceJpaEntity d SET d.isDefault = false WHERE d.memberId = :memberId AND d.isDefault = true")
     void clearDefaultByMemberId(Long memberId);
+
+    Optional<DeparturePlaceJpaEntity> findByMemberIdAndIsDefaultTrue(Long memberId);
 }
