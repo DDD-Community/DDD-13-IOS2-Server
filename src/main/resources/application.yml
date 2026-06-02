@@ -26,5 +26,8 @@ jwt:
 # 카카오/네이버: iOS가 SDK로 로그인 → Access Token을 서버에 전달 → 서버가 공급자 API 호출
 # 애플: iOS가 SDK로 로그인 → ID Token을 서버에 전달 → 서버가 토큰 디코딩
 
+gcs:
+  bucket-name: bangawo-storage
+
 server:
   port: 8080

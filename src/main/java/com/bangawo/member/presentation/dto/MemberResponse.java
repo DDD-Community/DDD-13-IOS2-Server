@@ -19,4 +19,14 @@ public record MemberResponse(
                 member.isRegistered()
         );
     }
+
+    public static MemberResponse from(Member member, String resolvedImageUrl) {
+        return new MemberResponse(
+                member.getId(),
+                member.getNickname(),
+                resolvedImageUrl,
+                member.getSocialProvider().name(),
+                member.isRegistered()
+        );
+    }
 }

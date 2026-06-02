@@ -54,6 +54,11 @@ public class Member {
                 .build();
     }
 
+    public void updateProfileImageUrl(String objectKey) {
+        this.profileImageUrl = objectKey;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public void updateProfile(String nickname, String profileImageUrl) {
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;

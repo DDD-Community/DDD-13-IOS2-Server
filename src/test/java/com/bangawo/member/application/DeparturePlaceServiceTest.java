@@ -36,7 +36,7 @@ class DeparturePlaceServiceTest {
         ArgumentCaptor<DeparturePlace> captor = ArgumentCaptor.forClass(DeparturePlace.class);
         verify(repository).save(captor.capture());
         assertThat(captor.getValue().isDefault()).isTrue();
-        verify(repository).clearDefaultByMemberId(1L);
+        verify(repository, never()).clearDefaultByMemberId(1L);
     }
 
     @Test

@@ -36,6 +36,10 @@ dependencies {
     // .env 파일 로드
     implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 
+    // GCS
+    implementation platform('com.google.cloud:libraries-bom:26.52.0')
+    implementation 'com.google.cloud:google-cloud-storage'
+
     // DB
     runtimeOnly 'org.postgresql:postgresql'
     implementation 'org.flywaydb:flyway-core'

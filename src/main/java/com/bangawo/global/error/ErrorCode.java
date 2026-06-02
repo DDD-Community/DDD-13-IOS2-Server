@@ -33,6 +33,11 @@ public enum ErrorCode {
     GROUP_NOT_FOUND(HttpStatus.NOT_FOUND, "GROUP_002", "그룹을 찾을 수 없습니다"),
     NOT_GROUP_MEMBER(HttpStatus.FORBIDDEN, "GROUP_003", "해당 그룹의 구성원이 아닙니다"),
     NOT_GROUP_HOST(HttpStatus.FORBIDDEN, "GROUP_004", "호스트만 수행할 수 있습니다"),
+
+    // Storage
+    STORAGE_INVALID_TYPE(HttpStatus.BAD_REQUEST, "STORAGE_001", "지원하지 않는 이미지 형식입니다"),
+    STORAGE_SIGNED_URL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STORAGE_002", "이미지 업로드 URL 생성에 실패했습니다"),
+    STORAGE_INVALID_PATH(HttpStatus.BAD_REQUEST, "STORAGE_003", "올바르지 않은 이미지 경로입니다"),
     ;
 
     private final HttpStatus status;

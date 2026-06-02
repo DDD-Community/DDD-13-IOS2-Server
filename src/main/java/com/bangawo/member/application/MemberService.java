@@ -65,6 +65,17 @@ public class MemberService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
+    /** 프로필 이미지 변경 */
+    public Member updateProfileImage(Long memberId, String objectKey) {
+        if (!objectKey.startsWith("profiles/") && !objectKey.startsWith("groups/")) {
+            throw new BusinessException(ErrorCode.STORAGE_INVALID_PATH);
+        }
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        member.updateProfileImageUrl(objectKey);
+        return memberRepository.save(member);
+    }
+
     /** 닉네임 변경 */
     public void updateNickname(Long memberId, String nickname) {
         nicknameValidator.validate(nickname);

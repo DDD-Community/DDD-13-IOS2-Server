@@ -4,6 +4,8 @@ import com.bangawo.auth.domain.Member;
 import com.bangawo.member.application.MemberService;
 import com.bangawo.member.presentation.dto.MemberResponse;
 import com.bangawo.member.presentation.dto.RegisterRequest;
+import com.bangawo.member.presentation.dto.UpdateProfileImageRequest;
+import com.bangawo.storage.application.StorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
 
     private final MemberService memberService;
+    private final StorageService storageService;
 
     @Operation(summary = "닉네임 금칙어 검증", description = "닉네임 입력 화면에서 사용. 통과 시 200, 금칙어 시 400")
     @PostMapping("/nickname/validate")
@@ -35,14 +38,27 @@ public class MemberController {
         Member member = memberService.register(memberId, req.getNickname(),
                 req.getAgreedTermsIds(), req.getDepartureLabel(), req.getDepartureAddress(),
                 req.getLatitude(), req.getLongitude());
-        return ResponseEntity.ok(MemberResponse.from(member));
+        String resolvedUrl = storageService.generateSignedReadUrl(member.getProfileImageUrl());
+        return ResponseEntity.ok(MemberResponse.from(member, resolvedUrl));
     }
 
     @Operation(summary = "프로필 조회")
     @GetMapping("/me")
     public ResponseEntity<MemberResponse> getProfile(Authentication auth) {
         Long memberId = (Long) auth.getPrincipal();
-        return ResponseEntity.ok(MemberResponse.from(memberService.getProfile(memberId)));
+        Member member = memberService.getProfile(memberId);
+        String resolvedUrl = storageService.generateSignedReadUrl(member.getProfileImageUrl());
+        return ResponseEntity.ok(MemberResponse.from(member, resolvedUrl));
+    }
+
+    @Operation(summary = "프로필 이미지 변경")
+    @PatchMapping("/me/profile-image")
+    public ResponseEntity<MemberResponse> updateProfileImage(Authentication auth,
+                                                              @Valid @RequestBody UpdateProfileImageRequest req) {
+        Long memberId = (Long) auth.getPrincipal();
+        Member member = memberService.updateProfileImage(memberId, req.objectKey());
+        String resolvedUrl = storageService.generateSignedReadUrl(member.getProfileImageUrl());
+        return ResponseEntity.ok(MemberResponse.from(member, resolvedUrl));
     }
 
     @Operation(summary = "닉네임 변경")
