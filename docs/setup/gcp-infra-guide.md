@@ -45,7 +45,23 @@ Docker 이미지를 실행하는 서버입니다.
 
 ---
 
-### 4. Secret Manager — 시크릿(비밀값) 관리
+### 4. Cloud Storage — 이미지 파일 저장소
+
+사용자 프로필 이미지 등 파일을 저장하는 오브젝트 스토리지입니다.
+서버가 직접 파일을 중계하지 않고 **Signed URL** 방식으로 클라이언트가 GCS에 직접 업로드/다운로드합니다.
+
+- 🪣 버킷명: `bangawo-storage`
+- 🌏 리전: `asia-northeast3` (서울)
+- 🔒 공개 액세스: 비활성화 (Signed URL로만 접근)
+- 💰 비용: 저장 용량 + 요청 수 기준 (초기엔 사실상 무료)
+
+**서비스 계정 필요 권한** (`bangawo-github-actions@...`):
+- `roles/storage.objectAdmin` — 객체 업로드/삭제
+- `roles/iam.serviceAccountTokenCreator` — Signed URL 서명
+
+---
+
+### 5. Secret Manager — 시크릿(비밀값) 관리
 
 JWT 키, DB 패스워드, 카카오 API 키 같은 민감한 정보를 안전하게 보관하는 금고입니다.
 코드나 환경변수에 직접 넣지 않고, Cloud Run이 실행될 때 여기서 꺼내 씁니다.
@@ -64,7 +80,8 @@ JWT 키, DB 패스워드, 카카오 API 키 같은 민감한 정보를 안전하
 | Cloud SQL (db-f1-micro) | ~$7-9 |
 | Cloud Run | ~$1-3 |
 | Secret Manager | ~$0.06 |
-| **합계** | **~$10-12/월** |
+| Cloud Storage | ~$0.1 |
+| **합계** | **~$10-13/월** |
 
 > $300 크레딧 기준 약 **25개월** 사용 가능
 
