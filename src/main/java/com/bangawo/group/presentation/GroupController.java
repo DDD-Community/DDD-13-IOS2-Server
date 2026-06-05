@@ -3,6 +3,8 @@ package com.bangawo.group.presentation;
 import com.bangawo.group.application.GroupService;
 import com.bangawo.group.presentation.dto.CreateGroupRequest;
 import com.bangawo.group.presentation.dto.CreateGroupResponse;
+import com.bangawo.meeting.presentation.dto.CreateMeetingRequest;
+import com.bangawo.meeting.presentation.dto.CreateMeetingResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -10,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import org.springframework.http.ResponseEntity;
 
 @Tag(name = "그룹", description = "그룹 생성 · 초대 코드 발급 · 구성원 관리")
 @RestController
@@ -29,5 +33,24 @@ public class GroupController {
                                            @Valid @RequestBody CreateGroupRequest request) {
         Long memberId = (Long) auth.getPrincipal();
         return groupService.createGroupWithMeeting(memberId, request.getName(), request.getThemeTagCode());
+    }
+
+    @Operation(summary = "그룹 종료 — 호스트가 그룹을 수동으로 종료 (호스트 전용)")
+    @PatchMapping("/{groupId}/close")
+    public ResponseEntity<Void> closeGroup(@PathVariable Long groupId, Authentication auth) {
+        Long memberId = (Long) auth.getPrincipal();
+        groupService.closeGroup(groupId, memberId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "새 모임 생성 — 현재 모임이 종료된 그룹에서 다음 모임 생성 (호스트 전용)")
+    @PostMapping("/{groupId}/meetings")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CreateMeetingResponse createNextMeeting(@PathVariable Long groupId,
+                                                   @Valid @RequestBody CreateMeetingRequest request,
+                                                   Authentication auth) {
+        Long memberId = (Long) auth.getPrincipal();
+        Long meetingId = groupService.createNextMeeting(groupId, memberId, request.name(), request.themeTagCode());
+        return new CreateMeetingResponse(meetingId);
     }
 }

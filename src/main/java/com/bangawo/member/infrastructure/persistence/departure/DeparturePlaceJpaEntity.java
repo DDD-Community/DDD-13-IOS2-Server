@@ -27,6 +27,12 @@ public class DeparturePlaceJpaEntity {
     @Column(nullable = false)
     private String address;
 
+    @Column(name = "road_address", nullable = false)
+    private String roadAddress;
+
+    @Column(name = "place_name")
+    private String placeName;
+
     @Column(nullable = false)
     private double latitude;
 
@@ -48,6 +54,8 @@ public class DeparturePlaceJpaEntity {
         e.memberId = domain.getMemberId();
         e.label = domain.getLabel();
         e.address = domain.getAddress();
+        e.roadAddress = domain.getRoadAddress();
+        e.placeName = domain.getPlaceName();
         e.latitude = domain.getCoordinate().getLatitude();
         e.longitude = domain.getCoordinate().getLongitude();
         e.isDefault = domain.isDefault();
@@ -62,6 +70,8 @@ public class DeparturePlaceJpaEntity {
                 .memberId(memberId)
                 .label(label)
                 .address(address)
+                .roadAddress(roadAddress)
+                .placeName(placeName)
                 .coordinate(new Coordinate(latitude, longitude))
                 .isDefault(isDefault)
                 .createdAt(createdAt)

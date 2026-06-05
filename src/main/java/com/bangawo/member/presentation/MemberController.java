@@ -33,11 +33,17 @@ public class MemberController {
     @Operation(summary = "회원가입", description = "닉네임 + 약관 동의 + 기본 출발지 등록")
     @PostMapping("/register")
     public ResponseEntity<MemberResponse> register(Authentication auth,
-                                                    @Valid @RequestBody RegisterRequest req) {
+                                                   @Valid @RequestBody RegisterRequest req) {
         Long memberId = (Long) auth.getPrincipal();
+        
+        // dev 브랜치의 세부 주소 필드들을 모두 반영하여 memberService를 호출합니다.
         Member member = memberService.register(memberId, req.getNickname(),
                 req.getAgreedTermsIds(), req.getDepartureLabel(), req.getDepartureAddress(),
-                req.getLatitude(), req.getLongitude());
+                req.getDepartureRoadAddress(), req.getDeparturePlaceName(),
+                req.getLatitude(), req.getLongitude(),
+                Boolean.TRUE.equals(req.getDepartureIsDefault()));
+        
+        // feature/image-upload 브랜치의 프로필 이미지 URL 처리 로직을 반영합니다.
         String resolvedUrl = storageService.generateSignedReadUrl(member.getProfileImageUrl());
         return ResponseEntity.ok(MemberResponse.from(member, resolvedUrl));
     }

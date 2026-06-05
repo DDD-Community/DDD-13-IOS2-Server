@@ -29,12 +29,14 @@ erDiagram
         TIMESTAMPTZ created_at "토큰 발급 시각"
     }
 
-    %% [기존] departure_place — 출발지
+    %% [기존 + V10 확장] departure_place — 출발지
     departure_place {
         BIGINT id PK "출발지 고유 ID"
         BIGINT member_id FK "소유 회원 ID"
         VARCHAR(10) label "출발지 별칭 (예: 집, 회사)"
-        VARCHAR(255) address "주소"
+        VARCHAR(255) address "지번 주소 (카카오 address_name)"
+        VARCHAR(255) road_address "도로명 주소 (카카오 road_address_name, V10 추가)"
+        VARCHAR(100) place_name "장소명 (카카오 place_name, V10 추가, nullable)"
         DOUBLE latitude "위도"
         DOUBLE longitude "경도"
         BOOLEAN is_default "기본 출발지 여부"
@@ -92,12 +94,13 @@ erDiagram
         TIMESTAMPTZ updated_at "수정 시각"
     }
 
-    %% [FC-4] meeting — 모임
+    %% [FC-4 + V9 확장] meeting — 모임
     meeting {
         BIGINT id PK "모임 고유 ID"
         BIGINT group_id FK "소속 그룹 ID"
-        VARCHAR(30) name "모임명 (그룹명과 동일한 값으로 생성)"
-        VARCHAR(30) theme_tag_code "테마 태그 코드 (theme_tag.code 참조)"
+        VARCHAR(30) name "모임명"
+        VARCHAR(30) theme_tag_code "테마 태그 코드"
+        VARCHAR(10) status "모임 진행 상태 (ACTIVE/CLOSED)"
         VARCHAR(15) location_status "장소 선정 상태 (BEFORE/IN_PROGRESS/COMPLETED)"
         VARCHAR(15) date_vote_status "날짜 투표 상태 (BEFORE/IN_PROGRESS/COMPLETED)"
         DATE confirmed_date "확정된 모임 날짜 (미확정 시 null)"
@@ -107,39 +110,118 @@ erDiagram
 
     %% [FC-4] group_member — 그룹 구성원
     group_member {
-        BIGINT id PK "구성원 고유 ID (surrogate key)"
+        BIGINT id PK "구성원 고유 ID"
         BIGINT group_id FK "소속 그룹 ID"
         BIGINT member_id FK "구성원 회원 ID"
         VARCHAR(10) role "역할 (HOST/MEMBER)"
-        VARCHAR(10) attendance_status "참석여부 (JOIN/LATE/ABSENT), 기본값 JOIN"
+        VARCHAR(10) attendance_status "참석여부 (JOIN/LATE/ABSENT)"
         TIMESTAMPTZ joined_at "그룹 합류 시각"
+    }
+
+    %% [FC-7] date_vote_session — 투표 세션
+    date_vote_session {
+        BIGINT id PK "투표 세션 고유 ID"
+        BIGINT meeting_id FK "소속 모임 ID (UNIQUE)"
+        VARCHAR(10) method "투표 방식 (HOST_PICK/VOTE)"
+        DATE deadline "투표 마감일 (VOTE 방식만, nullable)"
+        INT duration_days "투표 기간 일수 (1/3/7)"
+        VARCHAR(10) status "세션 상태 (ACTIVE/EXPIRED/CONFIRMED)"
+        TIMESTAMPTZ created_at "세션 생성 시각"
+    }
+
+    %% [FC-7] date_vote_option — 투표 후보 날짜
+    date_vote_option {
+        BIGINT id PK "후보 날짜 고유 ID"
+        BIGINT session_id FK "소속 투표 세션 ID"
+        DATE candidate_date "후보 날짜"
+        INT sort_order "정렬 순서 (0부터)"
+    }
+
+    %% [FC-7] date_vote_record — 투표 기록
+    date_vote_record {
+        BIGINT id PK "투표 기록 고유 ID"
+        BIGINT option_id FK "투표한 후보 날짜 ID"
+        BIGINT member_id FK "투표한 회원 ID"
+        TIMESTAMPTZ voted_at "투표 시각"
+    }
+
+    %% [FC-5] group_invite — 그룹 초대 코드
+    group_invite {
+        BIGINT id PK "고유 ID"
+        BIGINT group_id FK "대상 그룹 ID"
+        VARCHAR(36) code "UUID 초대 코드 (UNIQUE)"
+        TIMESTAMPTZ expires_at "만료 시각 (발급 후 48시간)"
+        TIMESTAMPTZ created_at "발급 시각"
+    }
+
+    %% [MVP2] meeting_participant — 모임별 참여자 출발지
+    meeting_participant {
+        BIGINT id PK "고유 ID"
+        BIGINT meeting_id FK "소속 모임 ID"
+        BIGINT member_id FK "참여자 회원 ID"
+        DOUBLE latitude "출발지 위도 (nullable — 출발지 미등록 시 null)"
+        DOUBLE longitude "출발지 경도 (nullable — 출발지 미등록 시 null)"
+        VARCHAR(10) attendance_status "참석 상태 (JOIN/LATE/ABSENT)"
+    }
+
+    %% [MVP2] subway_station — 지하철역 마스터
+    subway_station {
+        BIGINT station_id PK "공공데이터 역사 ID"
+        VARCHAR(100) station_name "역명 (예: 홍대입구)"
+        VARCHAR(100) line_name "노선명 (예: 2호선)"
+        DOUBLE latitude "위도"
+        DOUBLE longitude "경도"
+        GEOGRAPHY location_point "PostGIS geography(Point,4326)"
+    }
+
+    %% [MVP2] midpoint_station_candidate — 중간지점 역 후보
+    midpoint_station_candidate {
+        BIGINT id PK "고유 ID"
+        BIGINT meeting_id FK "소속 모임 ID"
+        INT rank "후보 순위 (1=가장 가까운 역)"
+        VARCHAR(100) station_name "역명"
+        VARCHAR(200) lines "노선 목록 (예: 2호선, 6호선)"
+        NUMERIC distance_km "중심점까지 거리 (km)"
     }
 
     member ||--o{ refresh_token : "1회원 N토큰"
     member ||--o{ departure_place : "1회원 N출발지"
     member ||--o{ terms_agreement : "1회원 N약관동의"
     member ||--o{ device_token : "1회원 N디바이스토큰"
+    member ||--o{ date_vote_record : "1회원 N투표기록"
+    member ||--o{ group_member : "1회원 N그룹참여"
+    member ||--o{ meeting_participant : "1회원 N모임참여"
+    group_info ||--o{ group_invite : "1그룹 N초대코드"
     terms ||--o{ terms_agreement : "1약관 N동의이력"
     theme_tag ||--o{ group_info : "1태그 N그룹"
     theme_tag ||--o{ meeting : "1태그 N모임"
     group_info ||--o{ meeting : "1그룹 N모임"
     group_info ||--o{ group_member : "1그룹 N구성원"
-    member ||--o{ group_member : "1회원 N그룹참여"
+    meeting ||--o| date_vote_session : "1모임 0~1세션"
+    meeting ||--o{ meeting_participant : "1모임 N참여자스냅샷"
+    meeting ||--o{ midpoint_station_candidate : "1모임 N역후보"
+    date_vote_session ||--o{ date_vote_option : "1세션 N후보"
+    date_vote_option ||--o{ date_vote_record : "1후보 N투표기록"
 ```
 
 ## 테이블 목록
 
-| 테이블 | 추가된 시점 | 설명 |
+| 테이블 | 마이그레이션 | 설명 |
 |---|---|---|
-| `member` | 기존 (V2) | 회원 (소셜 로그인 + 프로필) |
-| `refresh_token` | 기존 (V2) | JWT 리프레시 토큰 |
-| `departure_place` | 기존 (V3) | 출발지 |
-| `terms` | 기존 (V4) | 약관 |
-| `terms_agreement` | 기존 (V4) | 약관 동의 이력 |
-| `device_token` | 기존 (V5) | 푸시 알림 디바이스 토큰 |
-| `theme_tag` | FC-4 | 테마 태그 (DB 관리) |
-| `group_info` | FC-4 | 그룹 |
-| `meeting` | FC-4 | 모임 |
-| `group_member` | FC-4 | 그룹 구성원 |
-| *(FC-6 신규 테이블 없음)* | FC-6 | 기존 테이블 조회 전용 |
-| *(FC-7-1 신규 테이블 없음)* | FC-7-1 | `group_member.attendance_status` UPDATE, `departure_place` INSERT/UPDATE |
+| `member` | V2 | 회원 |
+| `refresh_token` | V2 | JWT 리프레시 토큰 |
+| `departure_place` | V3 + V10 | 출발지 (V10: road_address, place_name 추가) |
+| `terms` | V4 | 약관 |
+| `terms_agreement` | V4 | 약관 동의 이력 |
+| `device_token` | V5 | 푸시 알림 디바이스 토큰 |
+| `theme_tag` | V7 (FC-4) | 테마 태그 |
+| `group_info` | V7 (FC-4) | 그룹 |
+| `meeting` | V7 (FC-4) + V9 | 모임 (V9: status 컬럼 추가) |
+| `group_member` | V7 (FC-4) | 그룹 구성원 |
+| `date_vote_session` | V8 (FC-7) | 날짜 투표 세션 |
+| `date_vote_option` | V8 (FC-7) | 투표 후보 날짜 |
+| `date_vote_record` | V8 (FC-7) | 투표 기록 |
+| `meeting_participant` | V11 + V15 (MVP2) | 모임별 참여자 출발지 (합류 시 생성, V15에서 lat/lng nullable) |
+| `subway_station` | V12 (MVP2) | 지하철역 마스터 (PostGIS) |
+| `midpoint_station_candidate` | V13 (MVP2) | 중간지점 역 후보 (rank 1~3) |
+| `group_invite` | V14 (FC-5) | 그룹 초대 코드 (48시간 만료) |

@@ -40,7 +40,9 @@
 | JWT | 필수 | 401 AUTH_001 |
 | 최대 개수 | 3개 | 400 MEMBER_003 |
 | label | 필수, 최대 10자 | 400 COMMON_001 |
-| address | 필수 | 400 COMMON_001 |
+| address | 필수 (지번 주소) | 400 COMMON_001 |
+| roadAddress | 필수 (도로명 주소) | 400 COMMON_001 |
+| placeName | 선택 (nullable) | - |
 | latitude / longitude | 필수, 유효한 좌표 | 400 COMMON_001 |
 
 ---
@@ -48,7 +50,7 @@
 ## 출발지 수정 규칙
 
 ### 변경 규칙
-- 변경 가능 필드: label, address, latitude, longitude
+- 변경 가능 필드: label, address, roadAddress, placeName, latitude, longitude
 - isDefault는 수정 불가 (장소 정보만 변경)
 - 본인 소유 출발지만 수정 가능
 

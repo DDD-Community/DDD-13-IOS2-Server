@@ -7,6 +7,8 @@ public record DeparturePlaceResponse(
         Long id,
         String label,
         String address,
+        String roadAddress,
+        String placeName,
         double latitude,
         double longitude,
         boolean isDefault
@@ -14,6 +16,7 @@ public record DeparturePlaceResponse(
     public static DeparturePlaceResponse from(DeparturePlace place) {
         return new DeparturePlaceResponse(
                 place.getId(), place.getLabel(), place.getAddress(),
+                place.getRoadAddress(), place.getPlaceName(),
                 place.getCoordinate().getLatitude(), place.getCoordinate().getLongitude(),
                 place.isDefault()
         );

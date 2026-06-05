@@ -1,98 +1,101 @@
-# Requirements Clarification Questions — MVP1
+# Requirements Clarification — 중간지점 역 후보 추출 (MVP2)
 
-PRD(docs/prd/mvp1.md) 기반으로 백엔드 구현에 필요한 결정사항입니다.
-각 질문의 `[Answer]:` 태그 뒤에 알파벳으로 답변해주세요.
+## 사전 분석 요약
+
+현재 코드베이스 분석 결과:
+- `departure_place` 테이블: latitude/longitude (DOUBLE, PostGIS geometry 아님)
+- `subway_station` 테이블: **미존재** → 신규 생성 필요
+- `meeting_participant` 테이블: **미존재** → group_member + departure_place 활용 예정
+- 제공된 SQL 쿼리의 `meeting_participant.location_point`는 DB에 없는 구조
 
 ---
 
 ## Question 1
-날짜 투표 현황(FC-7)은 "실시간 또는 준실시간"으로 표시된다고 명시됩니다. 백엔드 구현 방식은?
+출발지 기하학적 중심(centroid) 계산 시 참여자 데이터 소스를 어떻게 할까요?
 
-A) 클라이언트 Polling — 앱이 주기적으로 REST API 호출 (구현 단순, MVP 적합)
-B) SSE(Server-Sent Events) — 서버가 이벤트 스트림 푸시 (단방향 실시간)
-C) WebSocket — 양방향 실시간 (구현 복잡도 높음)
-D) Other (please describe after [Answer]: tag below)
+현재 `departure_place`는 회원 개인 기준으로 저장되어 있고, 모임별 출발지는 별도 테이블이 없습니다.
 
-[Answer]: 실시간으로 표시된다고 표기는 해놨는데 사실 단순 날짜 투표를 실시간으로 하기위에서 웹소켓으로 만드는게 맞나 싶네 리소스 너무 차지하는게 아닌가 싶고? 이거는 너의 설명이 필요하니 설명해주고 다시 정하기로 해보자
+A) group_member(attendance_status != ABSENT) + departure_place(is_default=true) 사용 — 기존 데이터 활용, 추가 테이블 불필요
+B) 새 `meeting_participant` 테이블 생성 — 모임별 출발지 좌표 별도 저장, 향후 "이 모임만 다른 출발지 선택" 가능
+C) Other (please describe after [Answer]: tag below)
+
+[Answer]: B로 하는게 깔끔할것 같은데 이렇게 하면 모임별 참가자들 데이터가 너무 많이 쌓일까봐 걱정이긴해 로직도 많은부분 변경이 있어야하고 이부분은 상의해줄꺼지?
 
 ---
 
 ## Question 2
-초대 링크(FC-5) 생성 방식은? 서버가 링크를 생성하고 iOS가 카카오톡으로 전송합니다.
+`departure_place`가 없는 멤버가 있을 경우 처리 방식은?
 
-A) 서버가 단순 토큰 발급 (예: `/invite/{token}`) — iOS가 딥링크 URL 조합해서 공유
-B) 서버가 완성된 딥링크 URL 반환 (예: `bangawo://invite?token=xxx`)
-C) 서버가 완성된 카카오 공유 URL까지 생성
+A) 해당 멤버 제외하고 나머지 출발지로 중심 계산 (조용히 스킵)
+B) API 호출 시 에러 반환 — 출발지 미등록 멤버가 있으면 계산 불가
+C) 출발지 없는 멤버는 제외하되, Response에 "출발지 미등록 멤버 수" 포함
 D) Other (please describe after [Answer]: tag below)
 
-[Answer]: D 아마 IOS쪽에서 서버로 모임 코드와 함꼐 던져줄꺼야 그럼 그 초대코드 받고 해당 그룹 페이지로 이동할 수 있게 IOS로 다시 던져주면 될텐데?
+[Answer]: D 회원가입할때 기본 출발지는 필수 입력이라 없지는 않을텐데 없다고하면 에러로 하자
 
 ---
 
 ## Question 3
-푸시 알림(FC-7 투표 시작·마감·확정 알림)을 MVP1에서 실제로 구현하나요? device_token 테이블은 이미 존재합니다.
+역 후보 정렬 기준은 무엇인가요?
 
-A) 실제 FCM 연동까지 완전 구현 (서버 → FCM → iOS 디바이스)
-B) 알림 전송 로직만 구현 (FCM 키 설정은 나중에)
-C) MVP1에서는 스킵 — 데이터 변경 API만 구현, 알림은 MVP2
+제공된 SQL은 `dist_m ASC` (중심에서 가까운 순)로 되어 있고 score_drink 점수도 있습니다.
+
+A) 거리순 (dist_m ASC) — 가장 가까운 역 우선
+B) 점수순 (score_drink DESC) — 술/식당 점수 높은 역 우선
+C) 복합 (거리 + 점수 가중치) — 거리와 점수를 조합
 D) Other (please describe after [Answer]: tag below)
 
-[Answer]: A 해야하는데 FCM 이 뭔지 잘 모르겠어서 추가 설명 해주고 필요한게있으면 따로 뺴서 추가 구현할수있게 계획, 일정 짜줘야해
+[Answer]: D 사실 역마다 스코어를 넣으려고했는데 지금은 일단 거리순으로 해야할것 같아
 
 ---
 
 ## Question 4
-모임 자동 종료(FC-8 "모임 날짜가 지나면 자동 종료") 처리 방식은?
+subway_station 테이블에 어떤 점수 컬럼이 필요한가요?
 
-A) 스케줄러(@Scheduled) — 매일 자정 배치로 상태 업데이트
-B) 조회 시점 Lazy 계산 — 리스트 조회 시 날짜 비교해서 status 계산 (DB 상태값 미변경)
-C) 두 가지 모두 — 조회는 Lazy, 배치로 주기적 정리
+이후 장소 후보 등록 시 테마(술, 밥, 카페 등)별 점수가 필요하다고 하셨습니다.
+
+A) score_drink 하나만 (이번에 우선 구현, 나중에 추가)
+B) score_drink, score_food, score_cafe 3개 (주요 카테고리 미리 정의)
+C) 일단 점수 컬럼 없이 거리 기반만, 추후 ALTER TABLE로 추가
 D) Other (please describe after [Answer]: tag below)
 
-[Answer]: A
+[Answer]: C 우선 거리기반으로만 하자
 
 ---
 
 ## Question 5
-FC-6 모임 리스트의 상태(진행 중/확정/종료) 정렬 시, 그룹에 "현재 진행 중인 모임"이 없는 경우 (모임이 아직 생성 안 됨) 어떻게 처리하나요?
+subway_station 데이터는 어떻게 로드할 계획인가요?
 
-A) 그룹 생성 시 모임도 자동으로 함께 생성 (그룹과 모임 항상 1:1로 존재)
-B) 그룹만 생성, 모임은 호스트가 별도로 시작할 때 생성
+공공데이터 역사_ID/역사명/호선/위도/경도 보유 중이라고 하셨습니다.
+
+A) Flyway V11 SQL 마이그레이션으로 INSERT (CSV → SQL 변환하여 포함)
+B) 별도 데이터 로더 스크립트 (psql 또는 Spring 배치로 직접 import)
 C) Other (please describe after [Answer]: tag below)
 
-[Answer]: C PRD에 나와있어. 그룹 생성하면 첫번째 모임도 자동으로 생성되고 모임마다 날짜가 있으면 그날이 지나면 그 모임은 종료되도록 할꺼야. 화면에서는 그룹 = 모임 같은 용도로쓸꺼고 모임이 종료되면 종료됨으로 표시될꺼고 그 그룹(모임) 들어가면 다시 모임을 만들 수 있게 해야겠지.
+[Answer]: C 내가 일단 준 헤더와 데이터가 있으니 너가 테이블 만들어주면 내가 따로 넣을께
 
 ---
 
-## Question 6 (Extension Opt-In)
-보안 확장(Security Baseline) 규칙을 이 프로젝트에 적용할까요?
-— JWT/인증 이미 구현되어 있으나 group/meeting API에 대한 보안 검증 룰 추가 적용 여부
+## Question 6
+API 엔드포인트 동작 방식은?
 
-A) Yes — 보안 규칙을 블로킹 제약으로 적용 (프로덕션 수준)
-B) No — 스킵 (MVP 빠른 구현 우선)
+A) `GET /meetings/{meetingId}/midpoint-stations` — 요청 시 즉시 계산 반환
+B) 모임 상태 전이 시 자동 계산 후 DB 저장 → API는 저장값 조회만
 C) Other (please describe after [Answer]: tag below)
 
-[Answer]: A
+[Answer]: C 내가 생각한건 우선 장소후보 추려주기전 필요한 중요 데이터라 메모리나 DB에 따로 저장하고 API는 필요없다 생각했는데 간단하게 B처럼 해놔야하나
 
 ---
 
-## Question 7 (Extension Opt-In)
-TDD 방식으로 코드를 생성할까요? (테스트 먼저 작성 후 구현)
+## Question 7
+반환할 역 후보 개수는?
 
-A) Yes — TDD 워크플로우 적용 (토큰 비용 1.5~2배, 결함 최소화)
-B) No — 표준 코드 생성 (빠른 구현)
+A) 고정 3개
+B) 파라미터로 받음 (기본 3, 최대 N)
 C) Other (please describe after [Answer]: tag below)
 
-[Answer]: C 주요 기능들은 테스트 하도록하고 중요하지않은건 스킵
+[Answer]: A API로 가져올 데이터가 아니긴해서 일단은 서비스에 고정으로 3개 해놔야할것 같아
 
 ---
 
-## Question 8 (Extension Opt-In)
-Property-Based Testing 규칙을 적용할까요?
-
-A) Yes — 전체 적용
-B) Partial — 순수 함수·직렬화에만 적용
-C) No — 스킵
-D) Other (please describe after [Answer]: tag below)
-
-[Answer]: C
+답변 완료 후 "완료" 또는 "done"이라고 말씀해 주세요.

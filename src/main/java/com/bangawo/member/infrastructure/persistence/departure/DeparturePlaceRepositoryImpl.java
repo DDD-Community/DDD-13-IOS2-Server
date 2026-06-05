@@ -25,6 +25,12 @@ public class DeparturePlaceRepositoryImpl implements DeparturePlaceRepository {
     }
 
     @Override
+    public List<DeparturePlace> findAllByMemberIdIn(List<Long> memberIds) {
+        return jpaRepository.findAllByMemberIdIn(memberIds).stream()
+                .map(DeparturePlaceJpaEntity::toDomain).toList();
+    }
+
+    @Override
     public Optional<DeparturePlace> findByIdAndMemberId(Long id, Long memberId) {
         return jpaRepository.findByIdAndMemberId(id, memberId).map(DeparturePlaceJpaEntity::toDomain);
     }
@@ -42,5 +48,11 @@ public class DeparturePlaceRepositoryImpl implements DeparturePlaceRepository {
     @Override
     public void clearDefaultByMemberId(Long memberId) {
         jpaRepository.clearDefaultByMemberId(memberId);
+    }
+
+    @Override
+    public Optional<DeparturePlace> findDefaultByMemberId(Long memberId) {
+        return jpaRepository.findByMemberIdAndIsDefaultTrue(memberId)
+                .map(DeparturePlaceJpaEntity::toDomain);
     }
 }

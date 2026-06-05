@@ -1,120 +1,133 @@
-# Execution Plan — Bangawo MVP1
+# Execution Plan — 중간지점 역 후보 추출 (MVP2)
 
-## Analysis Summary
-
-### Transformation Scope
-- **Type**: Multi-context feature addition (Brownfield)
-- **Primary Changes**: group, meeting 두 개 신규 바운디드 컨텍스트 추가
-- **Related Components**: global (ErrorCode, SecurityConfig 확장), auth (Member 참조)
+## Detailed Analysis Summary
 
 ### Change Impact Assessment
-- **User-facing**: Yes — 그룹 생성/초대/모임/투표 전체 신규 API
-- **Structural**: Yes — group, meeting 패키지 신규 생성
-- **Data Model**: Yes — V7+ Flyway 마이그레이션 필요 (group, meeting, membership, date_vote 등)
-- **API**: Yes — /api/v1/groups, /api/v1/meetings 신규 엔드포인트
-- **NFR**: Yes — SSE 스트리밍, @Scheduled, FCM, Security Baseline 인가 규칙
+- **User-facing changes**: Yes — 신규 API 2개 (location/start, midpoint-stations)
+- **Structural changes**: Yes — subway 신규 바운디드 컨텍스트 도입
+- **Data model changes**: Yes — 신규 테이블 3개 (meeting_participant, subway_station, midpoint_station_candidate)
+- **API changes**: Yes — 신규 엔드포인트 2개, 기존 CreateMeeting 로직 수정
+- **NFR impact**: Low — PostGIS/Cloud SQL 이미 사용 중, GIST 인덱스 추가
+
+### Component Relationships
+- **Primary**: subway 컨텍스트 (신규), meeting 컨텍스트 (확장)
+- **Dependency**: meeting application layer → SubwayStationRepository (subway context)
+- **Modified**: CreateMeetingService — meeting 생성 시 meeting_participant 자동 생성 추가
 
 ### Risk Assessment
-- **Risk Level**: Medium-High
-- **이유**: SSE 구현, 투표 상태머신, 생명주기 스케줄러, FCM 연동 등 복잡도 있음
-- **Rollback**: 신규 컨텍스트라 기존 코드 영향 최소 — 롤백 상대적으로 용이
+- **Risk Level**: Medium
+- **주요 리스크**: PostGIS native query (JPA 밖), 새 컨텍스트 간 의존 방향
+- **Rollback**: Flyway 적용된 마이그레이션은 수정 불가 원칙 → 신중 설계
 
 ---
 
-## Workflow Visualization
+## Workflow Visualization (Text)
 
 ```
 INCEPTION PHASE
-+----------------------------------+
-| [완료] Workspace Detection       |
-| [완료] Reverse Engineering       |
-| [완료] Requirements Analysis     |
-| [SKIP] User Stories              |
-| [진행] Workflow Planning         |
-| [실행] Application Design        |
-| [실행] Units Generation          |
-+----------------------------------+
-              |
-              v
-CONSTRUCTION PHASE (유닛별 반복)
-+----------------------------------+
-| [실행] Functional Design         |
-| [실행] NFR Requirements          |
-| [실행] NFR Design                |
-| [SKIP] Infrastructure Design     |
-| [실행] Code Generation           |
-| [실행] Build and Test            |
-+----------------------------------+
+  [x] Workspace Detection       COMPLETED
+  [x] Reverse Engineering       COMPLETED (갱신)
+  [x] Requirements Analysis     COMPLETED
+  [ ] User Stories              SKIP
+  [x] Workflow Planning         IN PROGRESS
+  [ ] Application Design        EXECUTE
+  [ ] Units Generation          EXECUTE
+
+CONSTRUCTION PHASE
+  Unit 1: meeting_participant
+    [ ] Functional Design       EXECUTE
+    [ ] Code Generation         EXECUTE
+  Unit 2: subway context
+    [ ] Functional Design       EXECUTE
+    [ ] Code Generation         EXECUTE
+  Unit 3: midpoint 계산 + API
+    [ ] Functional Design       EXECUTE
+    [ ] Code Generation         EXECUTE
+  [ ] Build and Test            EXECUTE
+
+OPERATIONS PHASE
+  [ ] Operations                PLACEHOLDER
 ```
 
 ---
 
-## 실행 단계 목록
+## Phase 결정
 
 ### INCEPTION PHASE
 - [x] Workspace Detection — COMPLETED
-- [x] Reverse Engineering — COMPLETED
+- [x] Reverse Engineering — COMPLETED (stale 재실행)
 - [x] Requirements Analysis — COMPLETED
-- [x] User Stories — SKIP (PRD가 이미 상세 플로우 포함, 두 역할 정의됨)
+- [ ] User Stories — **SKIP** (단일 기능, 단일 역할)
 - [x] Workflow Planning — IN PROGRESS
-- [ ] Application Design — EXECUTE (신규 컴포넌트/서비스 설계 필요)
-- [ ] Units Generation — EXECUTE (3개 유닛으로 분해)
+- [ ] Application Design — **EXECUTE** (subway 신규 컨텍스트 컴포넌트 설계)
+- [ ] Units Generation — **EXECUTE** (3개 유닛 분해)
 
-### CONSTRUCTION PHASE (유닛별)
-- [ ] Functional Design — EXECUTE (투표 상태머신, 도메인 모델 상세 설계)
-- [ ] NFR Requirements — EXECUTE (SSE, Scheduler, Security Baseline, FCM)
-- [ ] NFR Design — EXECUTE (NFR 패턴 적용 설계)
-- [ ] Infrastructure Design — SKIP (클라우드 인프라 변경 없음)
-- [ ] Code Generation — EXECUTE (항상)
-- [ ] Build and Test — EXECUTE (항상)
+### CONSTRUCTION PHASE
 
-### OPERATIONS PHASE
-- [ ] Operations — PLACEHOLDER
+**Unit 1 — meeting_participant 도입**
+- [ ] Functional Design — EXECUTE
+- [ ] NFR Requirements — SKIP
+- [ ] NFR Design — SKIP
+- [ ] Infrastructure Design — SKIP
+- [ ] Code Generation — EXECUTE
 
----
+**Unit 2 — subway context 신규**
+- [ ] Functional Design — EXECUTE (PostGIS native query, 새 컨텍스트 DDD 설계)
+- [ ] Code Generation — EXECUTE
 
-## 유닛 분해 — FC 순서 기준 (협업 역할 분담용)
+**Unit 3 — midpoint 계산 + API**
+- [ ] Functional Design — EXECUTE (상태전이, 계산 오케스트레이션, API)
+- [ ] Code Generation — EXECUTE
 
-| 유닛 | FC | 내용 | 핵심 복잡도 |
-|---|---|---|---|
-| **Unit 1** | FC-4 | 그룹 & 첫 모임 생성 (그룹 생성 시 모임 동시 생성, 테마 태그) | 그룹/모임 동시 트랜잭션 |
-| **Unit 2** | FC-5 | 구성원 초대 & 합류 (초대 코드 발급/검증, 멤버십 등록) | 초대 코드 만료 처리 |
-| **Unit 3** | FC-6 | 모임 리스트 — 홈 화면 (상태별 정렬, 본인 모임만 조회) | 상태 계산 로직 |
-| **Unit 4** | FC-7 | 모임 상세 + 날짜 투표 A/B + SSE 실시간 현황 + 자동 종료 스케줄러 | SSE, 투표 상태머신, @Scheduled |
-| **Unit 5** | FC-7-1 | 내 정보 수정 (참석여부, 출발지, 수정 잠금) | 날짜 투표 종료 후 잠금 |
-| **Unit 6** | FC-8 | 그룹 생명주기 (그룹 종료, 새 모임 시작, 호스트 탈퇴/위임) | 호스트 랜덤 배정 |
-| **Unit 7** | 공통 | FCM 푸시 알림 (투표 시작/마감/확정/초대) | FCM 인터페이스 설계 |
+- [ ] Build and Test — EXECUTE
 
 ---
 
-## 의존성 & 병렬 작업 가능 범위
+## 3-Unit 분해
 
-```
-Unit 1 (FC-4: 그룹 생성) ← 모든 유닛의 기반, 선행 필수
-    ├── Unit 2 (FC-5: 초대)   ─┐
-    ├── Unit 3 (FC-6: 리스트)  ├── Unit 1 완료 후 병렬 가능
-    ├── Unit 5 (FC-7-1: 내정보)─┘
-    ├── Unit 4 (FC-7: 투표/SSE) ← Unit 1 완료 후
-    └── Unit 6 (FC-8: 생명주기) ← Unit 1 완료 후
-Unit 7 (Notification) ← Unit 4, 6 완료 후 (이벤트 트리거 확정 필요)
-```
+### Unit 1 — meeting_participant 도입
+**범위:**
+- V11__create_meeting_participant.sql
+- MeetingParticipant 도메인 (meeting context)
+- MeetingParticipantRepository 인터페이스 + 구현체
+- CreateMeetingService 수정 (meeting 생성 시 group_member → meeting_participant 자동 복사)
+
+**의존성:** 독립
+
+### Unit 2 — subway context 신규
+**범위:**
+- V12__create_subway_station.sql (DDL만, GIST 인덱스 포함)
+- SubwayStation 도메인 (subway context 신규)
+- SubwayStationRepository 인터페이스 + 구현체 (native PostGIS 쿼리)
+
+**의존성:** 독립
+
+### Unit 3 — midpoint 계산 + API
+**범위:**
+- V13__create_midpoint_station_candidate.sql
+- MidpointStationCandidate 도메인 (meeting context)
+- MidpointStationCandidateRepository 인터페이스 + 구현체
+- MidpointCalculationService (meeting_participant + subway_station 조합, PostGIS centroid)
+- Meeting 도메인: startLocationPhase() 메서드
+- LocationService: 호스트 권한 체크 + 계산 오케스트레이션
+- ErrorCode 추가
+- POST /meetings/{id}/location/start
+- GET /meetings/{id}/midpoint-stations
+- Request/Response DTO
+
+**의존성:** Unit 1 완료 + Unit 2 완료 후
 
 ---
 
-## 별도 태스크 (코드와 독립)
-
-| 태스크 | 담당 | 내용 |
-|---|---|---|
-| Firebase 설정 | iOS 팀 협업 | 서비스 계정 키 발급, APNs 인증서 등록 |
-| **GCP 배포** | 백엔드 | GCP MCP로 Cloud Run / GKE 서버 배포 (MVP1 코드 완성 후) |
+## 실행 순서
+Unit 1 → Unit 2 → Unit 3 → Build and Test
+(Unit 1,2 독립이나 Unit 3이 둘 다 필요)
 
 ---
 
-## 성공 기준
-- group, meeting 바운디드 컨텍스트 DDD 패턴 준수
-- 모든 API Security Baseline 인가 규칙 적용 (호스트/구성원 분리)
-- SSE 날짜 투표 현황 정상 동작
-- @Scheduled 모임 자동 종료 동작
-- FCM 코드 구현 완료 (Firebase 키 없이도 인터페이스 완성)
-- V7+ Flyway 마이그레이션 스크립트 완성
-- GCP 서버 배포 완료 (Operations 단계)
+## Success Criteria
+- compileJava BUILD SUCCESSFUL
+- V11/V12/V13 마이그레이션 적용 완료
+- POST /meetings/{id}/location/start → midpoint_station_candidate 3개 저장
+- GET /meetings/{id}/midpoint-stations → rank 1/2/3 반환
+- 비호스트 호출 시 403

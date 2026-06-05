@@ -177,3 +177,123 @@
 - `aidlc-docs/construction/build-and-test/` (파일 업데이트 — FC-7-1 포함)
 
 ---
+
+## [2026-05-23] Unit 4 (FC-7) Functional Design 시작
+
+**사용자 요청 (원문)**: 지금 다른 친구가 FC6 모임리스트조회 기능만든거 pull받고 이제 FC7 모임상세 해야하는데 prd읽고 스킬 진행해줘
+
+**진행 내용**:
+- 기존 세션 복원 (aidlc-state.md 확인)
+- PRD mvp1.md FC-7 섹션 읽음
+- 기존 코드 분석: Meeting.java, GroupMember.java, V7 마이그레이션, FC-6 완료 코드
+- Functional Design Plan 생성: aidlc-docs/construction/internal/plans/unit-4-fc7-functional-design-plan.md
+- 설계 질문 5개 포함 (출발지 설계, 투표 세션 저장, 방식 A API, 스케줄러 주기, SSE URL)
+
+**상태**: 사용자 답변 대기 중
+
+---
+## [2026-05-23] Unit 4 (FC-7) Functional Design 완료
+
+**최종 설계 결정 (Q1~Q5)**:
+- Q1: 출발지 전체 목록 표시 (N개)
+- Q2: date_vote_session 별도 테이블
+- Q3: API 2개 분리 (host-pick / vote)
+- Q4: 매일 자정 배치, 마감일 = 시작일 + N일
+- Q5: SSE 미사용, GET 폴링 방식
+- 참석여부 잠금: MVP1 없음, MVP2 location=COMPLETED 시 추가
+- 출발지 잠금: date_vote_status=COMPLETED 이후
+
+**생성 아티팩트**:
+- aidlc-docs/construction/internal/unit-4-fc7/functional-design/domain-entities.md
+- aidlc-docs/construction/internal/unit-4-fc7/functional-design/business-logic-model.md
+- aidlc-docs/construction/internal/unit-4-fc7/functional-design/business-rules.md
+- aidlc-docs/construction/review/fc-7/erd.md
+- aidlc-docs/construction/review/fc-7/rules.md
+- aidlc-docs/construction/review/project-erd.md (업데이트)
+- aidlc-docs/inception/requirements/requirements.md (SSE → GET 폴링 수정, 참석여부 잠금 MVP2 명시)
+
+**상태**: 사용자 승인 대기
+
+---
+## [2026-05-23] Unit 4 (FC-7) NFR Requirements 완료
+
+**사용자 응답 (원문)**:
+- Q1: A + "실패하면 직접 투표 종료 버튼을 누르게 하던가 해야겠네 투표 종료 API하나 있어야겠다"
+- Q2: "FCM은 지금 안할꺼야 나중에 할꺼야"
+
+**결정 사항**:
+- 스케줄러 실패 시 별도 API 불필요 — confirm/host-pick API로 수동 처리 가능
+- FCM MVP1 제외 — no-op 처리
+- requirements.md FR-8 수정
+
+**상태**: 사용자 승인 대기
+
+---
+## [2026-05-23] Unit 4 (FC-7) NFR Design 완료
+
+**결정 사항**:
+- 인가 패턴: 서비스 레이어 Guard 패턴 (FC-7에서 최초 정립)
+- 트랜잭션: 스케줄러 건별 @Transactional 분리
+- 스케줄러: 루프 + try-catch, 로깅 후 계속 진행
+- 상태 전이: Meeting 도메인 메서드로 캡슐화
+- FCM: no-op
+
+**상태**: 사용자 승인 대기
+
+---
+## [2026-05-23] Unit 4 (FC-7) Code Generation Plan 작성 완료
+
+**플랜 파일**: aidlc-docs/construction/internal/plans/unit-4-fc7-code-generation-plan.md
+**총 스텝**: 39개 (Group A~J)
+**API**: GET 모임상세, POST host-pick, POST 투표시작, POST 투표참여, GET 현황조회, PATCH 수동확정
+
+**승인 대기 중**
+
+---
+
+## MVP2 Session Start — 2026-05-28T00:00:00+09:00
+
+### User Request (원문)
+```
+지금 MVP1은 완료했어 
+/ai-dlc 모임초대 -> 날짜후보 등록 -> 날짜투표 -> 날짜 확정 까지 한거야
+MVP2 들어가기전에 중간장소 후보에대한 로직을 개발해야하는데 
+(참여자들의 출발지로 계산해서 중간지역인 역을 3개 후보 뽑기) -> 이 지역 근처 Nkm 장소들을 테마와 필터등 옵션 점수(이거는 나중에말해줌)대로 15개 뽑아 N일간(기본3일) 참여자들이 후보등록 -> 후보등록이 완료되면 이후 N일간 투표 -> 투표완료 후 장소선정 완료(프로세스끝) 이렇게 가는데 
+지금 맨앞에 중간 지역인 역을 뽑을꺼야
+```
+
+### 추가 컨텍스트
+```
+새로 시작할라고 clear 했는데 너가 이전 내용이 필요하다면 이어서해 근데 없을거같은데
+아 맞다 근데 사용자 출발지는 역 데이터로 하지 않아서 이것도 같이 고민이 필요해 그냥 사용자랑 가장 가까운 역으로 해야하나
+```
+
+### Workspace Detection
+- 기존 RE 아티팩트 stale (61→139 Java files, 6→10 migrations)
+- RE 재실행 결정
+- departure_place: latitude/longitude 더블 컬럼 (PostGIS geometry 아님)
+- subway_station 테이블 미존재
+- meeting_participant 테이블 미존재 (group_member + departure_place 으로 대체 필요)
+
+### Requirements Clarification Answers (2026-05-28)
+
+Q1 원문: "B로 하는게 깔끔할것 같은데 이렇게 하면 모임별 참가자들 데이터가 너무 많이 쌓일까봐 걱정이긴해 로직도 많은부분 변경이 있어야하고 이부분은 상의해줄꺼지?"
+Q2 원문: "D 회원가입할때 기본 출발지는 필수 입력이라 없지는 않을텐데 없다고하면 에러로 하자"
+Q3 원문: "D 사실 역마다 스코어를 넣으려고했는데 지금은 일단 거리순으로 해야할것 같아"
+Q4 원문: "C 우선 거리기반으로만 하자"
+Q5 원문: "C 내가 일단 준 헤더와 데이터가 있으니 너가 테이블 만들어주면 내가 따로 넣을께"
+Q6 원문: "C 내가 생각한건 우선 장소후보 추려주기전 필요한 중요 데이터라 메모리나 DB에 따로 저장하고 API는 필요없다 생각했는데 간단하게 B처럼 해놔야하나"
+Q7 원문: "A API로 가져올 데이터가 아니긴해서 일단은 서비스에 고정으로 3개 해놔야할것 같아"
+
+Clarification 1 원문: "B로 가야겠다 A안으로가면 무조건 기본 출발지로만 해야하는거자나 이건 아니지"
+Clarification 2 원문: "A가 가장 괜찮아보이네 역 후보도 보여줘야할 수 있으니"
+
+### Workflow Planning Approval — 2026-05-28
+**User Response**: "알아서 잘 해줬겠지 진행시켜"
+**Status**: Approved
+**Context**: 3유닛 플랜, User Stories SKIP, Application Design + Units Generation EXECUTE
+
+### Application Design + Units Generation Approval — 2026-05-28
+**User Response**: "알아서 잘 해줬겠지 진행시켜"
+**Status**: Approved (implicit — user approved at Workflow Planning)
+**Context**: Application Design (subway 신규 컨텍스트 + meeting 확장) + Units Generation (3유닛) 완료

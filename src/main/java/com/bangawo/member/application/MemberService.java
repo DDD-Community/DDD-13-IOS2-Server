@@ -31,7 +31,8 @@ public class MemberService {
     /** 회원가입 (소셜 로그인 후 프로필 + 약관 + 출발지 한 번에 처리) */
     public Member register(Long memberId, String nickname, java.util.List<Long> agreedTermsIds,
                            String departureLabel, String departureAddress,
-                           double latitude, double longitude) {
+                           String departureRoadAddress, String departurePlaceName,
+                           double latitude, double longitude, boolean departureIsDefault) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
@@ -48,7 +49,7 @@ public class MemberService {
 
         // 기본 출발지 등록 (닉네임보다 먼저 — 출발지 실패 시 닉네임 저장 방지)
         departurePlaceService.create(memberId, departureLabel, departureAddress,
-                latitude, longitude, true);
+                departureRoadAddress, departurePlaceName, latitude, longitude, departureIsDefault);
 
         // 프로필 업데이트 + 회원가입 완료 처리
         member.updateProfile(nickname, null);
