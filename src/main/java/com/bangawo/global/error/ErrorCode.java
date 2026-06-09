@@ -52,6 +52,11 @@ public enum ErrorCode {
     PARTICIPANT_DEPARTURE_NOT_SET(HttpStatus.BAD_REQUEST, "MEETING_011", "출발지를 등록하지 않은 참여자가 있습니다"),
     MIDPOINT_STATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING_012", "중간지점 근처에 지하철역을 찾을 수 없습니다"),
     MEETING_PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND, "MEETING_013", "모임 참여자를 찾을 수 없습니다"),
+
+    // Storage
+    STORAGE_INVALID_TYPE(HttpStatus.BAD_REQUEST, "STORAGE_001", "지원하지 않는 이미지 형식입니다"),
+    STORAGE_SIGNED_URL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STORAGE_002", "이미지 업로드 URL 생성에 실패했습니다"),
+    STORAGE_INVALID_PATH(HttpStatus.BAD_REQUEST, "STORAGE_003", "올바르지 않은 이미지 경로입니다"),
     ;
 
     private final HttpStatus status;
