@@ -1,20 +1,22 @@
-# Unit of Work Story Map — 중간지점 역 후보 추출 (MVP2)
+# Unit of Work — FC/요구사항 매핑 (FC-8~13)
 
-## FR → Unit 매핑
+> User Stories는 SKIP(백엔드 API). PRD FC + requirements FR을 유닛에 매핑.
 
-| Functional Requirement | Unit |
-|---|---|
-| FR-1: meeting_participant 테이블 + 모임 생성 시 자동 복사 | Unit 1 |
-| FR-2: subway_station 테이블 DDL + PostGIS 쿼리 | Unit 2 |
-| FR-3: midpoint_station_candidate 테이블 | Unit 3 |
-| FR-4: location 단계 시작 API + 역 계산 로직 | Unit 3 |
-| FR-5: 역 후보 조회 API | Unit 3 |
+| Unit | FC / FR | 산출 핵심 | API |
+|---|---|---|---|
+| U1 기반 | 상태모델, FR-8.1 가드, 모임입력확장 | LocationStatus, Meeting 가드, ErrorCode, V18/V26 | `POST /meetings`(입력확장) |
+| U2 추천 | FC-8 / FR-8.2~8.8 | place 컨텍스트, 추천 스코어링, V19/V20 | `POST /meetings/{id}/location/start`, `GET /meetings/{id}/recommendations`, `GET /places/options` |
+| U3 담기 | FC-9 / FR-9.1~9.5 | pick, 담기현황, 전환, 담기마감배치, V21 | `GET /meetings/{id}/places`, `POST/DELETE /meetings/{id}/places/{placeId}/pick`, `GET /meetings/{id}/places/pick-status`, `POST /meetings/{id}/place-vote`(호스트 시작) |
+| U4 투표 | FC-11·12 / FR-11·12 | 그래프, 투표세션/투표/이동부담, V22~V24 | `POST /meetings/{id}/place-vote/submit`, `GET /meetings/{id}/place-vote` |
+| U5 확정 | FC-13 / FR-13 | 4단계 순위, 확정저장, V25 | `GET /meetings/{id}/place-result` |
 
-## 스토리 (User Stories SKIP → FR 기반)
+## 커버리지 확인
+- FR-8 → U1(가드)+U2(추천) ✔
+- FR-9 → U3 ✔
+- FR-11/12 → U4 ✔
+- FR-13 → U5 ✔
+- NFR(그래프 부팅·스냅샷·스케줄러) → U2/U4 ✔
+- 모든 FR이 유닛에 할당됨.
 
-| # | As a... | I want to... | So that... | Unit |
-|---|---|---|---|---|
-| S-1 | 시스템 | 모임 생성 시 참여자 출발지 스냅샷 저장 | 중간지점 계산에 사용 | Unit 1 |
-| S-2 | 시스템 | 지하철역 공간 쿼리 실행 | 중간지점 역 후보 찾기 | Unit 2 |
-| S-3 | 호스트 | 장소 선정 단계 시작 | 역 후보 3개 자동 계산/저장 | Unit 3 |
-| S-4 | 그룹 멤버 | 중간지점 역 후보 조회 | 어느 지역에서 모일지 확인 | Unit 3 |
+## 알림
+- 범위 제외(푸시·인앱) — 유닛 없음. 상태전환 트리거 지점만 주석으로 표기.

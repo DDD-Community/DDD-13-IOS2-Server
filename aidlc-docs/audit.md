@@ -297,3 +297,74 @@ Clarification 2 원문: "A가 가장 괜찮아보이네 역 후보도 보여줘�
 **User Response**: "알아서 잘 해줬겠지 진행시켜"
 **Status**: Approved (implicit — user approved at Workflow Planning)
 **Context**: Application Design (subway 신규 컨텍스트 + meeting 확장) + Units Generation (3유닛) 완료
+
+---
+
+## NEW FEATURE CYCLE — 장소 선정~확정 플로우 (FC-8~13)
+
+### Workspace Detection — 2026-06-16
+**Trigger**: 사용자 요청 — "prd/mvp3.md (MVP2+3 신규 기능) AI-DLC 시작"
+**Findings**:
+- Brownfield, Workspace Root: /c/dev/tmp/ddd/Server (이전 Mac 경로에서 이동)
+- Java 171 files, Flyway 17 migrations (이전 RE 시점 139/10 대비 증가)
+- 신규 컨텍스트: subway, storage / 신규 테이블: place(V16), subway_edge(V17)
+- RE 아티팩트 STALE 판정 → Reverse Engineering 재실행
+**Decision**: 신규 Inception 사이클 시작 (이전 FC-4~7 사이클은 완료 상태)
+**Note**: git log상 동일 작업(FC-8~13 산출물)이 한 차례 revert됨 → 재시작
+
+### Reverse Engineering (FC-8~13) — 2026-06-16
+**Refreshed**: architecture.md, code-structure.md, api-documentation.md, reverse-engineering-timestamp.md
+**Key findings**: LocationStatus enum/PRD 불일치, place 도메인 코드 부재(테이블만 V12), subway_edge(V17) 그래프 코드 부재, 스케줄러 패턴 재사용 가능
+**Status**: AWAITING_USER_APPROVAL
+
+### Requirements Analysis (FC-8~13) — 2026-06-16
+**User decision**: 기존 방식 유지(고정 경로 덮어쓰기, A안). review 폴더에 최종 정리.
+**Action**: requirement-verification-questions.md 생성 (15문항: 범위/알림/상태모델/PRD미결4건/추천알고리즘/투표규칙/확장 opt-in 3건)
+**Status**: GATE — AWAITING_USER_ANSWERS
+
+### Requirements Analysis — Round 1 답변 수신 + Round 2 생성 (2026-06-16)
+**R1 답변 핵심**: 범위 AI 분할/푸시 제외, 상태 4-state, 마감+3일, subway_edge 다익스트라 스냅샷, 환승=TRANSFER엣지, 추천0개 반경확대, 투표 PRD그대로/익명, Security ON·PBT Partial·TDD OFF
+**사용자 미이해 항목**: Q7(편중), Q8(스코어링), Q9(역귀속/추천모델), Q10(카드), Q6(스냅샷 저장위치) → 개념 설명 후 Round 2(R1~R6)로 재질문
+**신규 요구**: 장소 탐색 반경 N km 파라미터화(현 2km 하드코딩)
+**Q4 구체화**: 담기 마감 0개 시 스코어 top-3 자동 후보 등록 후 투표
+**Status**: GATE — AWAITING Round 2 ANSWERS
+
+### Requirements Analysis — Round 2 답변 수신 + 흐름정리 (2026-06-16)
+**결정**: 거리계산 용도분리(추천=직선거리집계 / 카드·이동부담=그래프 단일출발 다익스트라), 가중치 min-max 정규화 설계단계 확정, 반경 사다리 2→4→6km(최대6km, 초과시 400)
+**남은 미확정 2건**: R5 이동부담 저장방식(DB vs 캐시 vs 매요청) / R1-2 역탭 유지여부
+**산출물**: place-selection-flow-overview.md (상태도 + 전체 시퀀스 mermaid + 단계별 상세)
+**Status**: GATE — 2건 답변 대기
+
+### Requirements Analysis — 완료 (2026-06-16)
+**최종 결정**: 상태설계 A(2축 유지) + startLocationPhase에 dateVoteStatus==COMPLETED 가드 추가. 플로우 A(PRD대로, 담기단계 유지). R5=DB스냅샷, R1-2=역탭유지. 거리 용도분리(추천=직선거리/카드·이동부담=그래프). 가중치는 설계때 사용자 확인.
+**확장**: Security ON / PBT Partial / TDD OFF
+**산출물**: requirements.md, place-selection-flow-overview.md
+**User approval**: "A 로가자 나머지 진행시켜" — 승인
+**Next**: User Stories 판단 → Workflow Planning
+
+### Workflow Planning — 완료 (2026-06-16)
+**User Stories**: SKIP. **Execute**: Application Design, Units Generation, Functional Design, NFR Req/Design, Code Gen, Build/Test. **Skip**: Infrastructure Design(인프라 변경 없음).
+**Risk**: Medium. **Sequence**: global→meeting/domain(상태)→subway(그래프)→place(추천)→meeting(담기/투표/확정).
+**산출물**: aidlc-docs/inception/plans/execution-plan.md
+**Status**: AWAITING_APPROVAL (user said 빨리 진행)
+
+### Application Design — Plan/질문 생성 (2026-06-16)
+**질문 7건**: 스코어링 가중치(w1=0.5/w2=0.4/w3=0.1 추천), place 신규컨텍스트, 스코어링 실행위치, subway 그래프 컴포넌트 위치, 테이블 명명(V18~), 이동부담 시점, enum 데이터 마이그레이션
+**산출물**: aidlc-docs/inception/plans/application-design-plan.md
+**Status**: GATE — AWAITING ANSWERS (사용자 빠른진행 요청 → 추천 디폴트 제공)
+
+### Application Design + Units + Review — 완료 (2026-06-16T08:47:13+09:00)
+**AD**: components/component-methods/services/component-dependency/application-design 5종 (place 신규컨텍스트, subway 그래프, meeting 확장)
+**추천 최종(Path B)**: HARD=반경+예약/주차(NULL관대), SOFT=0.5occ+0.25cat+0.15vibe+0.1rating, 거리제외. occasion=place.theme_codes↔themeTagCode. 모임 입력확장(categoryLabels/vibes)은 그룹생성 흐름 수정(별도 미팅생성 API 없음).
+**Units**: 5유닛(기반/추천/담기/그래프+투표/확정) FC 매핑
+**Review**: FC 번호 충돌(repo fc8=그룹생명주기 vs PRD fc8=추천) 발견 → fc8 원복, 장소흐름은 descriptive(fc8/pick/vote-create/vote/confirm). fc4 생성흐름 수정. overview.md(4-state)·project-erd.md(신규테이블) 갱신.
+**Agent 지시 수정**: inception.md Review Artifacts — unit-N 금지, 기존 FC 폴더 재사용 + 공통문서 갱신 규칙으로 변경.
+**User**: "빨리 다 만들어" + "기존 컨벤션 쓰도록 지시 바꿔" → 반영
+**Status**: INCEPTION COMPLETE → CONSTRUCTION READY
+
+### 네이밍 정리 + 커밋 (2026-06-16)
+**User**: "temp2를 mvp3로 바꾸고 이름 B로, 커밋해줘"
+- PRD: docs/prd/temp2.md → docs/prd/mvp3.md
+- review FC 번호 충돌 해소(B안): 기존 fc8(그룹생명주기) → fc-group-lifecycle, 장소 흐름 → fc8/fc9/fc11/fc12/fc13 (PRD mvp3 번호)
+- 참조 일괄 갱신(temp2→mvp3, fc-place-*→번호), overview FC표/경고문구 정리
+**Status**: INCEPTION COMPLETE — 커밋

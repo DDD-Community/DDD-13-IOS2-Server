@@ -192,6 +192,79 @@ erDiagram
     member ||--o{ group_member : "1회원 N그룹참여"
     member ||--o{ meeting_participant : "1회원 N모임참여"
     group_info ||--o{ group_invite : "1그룹 N초대코드"
+    %% [장소선정 신규] place — 장소 마스터
+    place {
+        BIGINT id PK
+        BIGINT place_id UK "네이버 place_id"
+        VARCHAR category_label "한식/카페/.../기타"
+        TEXT_ARRAY vibe "분위기 태그"
+        TEXT_ARRAY theme_codes "신규 V19: occasion 정규화(theme_tag 코드)"
+        BOOLEAN reservable
+        BOOLEAN has_parking
+        NUMERIC rating
+        GEOGRAPHY location_point "PostGIS"
+    }
+    %% [장소선정 신규] meeting_place_recommendation — 추천 15 스냅샷
+    meeting_place_recommendation {
+        BIGINT id PK
+        BIGINT meeting_id FK
+        BIGINT place_id FK
+        INT rank "1..15"
+        DOUBLE score
+        BIGINT nearest_station_id FK "귀속역"
+        TIMESTAMPTZ created_at
+    }
+    %% [장소선정 신규] meeting_place_pick — 담기
+    meeting_place_pick {
+        BIGINT id PK
+        BIGINT meeting_id FK
+        BIGINT member_id FK
+        BIGINT place_id FK
+        TIMESTAMPTZ picked_at
+    }
+    %% [장소선정 신규] meeting_place_vote_session — 투표 세션
+    meeting_place_vote_session {
+        BIGINT id PK
+        BIGINT meeting_id FK UK
+        TIMESTAMPTZ started_at
+        TIMESTAMPTZ deadline
+        VARCHAR status "IN_PROGRESS/CLOSED"
+    }
+    %% [장소선정 신규] meeting_place_vote — 투표(익명집계)
+    meeting_place_vote {
+        BIGINT id PK
+        BIGINT session_id FK
+        BIGINT member_id FK
+        BIGINT place_id FK
+        TIMESTAMPTZ voted_at
+    }
+    %% [장소선정 신규] meeting_travel_burden — 이동부담 스냅샷
+    meeting_travel_burden {
+        BIGINT id PK
+        BIGINT meeting_id FK
+        BIGINT member_id FK
+        BIGINT place_id FK
+        INT seconds "소요초"
+        INT transfers "환승수"
+    }
+    %% [장소선정 신규] meeting_confirmed_place — 확정 장소
+    meeting_confirmed_place {
+        BIGINT id PK
+        BIGINT meeting_id FK UK
+        BIGINT place_id FK
+        VARCHAR place_name
+        TEXT address
+        TIMESTAMPTZ confirmed_at
+    }
+    %% [기존] subway_edge — 이동 그래프(V17)
+    subway_edge {
+        BIGINT id PK
+        BIGINT from_station_id FK
+        BIGINT to_station_id FK
+        INT weight_sec
+        VARCHAR edge_type "RIDE/TRANSFER"
+    }
+
     terms ||--o{ terms_agreement : "1약관 N동의이력"
     theme_tag ||--o{ group_info : "1태그 N그룹"
     theme_tag ||--o{ meeting : "1태그 N모임"
@@ -202,6 +275,17 @@ erDiagram
     meeting ||--o{ midpoint_station_candidate : "1모임 N역후보"
     date_vote_session ||--o{ date_vote_option : "1세션 N후보"
     date_vote_option ||--o{ date_vote_record : "1후보 N투표기록"
+    meeting ||--o{ meeting_place_recommendation : "1모임 N추천"
+    place ||--o{ meeting_place_recommendation : "1장소 N추천"
+    meeting ||--o{ meeting_place_pick : "1모임 N담기"
+    place ||--o{ meeting_place_pick : "1장소 N담기"
+    meeting ||--|| meeting_place_vote_session : "1모임 1세션"
+    meeting_place_vote_session ||--o{ meeting_place_vote : "1세션 N투표"
+    place ||--o{ meeting_place_vote : "1장소 N투표"
+    meeting ||--o{ meeting_travel_burden : "1모임 N이동부담"
+    place ||--o{ meeting_travel_burden : "1장소 N이동부담"
+    meeting ||--|| meeting_confirmed_place : "1모임 1확정"
+    subway_station ||--o{ subway_edge : "역 그래프 엣지"
 ```
 
 ## 테이블 목록
@@ -222,6 +306,17 @@ erDiagram
 | `date_vote_option` | V8 (FC-7) | 투표 후보 날짜 |
 | `date_vote_record` | V8 (FC-7) | 투표 기록 |
 | `meeting_participant` | V11 + V15 (MVP2) | 모임별 참여자 출발지 (합류 시 생성, V15에서 lat/lng nullable) |
-| `subway_station` | V12 (MVP2) | 지하철역 마스터 (PostGIS) |
+| `place` | V12 (MVP2) | 장소 마스터 (네이버 place_id, PostGIS) |
 | `midpoint_station_candidate` | V13 (MVP2) | 중간지점 역 후보 (rank 1~3) |
 | `group_invite` | V14 (FC-5) | 그룹 초대 코드 (48시간 만료) |
+| `subway_station` | V16 (MVP2) | 지하철역 마스터 (PostGIS) |
+| `subway_edge` | V17 (MVP2) | 지하철 이동 그래프 (RIDE/TRANSFER, weight_sec) |
+| `meeting` (확장) | **V18** | + categories[], vibes[] (장소추천 소프트옵션) |
+| `place` (확장) | **V19** | + theme_codes[] (occasion 정규화) |
+| `meeting_place_recommendation` | **V20** | 추천 15 스냅샷 (rank/score/귀속역) |
+| `meeting_place_pick` | **V21** | 장소 담기 (모임원×장소) |
+| `meeting_place_vote_session` | **V22** | 장소 투표 세션 (마감일) |
+| `meeting_place_vote` | **V23** | 장소 투표 (익명 집계) |
+| `meeting_travel_burden` | **V24** | 이동부담 스냅샷 (소요초/환승수) |
+| `meeting_confirmed_place` | **V25** | 확정 장소 고정 저장 |
+| `meeting` locationStatus | **V26** | 4-state 데이터 마이그레이션 |

@@ -26,10 +26,13 @@ flowchart TD
 
     L --> M[출발지 미설정 구성원은\n이 시점에 출발지 등록/변경]
     M --> N[호스트가 장소 정하기 시작\nPOST /location/start]
-    N --> O[중간지점 역 후보 3개 계산\nPostGIS 중심점 기준]
-    O --> P[구성원 역 후보 조회\nlocationStatus = IN_PROGRESS]
+    N --> O[중간역 3개 + 추천 15개 산출\nlocationStatus = RECOMMENDED]
+    O --> P[구성원 장소 담기\n역탭/카테고리/필터]
+    P --> P2[전원담기 or 마감+3일 or 호스트투표생성\nlocationStatus = VOTING]
+    P2 --> P3[익명 다중 투표 + 이동부담 그래프]
+    P3 --> P4[자동 확정 4단계 순위\nlocationStatus = CONFIRMED]
 
-    P --> Q{모임 날짜 지남?}
+    P4 --> Q{모임 날짜 지남?}
     Q -- 스케줄러 자동 종료 --> R[모임 종료\nMeetingStatus = CLOSED]
     R --> S{새 모임?}
     S -- 호스트가 시작 --> E
@@ -55,13 +58,19 @@ stateDiagram-v2
         IN_PROGRESS --> BEFORE : 스케줄러\n동률·투표자 없음 (리셋)
     }
 
-    state "LocationStatus" as LS {
-        [*] --> BEFORE2
-        BEFORE2 --> IN_PROGRESS2 : POST /location/start\n(HOST)
-        BEFORE2 : BEFORE
-        IN_PROGRESS2 : IN_PROGRESS
+    state "LocationStatus (4-state 교체)" as LS {
+        [*] --> L_BEFORE
+        L_BEFORE --> L_RECOMMENDED : POST /location/start (HOST)\n중간역3 + 추천15
+        L_RECOMMENDED --> L_VOTING : 전원담기 / 마감+3일 / 호스트투표생성
+        L_VOTING --> L_CONFIRMED : 전원투표 / 투표마감
+        L_BEFORE : BEFORE
+        L_RECOMMENDED : RECOMMENDED
+        L_VOTING : VOTING
+        L_CONFIRMED : CONFIRMED
     }
 ```
+
+> 가드: 장소축 시작은 `dateVoteStatus == COMPLETED` AND `locationStatus == BEFORE` 일 때만.
 
 ---
 
@@ -74,8 +83,15 @@ stateDiagram-v2
 | FC-6 | 모임 리스트 (홈) | `GET /meetings` | meeting, group_member, departure_place |
 | FC-7 | 날짜 투표 | `POST /date-vote`<br>`POST /date-vote/host-pick`<br>`POST /date-vote/submit`<br>`PATCH /date-vote/confirm` | date_vote_session, date_vote_option, date_vote_record |
 | FC-7-1 | 내 정보 수정 | `PATCH /groups/{id}/members/me/attendance`<br>`POST /departure-places`<br>`PUT /departure-places/{id}`<br>`PATCH /meetings/{id}/participants/me/departure` | group_member, departure_place, meeting_participant |
-| FC-8 | 그룹 생명주기 | `PATCH /groups/{id}/close`<br>`POST /groups/{id}/meetings` | group_info, meeting |
+| (그룹 생명주기) | 그룹 종료/새 모임 | `PATCH /groups/{id}/close`<br>`POST /groups/{id}/meetings` | group_info, meeting |
 | FC-midpoint | 중간지점 역 추천 | `POST /meetings/{id}/location/start`<br>`GET /meetings/{id}/midpoint-stations` | meeting_participant, subway_station, midpoint_station_candidate |
+| **FC-8** | 중간역 반경 장소 추천 15 | `POST /location/start`(확장)<br>`GET /recommendations`<br>`GET /places/options` | place(+theme_codes), meeting_place_recommendation |
+| **FC-9** | 후보 담기/취소 | `GET /places`<br>`POST·DELETE /places/{id}/pick`<br>`GET /places/pick-status` | meeting_place_pick |
+| **FC-11** | 투표 세션·마감일 | `POST /place-vote` | meeting_place_vote_session |
+| **FC-12** | 익명 다중 투표 + 이동부담 | `POST /place-vote/submit`<br>`GET /place-vote` | meeting_place_vote, meeting_travel_burden, subway_edge |
+| **FC-13** | 4단계 순위 자동확정 | `GET /place-result` | meeting_confirmed_place |
+
+> FC 폴더: `review/fc8`·`fc9`·`fc11`·`fc12`·`fc13` (PRD mvp3.md 번호). 기존 그룹 생명주기는 번호 충돌 회피로 `review/fc-group-lifecycle` 로 보관(과거 'FC-8' 라벨이었음).
 
 ---
 
@@ -94,6 +110,12 @@ stateDiagram-v2
 | `date_vote_option` | 날짜 투표 시작 시 (후보 날짜 수만큼) |
 | `date_vote_record` | 구성원이 투표 시 |
 | `midpoint_station_candidate` | `POST /location/start` 호출 시 |
+| `meeting_place_recommendation` | `POST /location/start` 추천 15 산출 시 |
+| `meeting_place_pick` | 모임원이 장소 담기 시 |
+| `meeting_place_vote_session` | 투표 생성/전환 시 |
+| `meeting_place_vote` | 모임원이 장소 투표 시 |
+| `meeting_travel_burden` | 투표 시작 시 1회 스냅샷 |
+| `meeting_confirmed_place` | 장소 자동 확정 시 |
 
 ---
 
@@ -111,5 +133,8 @@ stateDiagram-v2
 | 모임 출발지 변경 | O | O |
 | 장소 선정 시작 | O | X |
 | 역 후보 조회 | O | O |
+| 장소 담기/취소 | O | O |
+| 투표 생성하기 | O | X |
+| 장소 투표 | O | O |
 | 그룹 종료 | O | X |
 | 새 모임 생성 | O | X |

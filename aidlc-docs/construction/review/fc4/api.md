@@ -14,14 +14,20 @@
 ```json
 {
   "name": "팀 회식",
-  "themeTagCode": "DINING"
+  "themeTagCode": "DINING",
+  "categoryLabels": ["한식", "주점"],
+  "vibes": ["왁자지껄", "넓은"]
 }
 ```
 
 | 필드 | 타입 | 필수 | 제약 |
 |---|---|---|---|
 | name | String | ✅ | 1~30자, 공백 불가 |
-| themeTagCode | String | ✅ | theme_tag.code 값 중 하나 |
+| themeTagCode | String | ✅ | theme_tag.code 값 중 하나 (= 목적/occasion) |
+| categoryLabels | String[] | ⬜ | **[FC-8 신규]** 고정 11 카테고리 내 값 |
+| vibes | String[] | ⬜ | **[FC-8 신규]** place.vibe 표준목록 내 값 |
+
+> categoryLabels/vibes 는 **모임(meeting)에 저장**되어 FC-8 추천에 사용. 그룹 테이블엔 저장 안 함.
 
 ### 응답 (201 Created)
 
