@@ -2,11 +2,12 @@
 
 ```mermaid
 sequenceDiagram
-    Host->>API: POST location/start radiusKm reservable parking
+    Host->>API: POST location/start radiusKm
     API->>Meeting: 가드 dateVoteStatus COMPLETED and locationStatus BEFORE
     API->>Participant: ATTEND LATE 출발지 검증
     API->>PostGIS: centroid 중간역 3개 반경 2 4 6 사다리
-    API->>PlaceRepo: findCandidates 역3 반경 하드필터
+    API->>Meeting: reservable parking 조회(생성시 저장된 값)
+    API->>PlaceRepo: findCandidates 역3 반경 reservable parking 하드필터
     PlaceRepo-->>API: 후보 거리 최근접역 포함
     API->>Scorer: soft 점수 정규화
     Scorer-->>API: 상위 15 귀속역

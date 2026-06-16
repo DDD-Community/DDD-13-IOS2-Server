@@ -16,7 +16,7 @@
 
 ## U2. 추천 — place 컨텍스트 + FC-8
 - place 도메인/리포(PostGIS 후보), RecommendationCandidate, PlaceScorer, PlaceOption
-- place.theme_codes(V19), meeting_place_recommendation(V20)
+- meeting_place_recommendation(V20) — place는 기존 occasion 재사용, 컬럼 변경 없음
 - PlaceSelectionService(start), 추천조회, `POST location/start` 확장, `GET /places/options`
 - 의존: U1
 
@@ -46,4 +46,4 @@
 - 신규 코드는 워크스페이스 루트(aidlc-docs 아님)
 
 ## 데이터 태스크 (코드와 분리, 비차단)
-- place.theme_codes 적재(occasion→theme_tag 매핑), vibe 표준목록 — GCP 연결 시 수행
+- vibe 표준목록 정비 — GCP 연결 시 수행 (occasion은 기존 데이터로 충분, 별도 적재 불필요)

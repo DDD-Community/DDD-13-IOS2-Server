@@ -54,7 +54,7 @@
 - FR-8.4 3개 역 반경 N km(기본2, 부족 시 4·6km 확대) 내 place 수집
   - **HARD 필터 = 반경 + 예약/주차(요청 시, NULL 관대: TRUE·NULL 포함, FALSE 제외)만.** (데이터 ~2천건이라 occasion 하드 제외)
 - FR-8.5 **SOFT 스코어링** = `0.5·occasion + 0.25·category + 0.15·vibe + 0.1·rating` → 상위 15 (거리 제외)
-  - occasion = `place.theme_codes` 가 모임 `themeTagCode` 포함 ? 1 : 0
+  - occasion = `place.occasion`(기존 컬럼) 가 모임 `themeTagCode`의 `theme_tag.display_name` 포함 ? 1 : 0
   - category = `place.category_label` ∈ 모임 `categoryLabels` ? 1 : 0
   - vibe = |모임 `vibes` ∩ `place.vibe`| / |모임 `vibes`|
   - rating = 후보집합 min-max 정규화(없으면 0.5)
@@ -123,17 +123,17 @@
 - `meeting` 테이블에 `categories TEXT[]`, `vibes TEXT[]` 컬럼 추가
 - 옵션 선택지 제공: category=고정 11종(PRD), vibe=`place.vibe` distinct → `GET /api/v1/places/options`
 
-### occasion ↔ theme_tag 정합 (데이터 태스크, 코드와 분리)
-- `place.theme_codes TEXT[]` 신규 컬럼 (기존 `occasion` 안 깸)
-- place.occasion DISTINCT 값(수십 개) → theme_tag 8코드 매핑 사전 1회 → UPDATE (또는 LLM 배치)
-- 코드는 `theme_codes` 조회하게 작성, 데이터는 추후 적재(GCP 연결 시)
+### occasion ↔ theme_tag 정합 (정정: 신규 컬럼 불필요)
+- 실데이터 확인 결과(`place_export.csv` 2299건) `occasion`에 이미 한글 태그가 채워져 있고, 그중 회식/가족모임/스터디는 theme_tag.display_name과 정확히 일치
+- 코드는 `place.occasion`(기존 V12 컬럼)을 `theme_tag.display_name`과 직접 비교하도록 작성. **신규 컬럼/데이터 적재 불필요**
+- 친구모임/데이트/단체모임 등 매칭 안 되는 고빈도 occasion 값은 theme_tag 확장 여부를 User가 별도 결정(범위 외)
 
 ### 필터/점수 순서
 1. HARD: 반경(2→4→6km) + 예약/주차(요청 시, NULL 관대)
 2. SOFT: 위 FR-8.5 가중합 → 상위 15
 
 ### 신규 Flyway (V18~)
-- V18 meeting + categories/vibes / V19 place + theme_codes
+- V18 meeting + category_labels/vibes/reservable/parking
 - V20 meeting_place_recommendation / V21 meeting_place_pick
 - V22 meeting_place_vote_session / V23 meeting_place_vote
 - V24 meeting_travel_burden / V25 meeting_confirmed_place

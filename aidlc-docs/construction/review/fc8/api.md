@@ -6,13 +6,13 @@
 
 ### 요청
 ```json
-{ "radiusKm": 2, "reservable": true, "parking": null }
+{ "radiusKm": 2 }
 ```
 | 필드 | 타입 | 필수 | 설명 |
 |---|---|---|---|
-| radiusKm | Number | ⬜ | 기본 2, 부족 시 4·6 자동 확대 |
-| reservable | Boolean | ⬜ | 예약가능 하드필터(요청 시) |
-| parking | Boolean | ⬜ | 주차가능 하드필터(요청 시) |
+| radiusKm | Number | ⬜ | 기본 2, 부족 시 4·6 자동 확대, 6 초과 시 400 |
+
+> 예약가능/주차가능 하드필터는 **모임 생성 시 입력한 `reservable`/`parking` 값**(FC-4 참조)을 그대로 사용한다. 이 API에서는 입력받지 않음.
 
 ### 응답 (200)
 추천 요약 또는 200 OK
@@ -21,6 +21,7 @@
 | 상태 | 코드 | 조건 |
 |---|---|---|
 | 403 | NOT_GROUP_HOST | 호스트 아님 |
+| 400 | INVALID_INPUT | radiusKm이 6 초과 |
 | 400 | PLACE_PHASE_NOT_READY | 날짜 미확정 |
 | 400 | LOCATION_PHASE_ALREADY_STARTED | 이미 시작 |
 | 400 | PARTICIPANT_DEPARTURE_NOT_SET | 출발지 미등록 참여자 |

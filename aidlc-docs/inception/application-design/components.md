@@ -3,7 +3,7 @@
 ## place 컨텍스트 (신규 `com.bangawo.place`)
 | Component | Layer | 책임 |
 |---|---|---|
-| `Place` | domain | 장소 도메인 모델(place_id, name, category_label, address, 좌표, vibe[], theme_codes[], reservable/parking, rating). 태그 매칭 헬퍼 |
+| `Place` | domain | 장소 도메인 모델(place_id, name, category_label, address, 좌표, vibe[], occasion(기존), reservable/parking, rating). 태그 매칭 헬퍼 |
 | `PlaceRepository` | domain (port) | 추천 후보 PostGIS 조회(반경+하드필터, 최근접역·거리 포함). vibe distinct 조회 |
 | `RecommendationCandidate` | domain | 후보 1건 VO(place + 직선거리 + 최근접 역) |
 | `PlaceScorer` | domain service | 순수 스코어링 함수(occasion/category/vibe/rating 가중합, min-max 정규화) |

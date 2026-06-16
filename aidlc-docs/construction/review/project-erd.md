@@ -198,7 +198,7 @@ erDiagram
         BIGINT place_id UK "네이버 place_id"
         VARCHAR category_label "한식/카페/.../기타"
         TEXT_ARRAY vibe "분위기 태그"
-        TEXT_ARRAY theme_codes "신규 V19: occasion 정규화(theme_tag 코드)"
+        TEXT_ARRAY occasion "%% [기존] AI 용도 태그 — theme_tag.display_name과 직접 비교(신규 컬럼 없음)"
         BOOLEAN reservable
         BOOLEAN has_parking
         NUMERIC rating
@@ -311,9 +311,8 @@ erDiagram
 | `group_invite` | V14 (FC-5) | 그룹 초대 코드 (48시간 만료) |
 | `subway_station` | V16 (MVP2) | 지하철역 마스터 (PostGIS) |
 | `subway_edge` | V17 (MVP2) | 지하철 이동 그래프 (RIDE/TRANSFER, weight_sec) |
-| `meeting` (확장) | **V18** | + categories[], vibes[] (장소추천 소프트옵션) |
-| `place` (확장) | **V19** | + theme_codes[] (occasion 정규화) |
-| `meeting_place_recommendation` | **V20** | 추천 15 스냅샷 (rank/score/귀속역) |
+| `meeting` (확장) | **V18** | + category_labels[], vibes[], reservable, parking (장소추천 옵션) |
+| `meeting_place_recommendation` | **V20** | 추천 15 스냅샷 (rank/score/귀속역) — place 테이블 변경 없음(기존 occasion 재사용) |
 | `meeting_place_pick` | **V21** | 장소 담기 (모임원×장소) |
 | `meeting_place_vote_session` | **V22** | 장소 투표 세션 (마감일) |
 | `meeting_place_vote` | **V23** | 장소 투표 (익명 집계) |

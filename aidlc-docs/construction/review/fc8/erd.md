@@ -11,7 +11,7 @@ erDiagram
         bigint place_id UK "네이버"
         varchar category_label
         text_array vibe
-        text_array theme_codes "신규 V19 occasion 정규화"
+        text_array occasion "%% [기존] AI 용도 태그(예: 회식/가족모임/스터디) — theme_tag.display_name과 직접 비교, 신규 컬럼 없음"
         boolean reservable
         boolean has_parking
         numeric rating
@@ -27,6 +27,6 @@ erDiagram
         timestamptz created_at
     }
 ```
-- V19: place + theme_codes TEXT[]
+- place 테이블 변경 없음 — 기존 `occasion`(TEXT[], V12) 그대로 사용
 - V20: meeting_place_recommendation 신규
-- (meeting + categories/vibes 는 FC-4 erd 참조, V18)
+- (meeting + categories/vibes/reservable/parking 는 FC-4 erd 참조, V18)

@@ -16,7 +16,7 @@ List<ScoredCandidate> score(List<RecommendationCandidate> cands,
 // score = 0.5*occ + 0.25*cat + 0.15*vibe + 0.1*rating (후보집합 min-max)
 
 // Place
-boolean matchesOccasion(String themeTagCode);   // theme_codes.contains
+boolean matchesOccasion(String themeTagDisplayName);   // 기존 occasion.contains, theme_tag.display_name과 비교
 boolean matchesCategory(List<String> categories);
 double vibeOverlap(List<String> vibes);
 ```

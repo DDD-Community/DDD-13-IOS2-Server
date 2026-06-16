@@ -13,7 +13,7 @@
 | 상태 | locationStatus 4-state(2축 유지) + dateVoteStatus==COMPLETED 가드 |
 | 추천 HARD | 반경(2→4→6km) + 예약/주차(요청, NULL 관대) |
 | 추천 SOFT | 0.5·occasion + 0.25·category + 0.15·vibe + 0.1·rating |
-| occasion 정합 | place.theme_codes(신규) ↔ themeTagCode, 데이터 별도 적재 |
+| occasion 정합 | place.occasion(기존) ↔ theme_tag.display_name 직접 비교, 신규 컬럼/데이터 적재 불필요 |
 | 모임 입력확장 | categoryLabels[], vibes[] (+ meeting 컬럼) |
 | 카드/이동부담 거리 | subway_edge 그래프 단일출발 다익스트라 |
 | 이동부담 저장 | VOTING 진입 시 1회 DB 스냅샷 |
@@ -35,7 +35,7 @@
 | 배치 | PlaceSelectionScheduler | 담기/투표 마감 |
 
 ## 5. 데이터 모델 (신규, V18~)
-- meeting +categories/vibes (V18) / place +theme_codes (V19)
+- meeting +category_labels/vibes/reservable/parking (V18)
 - meeting_place_recommendation(V20) / meeting_place_pick(V21)
 - meeting_place_vote_session(V22) / meeting_place_vote(V23)
 - meeting_travel_burden(V24) / meeting_confirmed_place(V25)
@@ -48,4 +48,4 @@
 
 ## 7. 검증
 - 일관성: 컴포넌트↔메서드↔서비스↔의존성 4문서 상호 정합 확인 완료
-- 미해결(데이터 태스크): place.theme_codes 적재, vibe 표준목록 — Construction 데이터 단계
+- 미해결(데이터 태스크): vibe 표준목록 정비 — Construction 데이터 단계 (occasion은 기존 데이터 재사용, 해결됨)

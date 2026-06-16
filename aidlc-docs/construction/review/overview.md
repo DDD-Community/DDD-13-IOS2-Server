@@ -85,7 +85,7 @@ stateDiagram-v2
 | FC-7-1 | 내 정보 수정 | `PATCH /groups/{id}/members/me/attendance`<br>`POST /departure-places`<br>`PUT /departure-places/{id}`<br>`PATCH /meetings/{id}/participants/me/departure` | group_member, departure_place, meeting_participant |
 | (그룹 생명주기) | 그룹 종료/새 모임 | `PATCH /groups/{id}/close`<br>`POST /groups/{id}/meetings` | group_info, meeting |
 | FC-midpoint | 중간지점 역 추천 | `POST /meetings/{id}/location/start`<br>`GET /meetings/{id}/midpoint-stations` | meeting_participant, subway_station, midpoint_station_candidate |
-| **FC-8** | 중간역 반경 장소 추천 15 | `POST /location/start`(확장)<br>`GET /recommendations`<br>`GET /places/options` | place(+theme_codes), meeting_place_recommendation |
+| **FC-8** | 중간역 반경 장소 추천 15 | `POST /location/start`(확장)<br>`GET /recommendations`<br>`GET /places/options` | place(기존 occasion 재사용, 컬럼 변경 없음), meeting_place_recommendation |
 | **FC-9** | 후보 담기/취소 | `GET /places`<br>`POST·DELETE /places/{id}/pick`<br>`GET /places/pick-status` | meeting_place_pick |
 | **FC-11** | 투표 세션·마감일 | `POST /place-vote` | meeting_place_vote_session |
 | **FC-12** | 익명 다중 투표 + 이동부담 | `POST /place-vote/submit`<br>`GET /place-vote` | meeting_place_vote, meeting_travel_burden, subway_edge |

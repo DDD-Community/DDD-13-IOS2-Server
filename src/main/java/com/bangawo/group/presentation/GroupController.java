@@ -32,7 +32,8 @@ public class GroupController {
     public CreateGroupResponse createGroup(Authentication auth,
                                            @Valid @RequestBody CreateGroupRequest request) {
         Long memberId = (Long) auth.getPrincipal();
-        return groupService.createGroupWithMeeting(memberId, request.getName(), request.getThemeTagCode());
+        return groupService.createGroupWithMeeting(memberId, request.getName(), request.getThemeTagCode(),
+                request.getCategoryLabels(), request.getVibes(), request.getReservable(), request.getParking());
     }
 
     @Operation(summary = "그룹 종료 — 호스트가 그룹을 수동으로 종료 (호스트 전용)")
@@ -50,7 +51,8 @@ public class GroupController {
                                                    @Valid @RequestBody CreateMeetingRequest request,
                                                    Authentication auth) {
         Long memberId = (Long) auth.getPrincipal();
-        Long meetingId = groupService.createNextMeeting(groupId, memberId, request.name(), request.themeTagCode());
+        Long meetingId = groupService.createNextMeeting(groupId, memberId, request.name(), request.themeTagCode(),
+                request.categoryLabels(), request.vibes(), request.reservable(), request.parking());
         return new CreateMeetingResponse(meetingId);
     }
 }

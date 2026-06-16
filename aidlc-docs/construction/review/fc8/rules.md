@@ -16,12 +16,12 @@
 
 ## 장소 후보 — HARD 필터
 - 3개 역 반경 N km(시작 2km, 부족 시 4·6) 내 place
-- 예약/주차: **요청 시에만** 적용. NULL(정보없음) **관대**: TRUE·NULL 포함, FALSE만 제외
+- 예약/주차: **모임 생성 시 입력한 `meeting.reservable`/`meeting.parking` 값을 그대로 사용** (location/start 요청에서 다시 입력받지 않음). NULL(조건 없음) **관대**: TRUE·NULL 포함, FALSE만 제외
 - 6km까지 0개 → PLACE_RECOMMENDATION_EMPTY(400)
 
 ## 스코어링 — SOFT (거리 제외)
 - `score = 0.5·occasion + 0.25·category + 0.15·vibe + 0.1·rating`
-  - occasion = place.theme_codes 가 모임 themeTagCode 포함 ? 1 : 0
+  - occasion = place.occasion(기존 AI 태그)가 모임 themeTagCode의 **theme_tag.display_name**(예: DINING→"회식") 포함 ? 1 : 0 — 신규 컬럼 없이 기존 occasion 데이터 그대로 사용
   - category = place.category_label ∈ 모임 categoryLabels ? 1 : 0
   - vibe = |모임 vibes ∩ place.vibe| / |모임 vibes|  (분모 0이면 0)
   - rating = 후보집합 min-max 정규화(결측 0.5)
