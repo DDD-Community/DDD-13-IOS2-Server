@@ -19,6 +19,7 @@ public class SubwayStationRepositoryImpl implements SubwayStationRepository {
         return jpaRepository.findRawCandidatesNearMeetingCenter(meetingId, limit)
                 .stream()
                 .map(row -> new StationCandidate(
+                        ((Number) row[3]).longValue(),
                         (String) row[0],
                         (String) row[1],
                         ((BigDecimal) row[2]).doubleValue()

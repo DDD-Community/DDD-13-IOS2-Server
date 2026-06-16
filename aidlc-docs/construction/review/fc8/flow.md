@@ -1,42 +1,29 @@
-# FC-8 로직 흐름
+# 처리 흐름 — FC-8 추천
 
-## 범위 정의
-
-| 기능 | MVP1 포함 여부 |
-|---|---|
-| 모임 자동 종료 (스케줄러) | ✅ FC-7에서 구현 완료 |
-| 새 모임 시작 | ✅ FC-7에서 구현 완료 |
-| 그룹 종료 (호스트 수동) | ✅ FC-8 구현 |
-| 호스트 위임 | ❌ MVP2 이후 |
-| 그룹 탈퇴 | ❌ MVP2 이후 |
-
----
-
-## 1. 그룹 종료
-
-```
-PATCH /api/v1/groups/{groupId}/close
-
-[Controller] → [GroupService.closeGroup]
-  1. JWT에서 memberId 추출
-  2. group 조회 (없으면 404)
-  3. groupMember 조회 → HOST인지 확인 (아니면 403)
-  4. group.isActive() 확인 (이미 CLOSED면 400)
-  5. group.close()  ← status = CLOSED
-  6. group 저장
-  응답: 204 No Content
+```mermaid
+sequenceDiagram
+    Host->>API: POST location/start radiusKm
+    API->>Meeting: 가드 dateVoteStatus COMPLETED and locationStatus BEFORE
+    API->>Participant: ATTEND LATE 출발지 검증
+    API->>PostGIS: centroid 중간역 3개 반경 2 4 6 사다리
+    API->>Meeting: reservable parking 조회(생성시 저장된 값)
+    API->>PlaceRepo: findCandidates 역3 반경 reservable parking 하드필터
+    PlaceRepo-->>API: 후보 거리 최근접역 포함
+    API->>Scorer: soft 점수 정규화
+    Scorer-->>API: 상위 15 귀속역
+    API->>DB: meeting_place_recommendation 저장
+    API->>Meeting: locationStatus RECOMMENDED
+    API-->>Host: 추천 결과
 ```
 
----
+## 단계
+1. 가드 통과 → 2. 참여자 출발지 검증 → 3. 중간역3(2→4→6km)
+4. 후보 수집(HARD: 반경+예약/주차) → 5. SOFT 점수 → 6. top15+귀속역 → 7. 스냅샷 + RECOMMENDED
 
-## 상태 전이 요약
+## 상태 전이
+- BEFORE → RECOMMENDED
 
-```
-GroupStatus:
-
-ACTIVE : 그룹 생성 시 기본값.
-CLOSED : 호스트가 수동으로 종료하거나 (FC-8),
-         그룹 내 모든 모임이 종료된 이후 재사용 없을 때 (미래 고려).
-
-ACTIVE ──[호스트 수동 종료]──────────────────────────→ CLOSED
-```
+## 엣지
+- 역 0개 → MIDPOINT_STATION_NOT_FOUND
+- 장소 0개(6km) → PLACE_RECOMMENDATION_EMPTY
+- 15 미만 → 가능한 만큼

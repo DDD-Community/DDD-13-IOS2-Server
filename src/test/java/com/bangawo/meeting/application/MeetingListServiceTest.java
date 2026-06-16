@@ -69,9 +69,9 @@ class MeetingListServiceTest {
         given(groupRepository.findAllById(any())).willReturn(List.of(group1, group2, group3));
 
         // group1 → CLOSED (confirmedDate 지남), group2 → CONFIRMED, group3 → IN_PROGRESS
-        Meeting closedMeeting = meeting(10L, 1L, LocationStatus.COMPLETED, DateVoteStatus.COMPLETED,
+        Meeting closedMeeting = meeting(10L, 1L, LocationStatus.CONFIRMED, DateVoteStatus.COMPLETED,
                 LocalDate.now().minusDays(1), now.minusDays(5));
-        Meeting confirmedMeeting = meeting(20L, 2L, LocationStatus.COMPLETED, DateVoteStatus.COMPLETED,
+        Meeting confirmedMeeting = meeting(20L, 2L, LocationStatus.CONFIRMED, DateVoteStatus.COMPLETED,
                 null, now.minusDays(4));
         Meeting inProgressMeeting = meeting(30L, 3L, LocationStatus.BEFORE, DateVoteStatus.BEFORE,
                 null, now.minusDays(3));

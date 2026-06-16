@@ -1,45 +1,51 @@
-# Services — 중간지점 역 후보 추출 (MVP2)
+# Services & Orchestration — FC-8~13
 
-## LocationService
-- **Layer**: Application (meeting context)
-- **Transaction**: @Transactional
-- **Role**: location 단계 시작 오케스트레이션
-- **Flow**:
-  1. Meeting 조회 → 존재 확인
-  2. GroupMember 조회 → 호스트 역할 확인
-  3. meeting.startLocationPhase() (상태 전이)
-  4. MidpointCalculationService.calculate() 호출
-  5. 결과를 MidpointStationCandidate로 변환 후 저장
-  6. meeting 저장
+## PlaceSelectionService (FC-8)
+오케스트레이션:
+1. 모임/호스트 검증 + `Meeting.startLocationPhase()`(가드: dateVoteStatus==COMPLETED)
+2. ATTEND/LATE 참여자 출발지 스냅샷 검증
+3. `MidpointCalculationService.calculate` → 중간역 3개(반경 2→4→6 사다리)
+4. `PlaceRepository.findCandidates(역3, 반경, 예약/주차)` → 후보(거리·최근접역 포함)
+5. `PlaceScorer.score(...)` → 상위 15 + 귀속역
+6. `MeetingPlaceRecommendation` 저장, `locationStatus→RECOMMENDED`
+- 0개(6km) → `PLACE_RECOMMENDATION_EMPTY`
 
-## MidpointCalculationService
-- **Layer**: Application (meeting context)
-- **Transaction**: readOnly 가능 (계산만)
-- **Role**: PostGIS 기반 중간지점 역 계산
-- **Flow**:
-  1. SubwayStationRepository.findCandidatesNearMeetingCenter(meetingId, 3)
-  2. 결과가 0개면 BusinessException(MIDPOINT_STATION_NOT_FOUND)
-  3. StationCandidate 리스트 반환
+## PlacePickService (FC-9)
+- `getPlaces`: 추천 스냅샷 + 역탭/카테고리/필터 + 보는사람 카드거리(`ShortestPathService.shortestFrom(내출발역)`)
+- `togglePick`: 담기/취소. 담기수 0→1 = 담기완료, 1→0 = 미완료
+  - 후처리: 전원 담기완료면 `toVoting()` 전환 트리거(→ PlaceVoteService.openSession 기본 +3일)
+- `startVoteByHost`: 후보≥1 시 즉시 VOTING 전환
 
-## CreateMeetingService (기존 수정)
-- **변경점**: meeting 저장 후 MeetingParticipantRepository.saveAll() 추가
-- **Flow 추가**:
-  1. (기존) group 조회 + meeting 생성 + meeting 저장
-  2. (신규) groupMemberRepository.findByGroupId() 조회
-  3. (신규) 각 멤버의 default departure_place 좌표로 MeetingParticipant 생성
-  4. (신규) meetingParticipantRepository.saveAll()
+## PlaceVoteService (FC-11/12)
+- `openSession`(내부): VoteSession 생성(마감 프리셋/기본+3일, 검증: 시작<마감<약속일)
+  - **이동부담 스냅샷 생성**: 참여자별 `ShortestPathService.shortestFrom(출발역)` 1회 → 각 후보 최근접역 조회 → `MeetingTravelBurden` 저장
+- `submitVote`: 다중제한(후보수 50% 내림, 최소1) 검증, 익명 저장. 0개되면 미완료
+  - 후처리: 전원 투표완료면 `PlaceConfirmService.confirm` 트리거
+- `getVoteStatus`: 익명 집계(득표수) + 후보별 이동부담(시간/환승) + 최장이동자 식별
 
-## 서비스 의존 관계
+## PlaceConfirmService (FC-13)
+- `confirm`: 4단계 순위(득표→시간합→환승합→등록순) → 1위 `MeetingConfirmedPlace` 저장, `locationStatus→CONFIRMED`
+- 전원 기권 → 4순위(등록순)
+
+## PlaceSelectionScheduler (기존 MeetingScheduler 패턴, @cron 매일 0시 KST)
+- `processPickDeadlines`: 담기마감(+3일) 도래 → 후보≥1 VOTING / 후보0 top3 자동등록 후 VOTING
+- `processVoteDeadlines`: 투표마감 도래 → `confirm`
+
+## 서비스 상호작용
+```mermaid
+flowchart TD
+    PSS[PlaceSelectionService] --> MCS[MidpointCalculationService]
+    PSS --> PR[PlaceRepository]
+    PSS --> PSc[PlaceScorer]
+    PPS[PlacePickService] --> SPS[ShortestPathService]
+    PVS[PlaceVoteService] --> SPS
+    PVS --> PCS[PlaceConfirmService]
+    SCH[Scheduler] --> PVS
+    SCH --> PCS
+    SPS --> SG[SubwayGraph]
 ```
-LocationController
-    → LocationService
-        → MeetingRepository
-        → GroupMemberRepository
-        → MidpointCalculationService
-            → SubwayStationRepository (subway context)
-        → MidpointStationCandidateRepository
 
-CreateMeetingService (기존)
-    → (추가) MeetingParticipantRepository
-    → (추가) DeparturePlaceRepository
-```
+## 트랜잭션 경계
+- 각 application 서비스 메서드 = 트랜잭션 단위
+- 그래프 로딩/다익스트라는 읽기 전용(메모리), 스냅샷 저장만 쓰기
+- 상태전이 + 스냅샷 저장은 동일 트랜잭션

@@ -1,140 +1,67 @@
-# Code Structure
+# Code Structure (RE refresh — FC-8~13 관점, 2026-06-16)
 
 ## Build System
-- **Type**: Gradle
-- **Java**: 17
-- **Spring Boot**: 3.4.4
+- Gradle / Java 17 / Spring Boot 3.4.4
+- Flyway migrations: V1 ~ V17 (17개)
+- Java 소스: 171 files
 
-## DDD 구현 패턴 (MVP1 구현 시 반드시 동일 패턴 적용)
+## DDD 구현 패턴 (신규 코드 작성 시 동일 적용)
+- **도메인 모델**: `{context}/domain/`, JPA 애노테이션 없음, `@Getter @Builder`, 정적 팩토리 + 비즈니스 메서드
+- **JPA 엔티티**: `{context}/infrastructure/persistence/`, `*JpaEntity`, `from(domain)` / `toDomain()`
+- **Repository 인터페이스**: `{context}/domain/`, `*Repository`, 도메인 모델 반환
+- **Repository 구현체**: `{context}/infrastructure/persistence/`, `*RepositoryImpl`, JpaRepository 위임
+- **앱 서비스**: `{context}/application/`, `*Service`, `@Transactional`, 오케스트레이션
+- **컨트롤러**: `{context}/presentation/`, `@RestController @RequestMapping("/api/v1/...")`, DTO 변환
+- **예외**: `throw new BusinessException(ErrorCode.XXX)` → `GlobalExceptionHandler`
+- **마이그레이션**: `V{n}__{설명}.sql`, `BIGINT GENERATED ALWAYS AS IDENTITY`, prefix 중복 금지
+- **네이티브 PostGIS 쿼리**: subway 컨텍스트 RepositoryImpl 참고 (geography, ST_Distance, GIST)
 
-### 패턴 1: 도메인 모델
-```java
-// 위치: {context}/domain/
-// 규칙: JPA 애노테이션 없음, @Getter + @Builder, 비즈니스 메서드 포함
-@Getter
-public class Member {
-    private Long id;
-    // ... fields
+## FC-8~13 관련 기존 파일 인벤토리 (수정/참조 후보)
 
-    @Builder
-    public Member(...) { ... }
+### meeting (확장 핵심)
+- `meeting/domain/Meeting.java` — 모임 애그리거트. `locationStatus`, `startLocationPhase()` 보유 / **상태 enum 확장 필요**
+- `meeting/domain/LocationStatus.java` — 현 `BEFORE/IN_PROGRESS/COMPLETED` / **PRD 기준 재정의 필요**
+- `meeting/domain/MeetingParticipant.java` — 출발지 스냅샷(lat/lng, attendanceStatus)
+- `meeting/domain/MidpointStationCandidate.java` — 중간지점 역 rank 1~3
+- `meeting/application/LocationService.java` — 장소선정 시작 오케스트레이션 / **FC-8 추천 단계 추가 지점**
+- `meeting/application/MidpointCalculationService.java` — PostGIS 중간지점 계산
+- `meeting/presentation/LocationController.java` — `/location/start`, `/midpoint-stations`, `/participants/me/departure`
+- `meeting/application/MeetingSchedulerService.java`, `VoteSchedulerService.java` — 마감 배치 패턴(FC-9/12 재사용)
+- `meeting/infrastructure/scheduler/MeetingScheduler.java` — `@Scheduled(cron "0 0 0 * * *" KST)`
+- `meeting/infrastructure/persistence/*` — JpaEntity/RepositoryImpl 패턴 참조
 
-    // 정적 팩토리 메서드
-    public static Member create(...) { ... }
+### subway (확장 핵심)
+- `subway/domain/SubwayStationRepository.java` — `findCandidatesNearMeetingCenter(meetingId, limit)`
+- `subway/domain/StationCandidate.java` — record(stationName, lines, distanceKm)
+- `subway/infrastructure/persistence/SubwayStationRepositoryImpl.java` — native PostGIS 쿼리
+- **subway_edge: 도메인/리포지토리 코드 없음 → 신규 그래프 로딩·최단경로 컴포넌트 필요(FC-12)**
 
-    // 비즈니스 메서드
-    public void updateProfile(...) { ... }
-}
-```
+### place (테이블만 존재 — 도메인 신규 필요)
+- `place`(V12) 테이블: place_id, name, category, category_label, address, lat/lng, location_point(geography),
+  has_room/has_group_seat/has_parking/reservable, max_group_size, vibe[], occasion[], naver_url 등
+- **place 도메인/리포지토리/추천 스코어링 코드 전부 신규**
 
-### 패턴 2: JPA 엔티티 (도메인과 분리)
-```java
-// 위치: {context}/infrastructure/persistence/
-// 규칙: *JpaEntity 접미사, from(domain) + toDomain() 변환 메서드
-@Entity
-@Table(name = "member")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MemberJpaEntity {
-    // JPA 필드들
+### member / group (참조)
+- `member/domain/departure/DeparturePlace.java` — 출발지 좌표 원천
+- `group/domain/GroupMember.java`, `GroupMemberRole.java`(HOST), `AttendanceStatus.java`(ATTEND/LATE/ABSENT)
 
-    public static MemberJpaEntity from(Member domain) { ... }
-    public Member toDomain() { ... }
-}
-```
+### global (공통)
+- `global/error/ErrorCode.java` — 에러코드 (MEETING_001~013 등) / **FC-8~13 신규 코드 추가 예정**
+- `global/common/Coordinate.java` — 좌표 VO
 
-### 패턴 3: Repository 인터페이스 (도메인 레이어)
-```java
-// 위치: {context}/domain/
-// 규칙: *Repository 접미사, 도메인 모델 반환 (JpaEntity 반환 금지)
-public interface MemberRepository {
-    Optional<Member> findById(Long id);
-    Member save(Member member);
-}
-```
+## DB Migrations (현행 V1~V17)
+| 버전 | 내용 |
+|---|---|
+| V11 | meeting_participant |
+| V12 | place (장소 마스터) |
+| V13 | midpoint_station_candidate |
+| V16 | subway_station |
+| V17 | **subway_edge (이동 그래프, RIDE/TRANSFER, weight_sec)** |
+→ FC-8~13 신규 테이블은 **V18~** 부터 채번.
 
-### 패턴 4: Repository 구현체 (인프라 레이어)
-```java
-// 위치: {context}/infrastructure/persistence/
-// 규칙: *RepositoryImpl 접미사, JpaRepository 위임, toDomain() 변환
-@Repository
-@RequiredArgsConstructor
-public class MemberRepositoryImpl implements MemberRepository {
-    private final MemberJpaRepository jpaRepository;
-
-    @Override
-    public Member save(Member member) {
-        return jpaRepository.save(MemberJpaEntity.from(member)).toDomain();
-    }
-}
-```
-
-### 패턴 5: 애플리케이션 서비스
-```java
-// 위치: {context}/application/
-// 규칙: *Service 접미사, @Transactional, 오케스트레이션만, 비즈니스 로직 금지
-@Service
-@RequiredArgsConstructor
-@Transactional
-public class AuthService {
-    // 생성자 주입만 사용
-}
-```
-
-### 패턴 6: 컨트롤러
-```java
-// 위치: {context}/presentation/
-// 규칙: @RestController, @RequestMapping("/api/v1/..."), DTO 사용
-// DTO 위치: {context}/presentation/dto/
-@RestController
-@RequestMapping("/api/v1/auth")
-public class AuthController { ... }
-```
-
-### 패턴 7: 예외 처리
-```java
-// 사용법: throw new BusinessException(ErrorCode.XXX)
-// ErrorCode: HTTP 상태코드 + 코드문자열 + 메시지 정의
-// GlobalExceptionHandler가 일괄 처리
-throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
-```
-
-### 패턴 8: DB 마이그레이션
-```sql
--- 파일명: V{n}__{설명}.sql
--- BIGINT GENERATED ALWAYS AS IDENTITY (시퀀스 방식)
--- 테이블명 prefix 중복 금지 (member_id O, member_member_id X)
-CREATE TABLE group_info (
-    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    ...
-);
-```
-
-## 기존 파일 인벤토리
-
-### global
-- `global/config/SecurityConfig.java` — JWT 필터 체인, 공개 엔드포인트 설정
-- `global/config/WebConfig.java` — CORS 설정
-- `global/config/SwaggerConfig.java` — OpenAPI 설정
-- `global/security/JwtProvider.java` — Access/Refresh 토큰 생성·검증
-- `global/security/JwtAuthenticationFilter.java` — 요청별 JWT 파싱·인증 주입
-- `global/error/ErrorCode.java` — 비즈니스 에러 코드 목록
-- `global/error/BusinessException.java` — 비즈니스 예외
-- `global/error/GlobalExceptionHandler.java` — 전역 예외 처리
-- `global/common/Coordinate.java` — 좌표 VO (latitude, longitude)
-
-### auth
-- `auth/domain/Member.java` — 회원 도메인 모델
-- `auth/domain/MemberRepository.java` — 회원 저장소 인터페이스
-- `auth/domain/RefreshToken.java` — 리프레시 토큰 도메인 모델
-- `auth/infrastructure/persistence/MemberJpaEntity.java` — 회원 JPA 엔티티
-- `auth/infrastructure/persistence/MemberRepositoryImpl.java` — 회원 저장소 구현체
-- `auth/infrastructure/social/KakaoAuthClient.java` — 카카오 OAuth 클라이언트
-- `auth/application/AuthService.java` — 인증 유스케이스
-- `auth/presentation/AuthController.java` — 인증 REST API
-
-### member
-- `member/domain/departure/DeparturePlace.java` — 출발지 도메인 모델
-- `member/domain/terms/Terms.java`, `TermsAgreement.java` — 약관 도메인 모델
-- `member/infrastructure/...` — JPA 엔티티 + 구현체
-- `member/application/MemberService.java`, `DeparturePlaceService.java`, `TermsService.java`
-- `member/presentation/MemberController.java`, `DeparturePlaceController.java`, `TermsController.java`
+## 신규 마이그레이션 후보 (RA/설계에서 확정)
+- 모임별 추천 장소 15개 스냅샷(스코어·귀속역)
+- 장소 담기(후보) — 모임원별 담기/취소
+- 장소 투표 — 익명 다중
+- 후보별 이동부담 스냅샷(소요시간·환승) — subway_edge 최단경로 결과
+- 장소 확정 결과

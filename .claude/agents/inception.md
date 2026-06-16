@@ -81,20 +81,29 @@ Save to `aidlc-docs/inception/units/`. Await user approval.
 
 ## Review Artifacts (always, before completion)
 
-유닛별로 `aidlc-docs/construction/review/{unit}/` 에 아래 4개 파일 생성.
-Application Design / Units Generation 결과물을 바탕으로 작성.
+**기존 컨벤션을 따른다.** `aidlc-docs/construction/review/` 는 **FC 단위 폴더**(`fc4`, `fc5`, `fc8`, `fc9` ...)로 구성된다. 임의의 `unit-N` 폴더를 새로 만들지 말 것 — 반드시 기존 FC 번호 체계를 재사용/확장한다.
+
+기능이 **기존 FC를 수정/확장**하면 새 폴더를 만들지 말고 **해당 FC 폴더의 파일을 수정**한다.
+
+각 FC 폴더에 아래 4개 파일 생성/갱신 (Application Design / Units Generation 결과물 기반):
 
 - `rules.md` — 비즈니스 규칙 및 제약사항
 - `api.md` — API 엔드포인트, 요청/응답 스키마, 에러 코드
 - `erd.md` — 엔티티 관계도
 - `flow.md` — API별 처리 흐름, 단계별 순서, 상태 전이
 
-**Gate**: Bash로 4개 파일 전부 존재 확인.
+또한 **공통 문서도 갱신**한다:
+- `aidlc-docs/construction/review/overview.md` — 앱 전체 플로우(상태 변화 포함)
+- `aidlc-docs/construction/review/project-erd.md` — 전체 테이블 마스터 ERD
+
+**Gate**: Bash로 각 FC 폴더의 4개 파일 + 공통 문서 갱신 여부 확인.
 ```
-aidlc-docs/construction/review/{unit}/rules.md
-aidlc-docs/construction/review/{unit}/api.md
-aidlc-docs/construction/review/{unit}/erd.md
-aidlc-docs/construction/review/{unit}/flow.md
+aidlc-docs/construction/review/{fcN}/rules.md
+aidlc-docs/construction/review/{fcN}/api.md
+aidlc-docs/construction/review/{fcN}/erd.md
+aidlc-docs/construction/review/{fcN}/flow.md
+aidlc-docs/construction/review/overview.md   (갱신)
+aidlc-docs/construction/review/project-erd.md (갱신)
 ```
 하나라도 없으면 생성 완료 후 **반드시 사용자 승인 대기**.
 승인 없이 Completion으로 넘어가지 말 것.
