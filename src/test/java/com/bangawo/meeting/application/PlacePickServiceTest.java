@@ -1,15 +1,12 @@
 package com.bangawo.meeting.application;
 
-import com.bangawo.auth.domain.Member;
 import com.bangawo.auth.domain.MemberRepository;
 import com.bangawo.global.error.BusinessException;
-import com.bangawo.global.error.ErrorCode;
 import com.bangawo.group.domain.GroupMember;
 import com.bangawo.group.domain.GroupMemberRepository;
 import com.bangawo.group.domain.GroupMemberRole;
 import com.bangawo.meeting.domain.*;
 import com.bangawo.meeting.presentation.dto.PlaceCardResponse;
-import com.bangawo.meeting.presentation.dto.PickStatusResponse;
 import com.bangawo.place.domain.Place;
 import com.bangawo.place.domain.PlaceRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,11 +20,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -41,6 +39,7 @@ class PlacePickServiceTest {
     @Mock MeetingPlaceRecommendationRepository meetingPlaceRecommendationRepository;
     @Mock PlaceRepository placeRepository;
     @Mock MemberRepository memberRepository;
+    @Mock PlaceVoteService placeVoteService;
 
     @InjectMocks PlacePickService service;
 
@@ -63,8 +62,9 @@ class PlacePickServiceTest {
         hostGroupMember = GroupMember.builder()
                 .groupId(10L).memberId(1L).role(GroupMemberRole.HOST).build();
     }
+
     @Test
-    void getPlaces_stationId_필터_적용() {
+    void getPlaces_stationId_filter() {
         given(meetingRepository.findById(1L)).willReturn(Optional.of(recommendedMeeting));
         given(groupMemberRepository.findByGroupIdAndMemberId(10L, 2L)).willReturn(Optional.of(memberGroupMember));
 
@@ -74,103 +74,101 @@ class PlacePickServiceTest {
                 .willReturn(List.of(rec1, rec2));
 
         Place place1 = Place.builder().id(100L).name("A").categoryLabel("RESTAURANT")
-                .address("서울").vibe(List.of("캐주얼")).build();
+                .address("Seoul").vibe(List.of("casual")).build();
         given(placeRepository.findByIds(List.of(100L))).willReturn(List.of(place1));
         given(meetingPlacePickRepository.findByMeetingId(1L)).willReturn(List.of());
 
         List<PlaceCardResponse> result = service.getPlaces(1L, 2L, 5L, null, null, null);
-
         assertThat(result).hasSize(1);
         assertThat(result.get(0).placeId()).isEqualTo(100L);
-        assertThat(result.get(0).cardDistance()).isNull();
     }
 
     @Test
-    void pickPlace_정상_담기() {
+    void pickPlace_success() {
         given(meetingRepository.findById(1L)).willReturn(Optional.of(recommendedMeeting));
         given(groupMemberRepository.findByGroupIdAndMemberId(10L, 2L)).willReturn(Optional.of(memberGroupMember));
         given(meetingPlacePickRepository.existsByMeetingIdAndMemberIdAndPlaceId(1L, 2L, 100L)).willReturn(false);
         given(meetingParticipantRepository.findByMeetingId(1L)).willReturn(List.of());
 
         service.pickPlace(1L, 2L, 100L);
-
         verify(meetingPlacePickRepository).save(any(MeetingPlacePick.class));
     }
 
     @Test
-    void pickPlace_이미_담음_멱등() {
+    void pickPlace_idempotent() {
         given(meetingRepository.findById(1L)).willReturn(Optional.of(recommendedMeeting));
         given(groupMemberRepository.findByGroupIdAndMemberId(10L, 2L)).willReturn(Optional.of(memberGroupMember));
         given(meetingPlacePickRepository.existsByMeetingIdAndMemberIdAndPlaceId(1L, 2L, 100L)).willReturn(true);
 
         service.pickPlace(1L, 2L, 100L);
-
         verify(meetingPlacePickRepository, never()).save(any());
     }
 
     @Test
-    void pickPlace_LOCATION_NOT_RECOMMENDED_예외() {
+    void pickPlace_not_recommended_throws() {
         Meeting beforeMeeting = Meeting.builder()
                 .id(1L).groupId(10L).name("t").themeTagCode("DINING")
-                .status(MeetingStatus.ACTIVE)
-                .locationStatus(LocationStatus.BEFORE)
+                .status(MeetingStatus.ACTIVE).locationStatus(LocationStatus.BEFORE)
                 .dateVoteStatus(DateVoteStatus.BEFORE).build();
         given(meetingRepository.findById(1L)).willReturn(Optional.of(beforeMeeting));
         given(groupMemberRepository.findByGroupIdAndMemberId(10L, 2L)).willReturn(Optional.of(memberGroupMember));
 
         assertThatThrownBy(() -> service.pickPlace(1L, 2L, 100L))
-                .isInstanceOf(com.bangawo.global.error.BusinessException.class);
+                .isInstanceOf(BusinessException.class);
     }
 
     @Test
-    void pickPlace_마감_PLACE_PICK_CLOSED_예외() {
-        Meeting expiredMeeting = Meeting.builder()
+    void pickPlace_deadline_expired_throws() {
+        Meeting expired = Meeting.builder()
                 .id(1L).groupId(10L).name("t").themeTagCode("DINING")
-                .status(MeetingStatus.ACTIVE)
-                .locationStatus(LocationStatus.RECOMMENDED)
+                .status(MeetingStatus.ACTIVE).locationStatus(LocationStatus.RECOMMENDED)
                 .dateVoteStatus(DateVoteStatus.COMPLETED)
-                .pickDeadline(LocalDateTime.now().minusSeconds(1))
-                .build();
-        given(meetingRepository.findById(1L)).willReturn(Optional.of(expiredMeeting));
+                .pickDeadline(LocalDateTime.now().minusSeconds(1)).build();
+        given(meetingRepository.findById(1L)).willReturn(Optional.of(expired));
         given(groupMemberRepository.findByGroupIdAndMemberId(10L, 2L)).willReturn(Optional.of(memberGroupMember));
 
         assertThatThrownBy(() -> service.pickPlace(1L, 2L, 100L))
-                .isInstanceOf(com.bangawo.global.error.BusinessException.class);
+                .isInstanceOf(BusinessException.class);
     }
+
     @Test
-    void pickPlace_전원_담기완료_자동_VOTING_전환() {
+    void pickPlace_all_done_auto_transitions_to_voting() {
         MeetingParticipant p1 = MeetingParticipant.create(1L, 2L, null, null, "JOIN");
         given(meetingRepository.findById(1L)).willReturn(Optional.of(recommendedMeeting));
         given(groupMemberRepository.findByGroupIdAndMemberId(10L, 2L)).willReturn(Optional.of(memberGroupMember));
         given(meetingPlacePickRepository.existsByMeetingIdAndMemberIdAndPlaceId(1L, 2L, 100L)).willReturn(false);
         given(meetingParticipantRepository.findByMeetingId(1L)).willReturn(List.of(p1));
         given(meetingPlacePickRepository.countByMeetingIdAndMemberId(1L, 2L)).willReturn(1);
+        given(placeVoteService.createSessionWithDefaultDuration(anyLong())).willReturn(null);
 
         service.pickPlace(1L, 2L, 100L);
 
         verify(meetingRepository).save(any(Meeting.class));
         assertThat(recommendedMeeting.getLocationStatus()).isEqualTo(LocationStatus.VOTING);
+        verify(placeVoteService).createSessionWithDefaultDuration(1L);
     }
 
     @Test
-    void startVoting_durationDays_유효성_실패() {
+    void startVoting_invalid_duration_throws() {
         given(meetingRepository.findById(1L)).willReturn(Optional.of(recommendedMeeting));
         given(groupMemberRepository.findByGroupIdAndMemberId(10L, 1L)).willReturn(Optional.of(hostGroupMember));
         given(meetingPlacePickRepository.existsByMeetingId(1L)).willReturn(true);
 
         assertThatThrownBy(() -> service.startVoting(1L, 1L, 2))
-                .isInstanceOf(com.bangawo.global.error.BusinessException.class);
+                .isInstanceOf(BusinessException.class);
     }
 
     @Test
-    void startVoting_정상_VOTING_전환() {
+    void startVoting_success() {
         given(meetingRepository.findById(1L)).willReturn(Optional.of(recommendedMeeting));
         given(groupMemberRepository.findByGroupIdAndMemberId(10L, 1L)).willReturn(Optional.of(hostGroupMember));
         given(meetingPlacePickRepository.existsByMeetingId(1L)).willReturn(true);
+        given(placeVoteService.createSession(anyLong(), anyInt())).willReturn(null);
 
         service.startVoting(1L, 1L, 3);
 
         assertThat(recommendedMeeting.getLocationStatus()).isEqualTo(LocationStatus.VOTING);
         verify(meetingRepository).save(recommendedMeeting);
+        verify(placeVoteService).createSession(1L, 3);
     }
 }

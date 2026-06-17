@@ -1,49 +1,32 @@
-# Unit Test Execution
+# Unit Test Instructions
 
-## 테스트 파일 목록
+## Test Framework
+- **JUnit 5** + **Mockito** (@Mock / @InjectMocks / @ExtendWith(MockitoExtension.class))
+- **AssertJ** for assertions
 
-| 파일 | 테스트 수 | 검증 범위 | FC |
-|---|---|---|---|
-| `GlobalExceptionHandlerTest` | 2 | BusinessException → HTTP 응답 변환 | 공통 |
-| `JwtProviderTest` | 4 | JWT 발급 · 검증 · 만료 | 공통 |
-| `MeetingComputeListStatusTest` | 7 | `Meeting.computeListStatus()` 도메인 로직 | FC-6 |
-| `MeetingListServiceTest` | 4 | `MeetingListService.getMyMeetingList()` 애플리케이션 로직 | FC-6 |
-| `GroupMemberServiceTest` | 2 | 참석여부 수정 · 미구성원 예외 | FC-7-1 |
-| `DeparturePlaceServiceTest` | 5 | 출발지 추가(방어로직) · 수정 · 한도초과 예외 | FC-7-1 |
+## Test Scope (77 tests, 0 failures)
 
-## 실행 방법
+### Meeting Context
+| Test Class | Coverage |
+|---|---|
+| `PlacePickServiceTest` | 담기/취소/현황/투표시작/자동VOTING전환 |
+| `PlaceVoteServiceTest` | 투표제출/재투표/최대투표수 검증/전원투표시 자동확정 |
+| `PlaceConfirmServiceTest` | 4단계 순위 로직 (득표↓·이동시간합↑·환승합↑·담긴순↑) |
+| `PlaceVoteSchedulerServiceTest` | 마감기한 초과 세션 자동 CLOSED + 확정 처리 |
 
-### 전체 유닛 테스트 실행
+### Subway Context
+| Test Class | Coverage |
+|---|---|
+| `SubwayGraphTest` | Dijkstra 경로 계산, 환승 가중치, 도달불가 station |
 
+## Run Command
 ```bash
-./gradlew test
+./gradlew test --no-daemon
+# 특정 클래스만
+./gradlew test --tests "com.bangawo.meeting.application.PlaceVoteServiceTest" --no-daemon
 ```
 
-### FC-7-1 관련 테스트만 실행
-
-```bash
-./gradlew test --tests "com.bangawo.group.application.GroupMemberServiceTest"
-./gradlew test --tests "com.bangawo.member.application.DeparturePlaceServiceTest"
-```
-
-## 성공 기준
-
-- Total 24개, Failures 0, Errors 0
-- 리포트 위치: `build/reports/tests/test/index.html`
-
-## GroupMemberServiceTest 커버리지
-
-| 케이스 | 기대 결과 |
-|---|---|
-| 정상 요청 | attendanceStatus 변경 후 save 호출 |
-| 미구성원 | `403 GROUP_003` BusinessException |
-
-## DeparturePlaceServiceTest 커버리지
-
-| 케이스 | 기대 결과 |
-|---|---|
-| 첫 등록 (isDefault=false 전달) | isDefault 강제 true로 저장 |
-| 최대 3개 초과 | `400 MEMBER_003` BusinessException |
-| isDefault=true 요청 | clearDefaultByMemberId 호출 |
-| 수정 성공 | label/address/좌표 변경, isDefault 유지 |
-| 타인 소유 수정 시도 | `404 MEMBER_005` BusinessException |
+## Key Patterns
+- `@ExtendWith(MockitoExtension.class)` — Spring context 불필요
+- `@InjectMocks` 대상에 새 의존성 추가 시 반드시 `@Mock` 선언 추가
+- Business rule 검증: `assertThatThrownBy(...).isInstanceOf(BusinessException.class)`
