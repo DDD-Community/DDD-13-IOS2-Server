@@ -455,3 +455,10 @@ Clarification 2 원문: "A가 가장 괜찮아보이네 역 후보도 보여줘�
 **TODO(향후, 범위 외)**: User 요청 — place.occasion 원본 데이터에서 혼밥/혼술류 "혼자" 용도 태그를 데이터 파이프라인(DDD/Data) 단계에서 제외하는 작업 필요. 이 리포 범위 아님, 별도 추적
 **review 갱신**: fc4/rules.md, fc4/api.md (테마태그 선택지 15종, GET /theme-tags 응답 예시)
 **검증**: compileJava/compileTestJava + test 전체 통과 (13 클래스)
+
+---
+## 2026-06-17T00:00:00+09:00 — U3 FC-9 Code Generation Plan (Part 1)
+
+**Action**: U3(담기 FC-9) 코드 생성 플랜 작성 및 승인 요청
+**Plan file**: `aidlc-docs/construction/internal/plans/unit-3-fc9-code-generation-plan.md`
+**Status**: AWAITING_APPROVAL
