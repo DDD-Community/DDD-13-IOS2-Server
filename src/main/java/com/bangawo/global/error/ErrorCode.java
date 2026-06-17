@@ -52,6 +52,14 @@ public enum ErrorCode {
     PARTICIPANT_DEPARTURE_NOT_SET(HttpStatus.BAD_REQUEST, "MEETING_011", "출발지를 등록하지 않은 참여자가 있습니다"),
     MIDPOINT_STATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING_012", "중간지점 근처에 지하철역을 찾을 수 없습니다"),
     MEETING_PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND, "MEETING_013", "모임 참여자를 찾을 수 없습니다"),
+    PLACE_PHASE_NOT_READY(HttpStatus.BAD_REQUEST, "MEETING_014", "날짜가 아직 확정되지 않았습니다"),
+    PLACE_RECOMMENDATION_EMPTY(HttpStatus.BAD_REQUEST, "MEETING_015", "추천 가능한 장소가 없습니다"),
+    LOCATION_NOT_RECOMMENDED(HttpStatus.BAD_REQUEST, "MEETING_016", "장소 추천 단계가 아닙니다"),
+    PLACE_PICK_CLOSED(HttpStatus.BAD_REQUEST, "MEETING_017", "담기가 마감되었습니다"),
+    PLACE_VOTE_DEADLINE_INVALID(HttpStatus.BAD_REQUEST, "MEETING_018", "투표 마감일은 약속 날짜 이전으로 설정해 주세요"),
+    PLACE_VOTE_NOT_IN_PROGRESS(HttpStatus.BAD_REQUEST, "MEETING_019", "투표가 진행 중이 아닙니다"),
+    PLACE_VOTE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "MEETING_020", "투표 가능 개수를 초과했습니다"),
+    PLACE_NOT_CONFIRMED(HttpStatus.BAD_REQUEST, "MEETING_021", "아직 장소가 확정되지 않았습니다"),
 
     // Storage
     STORAGE_INVALID_TYPE(HttpStatus.BAD_REQUEST, "STORAGE_001", "지원하지 않는 이미지 형식입니다"),

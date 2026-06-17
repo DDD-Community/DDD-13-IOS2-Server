@@ -1,11 +1,13 @@
 package com.bangawo.meeting.infrastructure.persistence;
 
+import com.bangawo.meeting.domain.LocationStatus;
 import com.bangawo.meeting.domain.MeetingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,4 +21,6 @@ public interface MeetingJpaRepository extends JpaRepository<MeetingJpaEntity, Lo
     Optional<MeetingJpaEntity> findLatestByGroupId(@Param("groupId") Long groupId);
 
     List<MeetingJpaEntity> findByStatusAndConfirmedDateBefore(MeetingStatus status, LocalDate today);
+
+    List<MeetingJpaEntity> findByLocationStatusAndPickDeadlineBefore(LocationStatus locationStatus, LocalDateTime now);
 }

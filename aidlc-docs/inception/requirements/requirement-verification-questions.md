@@ -1,101 +1,171 @@
-# Requirements Clarification — 중간지점 역 후보 추출 (MVP2)
+# Requirements Verification Questions — 장소 선정~확정 (FC-8~13)
 
-## 사전 분석 요약
-
-현재 코드베이스 분석 결과:
-- `departure_place` 테이블: latitude/longitude (DOUBLE, PostGIS geometry 아님)
-- `subway_station` 테이블: **미존재** → 신규 생성 필요
-- `meeting_participant` 테이블: **미존재** → group_member + departure_place 활용 예정
-- 제공된 SQL 쿼리의 `meeting_participant.location_point`는 DB에 없는 구조
+> 각 질문의 `[Answer]:` 뒤에 답을 적어주세요. 객관식은 A/B/C 또는 X(직접 기술).
+> 빠르게 가려면 추천안(✅)만 확인하고 "추천대로"라고 적어도 됩니다.
 
 ---
 
-## Question 1
-출발지 기하학적 중심(centroid) 계산 시 참여자 데이터 소스를 어떻게 할까요?
+## A. 범위 / 진행 방식
 
-현재 `departure_place`는 회원 개인 기준으로 저장되어 있고, 모임별 출발지는 별도 테이블이 없습니다.
+### Q1. 이번 사이클 범위 (양이 많음 — 조절 가능)
+FC-8~13 + 알림까지 한 번에 vs 분할.
 
-A) group_member(attendance_status != ABSENT) + departure_place(is_default=true) 사용 — 기존 데이터 활용, 추가 테이블 불필요
-B) 새 `meeting_participant` 테이블 생성 — 모임별 출발지 좌표 별도 저장, 향후 "이 모임만 다른 출발지 선택" 가능
-C) Other (please describe after [Answer]: tag below)
+- A) FC-8~13 전부 한 사이클로 설계 (Inception은 통째로, Construction은 유닛 분할) ✅추천
+- B) 2분할 — (1차: FC-8 추천 + FC-9 담기) / (2차: FC-11~13 투표·확정)
+- C) 3분할 — FC-8 / FC-9 / FC-11~13
+- X) 기타
 
-[Answer]: B로 하는게 깔끔할것 같은데 이렇게 하면 모임별 참가자들 데이터가 너무 많이 쌓일까봐 걱정이긴해 로직도 많은부분 변경이 있어야하고 이부분은 상의해줄꺼지?
+[Answer]: 너가 하기 괜찮은 context대로 해줘 그리고 지금 푸시알람기능은 고려도안하고 안할꺼니까 빼
 
----
+### Q2. 알림(Push/In-App) 구현 범위
+device_token(V5)은 있으나 실제 발송 로직 미확인.
 
-## Question 2
-`departure_place`가 없는 멤버가 있을 경우 처리 방식은?
+- A) 이번 범위: 상태전환/마감 트리거 지점에 알림 발송 호출까지 구현(실제 FCM 등 연동 포함)
+- B) 이번 범위: 알림 트리거 훅/이벤트만 마련, 실제 발송은 추후
+- C) 알림 전체 이번 범위 제외 ✅추천(핵심 플로우 우선, 알림은 후속)
+- X) 기타
 
-A) 해당 멤버 제외하고 나머지 출발지로 중심 계산 (조용히 스킵)
-B) API 호출 시 에러 반환 — 출발지 미등록 멤버가 있으면 계산 불가
-C) 출발지 없는 멤버는 제외하되, Response에 "출발지 미등록 멤버 수" 포함
-D) Other (please describe after [Answer]: tag below)
-
-[Answer]: D 회원가입할때 기본 출발지는 필수 입력이라 없지는 않을텐데 없다고하면 에러로 하자
-
----
-
-## Question 3
-역 후보 정렬 기준은 무엇인가요?
-
-제공된 SQL은 `dist_m ASC` (중심에서 가까운 순)로 되어 있고 score_drink 점수도 있습니다.
-
-A) 거리순 (dist_m ASC) — 가장 가까운 역 우선
-B) 점수순 (score_drink DESC) — 술/식당 점수 높은 역 우선
-C) 복합 (거리 + 점수 가중치) — 거리와 점수를 조합
-D) Other (please describe after [Answer]: tag below)
-
-[Answer]: D 사실 역마다 스코어를 넣으려고했는데 지금은 일단 거리순으로 해야할것 같아
+[Answer]: C
 
 ---
 
-## Question 4
-subway_station 테이블에 어떤 점수 컬럼이 필요한가요?
+## B. 상태 모델 (RE 발견 — 불일치)
 
-이후 장소 후보 등록 시 테마(술, 밥, 카페 등)별 점수가 필요하다고 하셨습니다.
+### Q3. LocationStatus enum 재정의
+현재 `BEFORE / IN_PROGRESS / COMPLETED` ↔ PRD `BEFORE / RECOMMENDED / VOTING / CONFIRMED`.
 
-A) score_drink 하나만 (이번에 우선 구현, 나중에 추가)
-B) score_drink, score_food, score_cafe 3개 (주요 카테고리 미리 정의)
-C) 일단 점수 컬럼 없이 거리 기반만, 추후 ALTER TABLE로 추가
-D) Other (please describe after [Answer]: tag below)
+- A) PRD대로 4-state로 교체 (IN_PROGRESS→RECOMMENDED, 신규 VOTING, COMPLETED→CONFIRMED) ✅추천
+- B) 기존 enum 유지하고 별도 단계 필드 추가
+- X) 기타
 
-[Answer]: C 우선 거리기반으로만 하자
-
----
-
-## Question 5
-subway_station 데이터는 어떻게 로드할 계획인가요?
-
-공공데이터 역사_ID/역사명/호선/위도/경도 보유 중이라고 하셨습니다.
-
-A) Flyway V11 SQL 마이그레이션으로 INSERT (CSV → SQL 변환하여 포함)
-B) 별도 데이터 로더 스크립트 (psql 또는 Spring 배치로 직접 import)
-C) Other (please describe after [Answer]: tag below)
-
-[Answer]: C 내가 일단 준 헤더와 데이터가 있으니 너가 테이블 만들어주면 내가 따로 넣을께
+[Answer]: A
 
 ---
 
-## Question 6
-API 엔드포인트 동작 방식은?
+## C. PRD §5 미결 사항
 
-A) `GET /meetings/{meetingId}/midpoint-stations` — 요청 시 즉시 계산 반환
-B) 모임 상태 전이 시 자동 계산 후 DB 저장 → API는 저장값 조회만
-C) Other (please describe after [Answer]: tag below)
+### Q4. (미결1) 담기 마감 도래 시 후보 0개(아무도 안 담음)
+- A) 자동 종료 없이 호스트가 직접 장소 선택으로 전환
+- B) 담기 마감 자동 연장(+N일)
+- C) 모임 장소선정 자동 종료/취소
+- D) 일단 에러/안내만 하고 호스트 재시작 유도 ✅추천(MVP 단순화)
+- X) 기타
 
-[Answer]: C 내가 생각한건 우선 장소후보 추려주기전 필요한 중요 데이터라 메모리나 DB에 따로 저장하고 API는 필요없다 생각했는데 간단하게 B처럼 해놔야하나
+[Answer]: X 마감일 지나면 15개중에 가장 스코어에 근접한 3개정도 후보로 올려서 투표 진행
+
+### Q5. (미결2) 자동 전환 시 투표 마감일 기본값
+호스트가 마감일을 못 정한 채 VOTING 전환된 경우.
+
+- A) +3일 프리셋 자동 적용 ✅추천
+- B) +1일
+- C) 모임일 직전(약속일 -1일)
+- X) 기타
+
+[Answer]: A
+
+### Q6. (미결3) 이동 부담 산출 방식
+subway_edge(V17) 그래프를 직접 만들어두심.
+
+- A) subway_edge 그래프 최단경로(다익스트라)로 소요시간·환승 계산, 투표 시작 시 (참여자×후보) 1회 스냅샷 저장 ✅추천(PRD 우선안 일치)
+- B) 실시간 계산(요청 시마다)
+- C) 외부 길찾기 API 연동
+- X) 기타
+
+[Answer]: A (스냅샷을 어떻게 저장할껀지 궁금하네..? 설마 DB는 아닐꺼고 ..?)
+
+### Q6-1. 환승 횟수 정의 (FC-13 3순위)
+- A) 최단경로상 TRANSFER 엣지 통과 수 = 환승 횟수 ✅추천
+- B) 노선 변경 횟수 별도 산정
+- X) 기타
+
+[Answer]: A 
+
+### Q7. (미결4) 추천 < 15개 / 역별 편중
+- A) 가능한 개수만 추천, 역별 최소보장 없음(점수순 그대로) ✅추천
+- B) 역별 최소 N개 보장
+- C) 최소 보장 개수 미만이면 반경 확대 재계산
+- X) 기타
+
+[Answer]: 이게 무슨 질문인지 이해가 안되는데 ?
+
+### Q7-1. 추천 0개일 때 (FC-8 미결)
+- A) 400 에러 + 안내 ✅추천
+- B) 반경 확대 재시도
+- X) 기타
+
+[Answer]: B
 
 ---
 
-## Question 7
-반환할 역 후보 개수는?
+## D. 추천 알고리즘 (FC-8)
 
-A) 고정 3개
-B) 파라미터로 받음 (기본 3, 최대 N)
-C) Other (please describe after [Answer]: tag below)
+### Q8. 스코어링 입력 항목
+place: category_label, vibe[], occasion[], has_parking, reservable, rating 등. 모임: themeTagCode 보유.
 
-[Answer]: A API로 가져올 데이터가 아니긴해서 일단은 서비스에 고정으로 3개 해놔야할것 같아
+- A) 모임 themeTag ↔ place vibe/occasion 매칭 + rating 가중 합산 점수로 정렬 ✅추천(단순 가중합)
+- B) 카테고리 매칭만
+- C) 상세 가중치는 설계 단계에서 확정
+- X) 기타(가중치 직접 기술)
+
+[Answer]: A 가 뭔소리하는거야? 어떻게 하겠다는건지 정확히 말해봐
+
+### Q9. 역 귀속 태깅 기준 (FC-8 step5)
+- A) 3개 역 중 최근접 역(PostGIS 거리)에 귀속 ✅추천
+- B) 역 반경 내 포함 기준(중복 가능)
+- X) 기타
+
+[Answer]:이건 또 뭔말이야? 사용자들 중간 지점에 있는 역 3개를 뽑은뒤 거기서 Nkm(지금은 아마 2km로 고정해놨을텐데 이거는 조절 가능해야하는걸로 변경 필요) 에 해당하는 장소들 둥 하드필터에 해당하는 장소들중 특정 알고리즘(ex 사용자들-목적지 총 거리 * w1 +  옵션 or 분위기 태그 스코어 * w2 등 지금 내가 가지고 있는 정보들로 할 수 있는 제일 괜찮은 점수 매기기 알고리즘?) 으로 15개 정도 순위매겨 추천하는게 필요한데 무슨 3개역에서 뭔 가장 최근접 역이며 이런게 왜나와
+
+### Q10. 카드의 "거리"(유저 출발지 기준, FC-9)
+- A) 직선거리(PostGIS ST_Distance) ✅추천(가벼움)
+- B) subway_edge 그래프 기반 거리
+- X) 기타
+
+[Answer]: 카드가 뭐야 ;;
 
 ---
 
-답변 완료 후 "완료" 또는 "done"이라고 말씀해 주세요.
+## E. 투표 규칙 (FC-11/12)
+
+### Q11. 투표 다중 제한
+PRD: 1인 최대 = 후보수 50% 내림, 최소 1.
+
+- A) PRD 그대로 ✅추천
+- X) 기타
+
+[Answer]: A
+
+### Q12. 익명성 저장
+- A) 투표 레코드에 member_id 저장하되 조회 시 집계/완료여부만 노출 ✅추천
+- B) member_id 미저장(완전 익명)
+- X) 기타
+
+[Answer]: A
+
+---
+
+## F. 확장(Extensions) Opt-In
+
+### Q13. Security Extension
+보안 확장 규칙을 강제할까요?
+
+- A) Yes — 모든 SECURITY 규칙 강제(프로덕션급 권장)
+- B) No — SECURITY 규칙 생략(PoC/프로토타입)
+- X) 기타
+
+[Answer]: A
+
+### Q14. Property-Based Testing Extension
+- A) Yes — 모든 PBT 규칙 강제
+- B) Partial — 순수함수/직렬화 라운드트립에만
+- C) No — PBT 생략
+- X) 기타
+
+[Answer]: B
+
+### Q15. TDD Code Generation Extension
+- A) Yes — TDD 워크플로(토큰 1.5~2x, 결함 최소)
+- B) No — 표준 코드 생성
+- X) 기타
+
+[Answer]: B

@@ -1,44 +1,41 @@
-# Build and Test Summary — FC-6 + FC-7-1
+# Build and Test Summary
 
-## Build Status
-
-- **Build Tool**: Gradle 8.x (Wrapper)
-- **Build Status**: SUCCESS
-- **Build Command**: `./gradlew build`
-- **Build Artifacts**: `build/libs/bangawo-0.0.1-SNAPSHOT.jar`
-
-## Test Execution Summary
-
-### Unit Tests
-
-| 테스트 클래스 | Total | Passed | Failed | Skipped | FC |
-|---|---|---|---|---|---|
-| `GlobalExceptionHandlerTest` | 2 | 2 | 0 | 0 | 공통 |
-| `JwtProviderTest` | 4 | 4 | 0 | 0 | 공통 |
-| `MeetingComputeListStatusTest` | 7 | 7 | 0 | 0 | FC-6 |
-| `MeetingListServiceTest` | 4 | 4 | 0 | 0 | FC-6 |
-| `GroupMemberServiceTest` | 2 | 2 | 0 | 0 | FC-7-1 |
-| `DeparturePlaceServiceTest` | 5 | 5 | 0 | 0 | FC-7-1 |
-| **합계** | **24** | **24** | **0** | **0** | |
-
-- **Status**: PASS
-- **Report**: `build/reports/tests/test/index.html`
-
-### Integration Tests
-
-- **방식**: 수동 (Swagger UI + Mock 로그인 API)
-- **Status**: N/A (자동화는 향후 Testcontainers로 확장 예정)
-- **시나리오**: `integration-test-instructions.md` 참조 (FC-6 4개 + FC-7-1 6개)
-
-### Performance Tests
-
-- **Status**: N/A (MVP 단계 — 성능 요구사항 미정의)
-
-## Overall Status
-
+## Build Result
 | 항목 | 결과 |
 |---|---|
-| 컴파일 | SUCCESS |
-| 유닛 테스트 (24개) | ALL PASS |
-| 통합 테스트 | 수동 검증 |
-| Ready for Operations | YES |
+| **Build Tool** | Gradle 8.12 (Wrapper) |
+| **Command** | `./gradlew clean build --no-daemon` |
+| **Status** | BUILD SUCCESSFUL |
+| **실행일** | 2026-06-17 |
+
+## Test Result
+| 항목 | 결과 |
+|---|---|
+| **총 테스트 수** | 77 |
+| **성공** | 77 |
+| **실패** | 0 |
+| **스킵** | 0 |
+
+## 신규 구현 단위 (FC-11 ~ FC-13)
+
+### U4 — 지하철 그래프 + 투표 (FC-11, FC-12)
+- `SubwayGraph.dijkstra()`: Dijkstra, seconds + transfers 동시 추적
+- `SubwayGraphLoader`: ApplicationRunner, 시작 시 안전 로드 (데이터 없어도 경고만)
+- `MeetingPlaceVoteSession/Vote/TravelBurden`: 도메인 + 인프라 분리
+- `PlaceVoteService.submitVote()`: 최대 투표수 검증, 재투표, 전원투표 시 자동확정
+
+### U5 — 자동 확정 (FC-13)
+- `PlaceConfirmService.confirmPlace()`: 4단계 Comparator 체인 (득표↓ → 이동시간합↑ → 환승합↑ → 담긴순↑)
+- `PlaceVoteSchedulerService.closeExpiredSessions()`: 투표 마감기한 초과 자동 처리
+- `MeetingConfirmedPlace`: 확정 장소 저장
+
+## Flyway 마이그레이션
+| 버전 | 내용 |
+|---|---|
+| V22 | meeting_place_vote_session (투표 세션) |
+| V23 | meeting_place_vote (개인 투표 기록) |
+| V24 | meeting_travel_burden (이동 부담 스냅샷) |
+| V25 | meeting_confirmed_place (확정 장소) |
+
+## 수정된 파일 (테스트 픽스)
+- `PlacePickServiceTest.java`: `@Mock PlaceVoteService` 추가, stubbing 보완

@@ -1,70 +1,42 @@
-# Component Dependency — 중간지점 역 후보 추출 (MVP2)
+# Component Dependency — FC-8~13
 
-## 레이어 의존 방향 (DDD 원칙 준수)
-```
-presentation → application → domain ← infrastructure
-```
+## 의존 매트릭스
+| From \ To | place | subway | meeting.domain | member | group | global |
+|---|---|---|---|---|---|---|
+| PlaceSelectionService | ✔ port | ✔(midpoint) | ✔ | ✔(출발지) | ✔(권한) | ✔ |
+| PlacePickService | ✔ | ✔(최단경로) | ✔ | ✔ | ✔ | ✔ |
+| PlaceVoteService | ✔ | ✔(최단경로) | ✔ | ✔ | - | ✔ |
+| PlaceConfirmService | - | - | ✔ | - | - | ✔ |
+| Scheduler | - | ✔ | ✔ | ✔ | - | ✔ |
 
-## 컨텍스트 간 의존
-```
-meeting context application layer
-    → subway context domain (SubwayStationRepository interface)
-```
-- meeting → subway: 단방향 (subway context는 meeting을 모름)
-- subway domain interface는 meeting application에서 주입받아 사용
+- 모든 컨텍스트 간 호출은 **도메인 포트(interface)** 경유. JPA 직접 의존 금지(DDD 규약).
 
-## 신규 컴포넌트 의존 그래프
+## 통신 패턴
+- 동기 호출(단일 모놀리식). 이벤트버스 미사용(범위 외).
+- subway 그래프는 **싱글턴 빈**(부팅 1회 로드, 읽기 공유).
+- 상태전이 트리거(전원 담기/투표 완료)는 서비스 내 후처리 호출(동일 트랜잭션).
 
-```
-LocationController
-    └─> LocationService (meeting.application)
-            ├─> MeetingRepository (meeting.domain)
-            ├─> GroupMemberRepository (group.domain)
-            ├─> MidpointCalculationService (meeting.application)
-            │       └─> SubwayStationRepository (subway.domain)
-            │               └─ [impl] SubwayStationRepositoryImpl (subway.infra)
-            │                           └─> SubwayStationJpaRepository (native SQL)
-            └─> MidpointStationCandidateRepository (meeting.domain)
-                    └─ [impl] MidpointStationCandidateRepositoryImpl (meeting.infra)
-
-CreateMeetingService (기존, 확장)
-    ├─> (기존) MeetingRepository
-    ├─> (신규) MeetingParticipantRepository (meeting.domain)
-    │           └─ [impl] MeetingParticipantRepositoryImpl (meeting.infra)
-    └─> (신규) DeparturePlaceRepository (member.domain) — default 출발지 조회
+## 데이터 흐름 (FC-8 추천)
+```mermaid
+flowchart LR
+    REQ[POST location/start] --> PSS[PlaceSelectionService]
+    PSS --> PART[(meeting_participant 좌표)]
+    PSS --> MID[중간역 3 PostGIS]
+    PSS --> CAND[PlaceRepository.findCandidates PostGIS 반경+하드필터]
+    CAND --> SCORE[PlaceScorer soft 점수]
+    SCORE --> SNAP[(meeting_place_recommendation 15)]
+    SNAP --> ST[locationStatus=RECOMMENDED]
 ```
 
-## 패키지 구조 (신규)
+## 데이터 흐름 (FC-12 이동부담)
+```mermaid
+flowchart LR
+    OPEN[VOTING 진입] --> LOOP[참여자별 최근접역]
+    LOOP --> DJK[ShortestPathService 단일출발]
+    DJK --> CANDST[후보 최근접역 매핑]
+    CANDST --> TB[(meeting_travel_burden 스냅샷)]
 ```
-com.bangawo
-├── meeting/
-│   ├── domain/
-│   │   ├── MeetingParticipant.java         (신규)
-│   │   ├── MeetingParticipantRepository.java (신규)
-│   │   ├── MidpointStationCandidate.java   (신규)
-│   │   └── MidpointStationCandidateRepository.java (신규)
-│   ├── application/
-│   │   ├── LocationService.java            (신규)
-│   │   ├── MidpointCalculationService.java (신규)
-│   │   └── MeetingService.java             (기존, 수정)
-│   ├── presentation/
-│   │   ├── LocationController.java         (신규)
-│   │   └── dto/
-│   │       └── MidpointStationCandidateResponse.java (신규)
-│   └── infrastructure/persistence/
-│       ├── MeetingParticipantJpaEntity.java (신규)
-│       ├── MeetingParticipantJpaRepository.java (신규)
-│       ├── MeetingParticipantRepositoryImpl.java (신규)
-│       ├── MidpointStationCandidateJpaEntity.java (신규)
-│       ├── MidpointStationCandidateJpaRepository.java (신규)
-│       └── MidpointStationCandidateRepositoryImpl.java (신규)
-└── subway/                                 (컨텍스트 전체 신규)
-    ├── domain/
-    │   ├── SubwayStation.java
-    │   ├── StationCandidate.java
-    │   └── SubwayStationRepository.java
-    └── infrastructure/persistence/
-        ├── SubwayStationJpaEntity.java
-        ├── SubwayStationJpaRepository.java
-        └── SubwayStationRepositoryImpl.java
-```
+
+## 빌드/패키지 순서 (의존 기반)
+1. global(ErrorCode) → 2. meeting.domain(LocationStatus/Meeting 가드) →
+3. subway(그래프) ∥ place(추천) → 4. meeting 서비스(담기/투표/확정) → 5. 스케줄러

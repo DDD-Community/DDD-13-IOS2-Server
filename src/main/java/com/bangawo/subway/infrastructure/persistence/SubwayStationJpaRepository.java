@@ -4,8 +4,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 public interface SubwayStationJpaRepository extends JpaRepository<SubwayStationJpaEntity, Long> {
 
@@ -20,6 +20,17 @@ public interface SubwayStationJpaRepository extends JpaRepository<SubwayStationJ
                 WHERE mp.meeting_id = :meetingId
                   AND mp.attendance_status != 'ABSENT'
             ),
+            ladder AS (
+                SELECT unnest(ARRAY[2000, 4000, 6000]) AS radius
+            ),
+            chosen_radius AS (
+                SELECT MIN(l.radius) AS radius
+                FROM ladder l, center_point c
+                WHERE EXISTS (
+                    SELECT 1 FROM subway_station s
+                    WHERE ST_DWithin(s.location_point, c.geom, l.radius)
+                )
+            ),
             candidates AS (
                 SELECT
                     s.station_name,
@@ -27,19 +38,34 @@ public interface SubwayStationJpaRepository extends JpaRepository<SubwayStationJ
                     MIN(ST_DistanceSphere(
                         s.location_point::geometry,
                         c.geom::geometry
-                    )) AS dist_m
-                FROM subway_station s, center_point c
-                WHERE ST_DWithin(s.location_point, c.geom, 2000)
+                    )) AS dist_m,
+                    MIN(s.station_id) AS station_id
+                FROM subway_station s, center_point c, chosen_radius r
+                WHERE r.radius IS NOT NULL
+                  AND ST_DWithin(s.location_point, c.geom, r.radius)
                 GROUP BY s.station_name
             )
             SELECT
                 station_name,
                 lines,
-                ROUND(CAST(dist_m AS numeric) / 1000, 3) AS distance_km
+                ROUND(CAST(dist_m AS numeric) / 1000, 3) AS distance_km,
+                station_id
             FROM candidates
             ORDER BY dist_m ASC
             LIMIT :limit
             """)
     List<Object[]> findRawCandidatesNearMeetingCenter(@Param("meetingId") Long meetingId,
                                                        @Param("limit") int limit);
+
+    @Query(nativeQuery = true, value = """
+            SELECT MIN(s.station_id)
+            FROM subway_station s
+            ORDER BY ST_DistanceSphere(
+                s.location_point::geometry,
+                ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geometry
+            )
+            LIMIT 1
+            """)
+    Optional<Long> findNearestStationId(@Param("latitude") double latitude,
+                                        @Param("longitude") double longitude);
 }

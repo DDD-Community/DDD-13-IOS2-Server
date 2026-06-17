@@ -1,16 +1,16 @@
 package com.bangawo.meeting.infrastructure.persistence;
 
-import com.bangawo.meeting.domain.DateVoteStatus;
-import com.bangawo.meeting.domain.LocationStatus;
-import com.bangawo.meeting.domain.Meeting;
-import com.bangawo.meeting.domain.MeetingStatus;
+import com.bangawo.meeting.domain.*;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "meeting")
@@ -31,6 +31,20 @@ public class MeetingJpaEntity {
     @Column(name = "theme_tag_code", nullable = false, length = 30)
     private String themeTagCode;
 
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "category_labels", columnDefinition = "text[]")
+    private List<String> categoryLabels;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "vibes", columnDefinition = "text[]")
+    private List<String> vibes;
+
+    @Column(name = "reservable")
+    private Boolean reservable;
+
+    @Column(name = "parking")
+    private Boolean parking;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
     private MeetingStatus status;
@@ -46,6 +60,9 @@ public class MeetingJpaEntity {
     @Column(name = "confirmed_date")
     private LocalDate confirmedDate;
 
+    @Column(name = "pick_deadline")
+    private LocalDateTime pickDeadline;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -58,10 +75,15 @@ public class MeetingJpaEntity {
         entity.groupId = meeting.getGroupId();
         entity.name = meeting.getName();
         entity.themeTagCode = meeting.getThemeTagCode();
+        entity.categoryLabels = meeting.getCategoryLabels();
+        entity.vibes = meeting.getVibes();
+        entity.reservable = meeting.getReservable();
+        entity.parking = meeting.getParking();
         entity.status = meeting.getStatus();
         entity.locationStatus = meeting.getLocationStatus();
         entity.dateVoteStatus = meeting.getDateVoteStatus();
         entity.confirmedDate = meeting.getConfirmedDate();
+        entity.pickDeadline = meeting.getPickDeadline();
         entity.createdAt = meeting.getCreatedAt();
         entity.updatedAt = meeting.getUpdatedAt();
         return entity;
@@ -73,10 +95,15 @@ public class MeetingJpaEntity {
                 .groupId(groupId)
                 .name(name)
                 .themeTagCode(themeTagCode)
+                .categoryLabels(categoryLabels)
+                .vibes(vibes)
+                .reservable(reservable)
+                .parking(parking)
                 .status(status)
                 .locationStatus(locationStatus)
                 .dateVoteStatus(dateVoteStatus)
                 .confirmedDate(confirmedDate)
+                .pickDeadline(pickDeadline)
                 .createdAt(createdAt)
                 .updatedAt(updatedAt)
                 .build();

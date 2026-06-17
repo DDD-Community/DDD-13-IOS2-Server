@@ -22,7 +22,7 @@ class MeetingComputeListStatusTest {
     @Test
     @DisplayName("confirmedDate가 오늘 이전이면 CLOSED")
     void closedWhenConfirmedDateBeforeToday() {
-        Meeting m = meetingWith(LocationStatus.COMPLETED, DateVoteStatus.COMPLETED,
+        Meeting m = meetingWith(LocationStatus.CONFIRMED, DateVoteStatus.COMPLETED,
                 LocalDate.now().minusDays(1));
         assertThat(m.computeListStatus(LocalDate.now())).isEqualTo(MeetingListStatus.CLOSED);
     }
@@ -30,7 +30,7 @@ class MeetingComputeListStatusTest {
     @Test
     @DisplayName("confirmedDate가 오늘이면 CLOSED 아님")
     void notClosedWhenConfirmedDateIsToday() {
-        Meeting m = meetingWith(LocationStatus.COMPLETED, DateVoteStatus.COMPLETED,
+        Meeting m = meetingWith(LocationStatus.CONFIRMED, DateVoteStatus.COMPLETED,
                 LocalDate.now());
         assertThat(m.computeListStatus(LocalDate.now())).isEqualTo(MeetingListStatus.CONFIRMED);
     }
@@ -43,9 +43,16 @@ class MeetingComputeListStatusTest {
     }
 
     @Test
-    @DisplayName("locationStatus IN_PROGRESS이면 IN_PROGRESS")
-    void inProgressWhenLocationInProgress() {
-        Meeting m = meetingWith(LocationStatus.IN_PROGRESS, DateVoteStatus.BEFORE, null);
+    @DisplayName("locationStatus RECOMMENDED이면 IN_PROGRESS")
+    void inProgressWhenLocationRecommended() {
+        Meeting m = meetingWith(LocationStatus.RECOMMENDED, DateVoteStatus.BEFORE, null);
+        assertThat(m.computeListStatus(LocalDate.now())).isEqualTo(MeetingListStatus.IN_PROGRESS);
+    }
+
+    @Test
+    @DisplayName("locationStatus VOTING이면 IN_PROGRESS")
+    void inProgressWhenLocationVoting() {
+        Meeting m = meetingWith(LocationStatus.VOTING, DateVoteStatus.BEFORE, null);
         assertThat(m.computeListStatus(LocalDate.now())).isEqualTo(MeetingListStatus.IN_PROGRESS);
     }
 
@@ -57,9 +64,9 @@ class MeetingComputeListStatusTest {
     }
 
     @Test
-    @DisplayName("둘 다 COMPLETED이면 CONFIRMED")
+    @DisplayName("locationStatus CONFIRMED, dateVoteStatus COMPLETED이면 CONFIRMED")
     void confirmedWhenBothCompleted() {
-        Meeting m = meetingWith(LocationStatus.COMPLETED, DateVoteStatus.COMPLETED, null);
+        Meeting m = meetingWith(LocationStatus.CONFIRMED, DateVoteStatus.COMPLETED, null);
         assertThat(m.computeListStatus(LocalDate.now())).isEqualTo(MeetingListStatus.CONFIRMED);
     }
 

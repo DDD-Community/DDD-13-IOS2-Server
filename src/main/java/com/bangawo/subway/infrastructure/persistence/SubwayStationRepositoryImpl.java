@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -19,10 +20,16 @@ public class SubwayStationRepositoryImpl implements SubwayStationRepository {
         return jpaRepository.findRawCandidatesNearMeetingCenter(meetingId, limit)
                 .stream()
                 .map(row -> new StationCandidate(
+                        ((Number) row[3]).longValue(),
                         (String) row[0],
                         (String) row[1],
                         ((BigDecimal) row[2]).doubleValue()
                 ))
                 .toList();
+    }
+
+    @Override
+    public Optional<Long> findNearestStationId(double latitude, double longitude) {
+        return jpaRepository.findNearestStationId(latitude, longitude);
     }
 }

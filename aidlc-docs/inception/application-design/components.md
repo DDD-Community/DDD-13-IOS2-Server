@@ -1,102 +1,43 @@
-# Components — 중간지점 역 후보 추출 (MVP2)
+# Components — FC-8~13
 
-## subway 컨텍스트 (신규)
+## place 컨텍스트 (신규 `com.bangawo.place`)
+| Component | Layer | 책임 |
+|---|---|---|
+| `Place` | domain | 장소 도메인 모델(place_id, name, category_label, address, 좌표, vibe[], occasion(기존), reservable/parking, rating). 태그 매칭 헬퍼 |
+| `PlaceRepository` | domain (port) | 추천 후보 PostGIS 조회(반경+하드필터, 최근접역·거리 포함). vibe distinct 조회 |
+| `RecommendationCandidate` | domain | 후보 1건 VO(place + 직선거리 + 최근접 역) |
+| `PlaceScorer` | domain service | 순수 스코어링 함수(occasion/category/vibe/rating 가중합, min-max 정규화) |
+| `PlaceOption` | domain | 선택지 상수(고정 11 카테고리) + vibe 목록 |
+| `PlaceRepositoryImpl`, `PlaceJpaEntity`, `PlaceJpaRepository` | infrastructure | PostGIS 네이티브 쿼리 구현 |
 
-### SubwayStation
-- **Type**: Domain Model
-- **Package**: com.bangawo.subway.domain
-- **Purpose**: 지하철역 단일 노선 레코드 (역명 + 노선명 + 좌표)
-- **Responsibilities**: 역 식별자, 역명, 노선명, 위경도 보유
+## subway 컨텍스트 (확장)
+| Component | Layer | 책임 |
+|---|---|---|
+| `SubwayGraph` | domain | 인접리스트(역→엣지). 부팅 시 subway_edge 로드 |
+| `ShortestPathService` | domain service | 단일출발 다익스트라 → 모든 역까지 소요초·환승수 |
+| `PathResult` | domain | (목적지역 → 소요초, 환승수) 맵 VO |
+| `SubwayEdgeRepository` | domain (port) | subway_edge 전체 로드 |
+| `SubwayGraphLoader` | infrastructure | ApplicationRunner — 부팅 시 그래프 적재 |
+| `SubwayStationRepository`(기존) | domain | 최근접역/중간역 후보(PostGIS) |
 
-### StationCandidate
-- **Type**: Domain Value Object (query result)
-- **Package**: com.bangawo.subway.domain
-- **Purpose**: 중간지점 역 후보 계산 결과를 담는 불변 객체
-- **Responsibilities**: stationName, lines(노선 합산), distanceKm 보유
+## meeting 컨텍스트 (확장)
+| Component | Layer | 책임 |
+|---|---|---|
+| `LocationStatus`(교체) | domain | BEFORE/RECOMMENDED/VOTING/CONFIRMED |
+| `Meeting`(확장) | domain | 상태 전이 + `dateVoteStatus==COMPLETED` 가드, categories/vibes 보유 |
+| `MeetingPlaceRecommendation` | domain | 추천 15 스냅샷(rank, score, 귀속역, placeId) |
+| `MeetingPlacePick` | domain | 담기(모임원×place, 담은시각) |
+| `MeetingPlaceVoteSession` | domain | 투표세션(시작일, 마감일, 상태) |
+| `MeetingPlaceVote` | domain | 투표(모임원×place, 익명집계) |
+| `MeetingTravelBurden` | domain | 이동부담 스냅샷(member×place: 소요초, 환승수) |
+| `MeetingConfirmedPlace` | domain | 확정 장소 고정 저장 |
+| 각 `*Repository`(port) + infra(`*JpaEntity/JpaRepository/RepositoryImpl`) | domain/infra | 영속성 |
+| `PlaceSelectionScheduler`(확장) | infrastructure | 담기마감/투표마감 배치 |
 
-### SubwayStationRepository (interface)
-- **Type**: Domain Repository Interface
-- **Package**: com.bangawo.subway.domain
-- **Purpose**: 지하철역 공간 쿼리 추상화
-- **Responsibilities**: PostGIS 기반 근거리 역 후보 조회
+## global (확장)
+- `ErrorCode`(확장): FC-9/11/12/13 신규 에러코드
 
-### SubwayStationJpaEntity
-- **Type**: Infrastructure JPA Entity
-- **Package**: com.bangawo.subway.infrastructure.persistence
-- **Purpose**: subway_station 테이블 매핑 (PostGIS Point 포함)
-
-### SubwayStationJpaRepository
-- **Type**: Infrastructure Spring Data Repository
-- **Package**: com.bangawo.subway.infrastructure.persistence
-- **Purpose**: native SQL @Query 으로 PostGIS 쿼리 실행
-
-### SubwayStationRepositoryImpl
-- **Type**: Infrastructure Repository Impl
-- **Package**: com.bangawo.subway.infrastructure.persistence
-- **Purpose**: SubwayStationRepository 인터페이스 구현
-
----
-
-## meeting 컨텍스트 (추가)
-
-### MeetingParticipant
-- **Type**: Domain Model
-- **Package**: com.bangawo.meeting.domain
-- **Purpose**: 모임별 참여자 스냅샷 (출발지 좌표 + 출석 상태)
-- **Responsibilities**: meetingId, memberId, latitude, longitude, attendanceStatus 보유
-
-### MeetingParticipantRepository (interface)
-- **Type**: Domain Repository Interface
-- **Package**: com.bangawo.meeting.domain
-- **Responsibilities**: 모임별 참여자 저장/조회
-
-### MeetingParticipantJpaEntity
-- **Type**: Infrastructure JPA Entity
-- **Package**: com.bangawo.meeting.infrastructure.persistence
-- **Purpose**: meeting_participant 테이블 매핑 (PostGIS Point 포함)
-
-### MeetingParticipantJpaRepository / RepositoryImpl
-- **Package**: com.bangawo.meeting.infrastructure.persistence
-
-### MidpointStationCandidate
-- **Type**: Domain Model
-- **Package**: com.bangawo.meeting.domain
-- **Purpose**: 모임별 역 후보 저장 결과 (rank 1~3)
-- **Responsibilities**: meetingId, rank, stationName, lines, distanceKm 보유
-
-### MidpointStationCandidateRepository (interface)
-- **Type**: Domain Repository Interface
-- **Package**: com.bangawo.meeting.domain
-
-### MidpointStationCandidateJpaEntity / JpaRepository / RepositoryImpl
-- **Package**: com.bangawo.meeting.infrastructure.persistence
-
-### LocationService
-- **Type**: Application Service
-- **Package**: com.bangawo.meeting.application
-- **Purpose**: location 단계 시작 오케스트레이션 (권한 체크 + 계산 트리거 + 저장)
-- **Responsibilities**: 호스트 검증, meeting 상태 전이, MidpointCalculationService 호출
-
-### MidpointCalculationService
-- **Type**: Application Service (calculation)
-- **Package**: com.bangawo.meeting.application
-- **Purpose**: PostGIS 기반 중간지점 역 3개 계산
-- **Responsibilities**: meeting_participant 좌표 수집 → centroid → subway_station 조회 → 결과 반환
-
-### LocationController (또는 MeetingController 확장)
-- **Type**: Presentation
-- **Package**: com.bangawo.meeting.presentation
-
-### MidpointStationCandidateResponse / StationInfo
-- **Type**: Presentation DTO
-- **Package**: com.bangawo.meeting.presentation.dto
-
----
-
-## 수정되는 기존 컴포넌트
-
-### Meeting (domain model)
-- **변경**: startLocationPhase() 메서드 추가 (locationStatus BEFORE → IN_PROGRESS)
-
-### MeetingService 또는 CreateMeetingService
-- **변경**: meeting 생성 시 MeetingParticipantRepository.saveAll() 호출 추가
+## 인터페이스 원칙
+- Repository 인터페이스는 도메인 모델 반환(JpaEntity 금지)
+- meeting → subway/place 는 **도메인 포트**를 통해 호출(직접 JPA 의존 금지)
+- 스코어링·최단경로는 순수 도메인 서비스(테스트 용이, PBT 대상)

@@ -1,61 +1,51 @@
-# Application Design (통합) — 중간지점 역 후보 추출 (MVP2)
+# Application Design (통합) — 장소 선정~확정 (FC-8~13)
 
-## 요약
+> 세부: components.md / component-methods.md / services.md / component-dependency.md
+> 결정 근거: requirements.md (Path B), place-selection-flow-overview.md
 
-신규 subway 바운디드 컨텍스트 도입 + meeting 컨텍스트 확장.
-3개 Flyway 마이그레이션, 총 신규 Java 파일 약 15개 예상.
+## 1. 설계 개요
+- 신규 컨텍스트 **place**(추천), 확장 **subway**(그래프 최단경로), 확장 **meeting**(담기/투표/확정 + 상태 4-state).
+- DDD 레이어/포트 준수. PostGIS 추천 + 메모리 그래프 다익스트라.
 
-## 컨텍스트 구성
+## 2. 핵심 설계 결정
+| 결정 | 내용 |
+|---|---|
+| 상태 | locationStatus 4-state(2축 유지) + dateVoteStatus==COMPLETED 가드 |
+| 추천 HARD | 반경(2→4→6km) + 예약/주차(요청, NULL 관대) |
+| 추천 SOFT | 0.5·occasion + 0.25·category + 0.15·vibe + 0.1·rating |
+| occasion 정합 | place.occasion(기존) ↔ theme_tag.display_name 직접 비교, 신규 컬럼/데이터 적재 불필요 |
+| 모임 입력확장 | categoryLabels[], vibes[] (+ meeting 컬럼) |
+| 카드/이동부담 거리 | subway_edge 그래프 단일출발 다익스트라 |
+| 이동부담 저장 | VOTING 진입 시 1회 DB 스냅샷 |
+| 확정 | 4단계 순위(득표→시간합→환승합→등록순) |
 
-| 컨텍스트 | 신규/수정 | 주요 컴포넌트 |
+## 3. 컴포넌트 요약
+- **place**: Place, PlaceRepository(PostGIS), RecommendationCandidate, PlaceScorer, PlaceOption
+- **subway**: SubwayGraph, ShortestPathService, SubwayEdgeRepository, SubwayGraphLoader(부팅)
+- **meeting**: LocationStatus(교체), Meeting(가드), MeetingPlaceRecommendation/Pick/VoteSession/Vote/TravelBurden/ConfirmedPlace, 4 서비스, Scheduler
+- **global**: ErrorCode 확장
+
+## 4. 서비스 매핑
+| FC | 서비스 | 상태전이 |
 |---|---|---|
-| subway (신규) | 신규 | SubwayStation, StationCandidate, SubwayStationRepository |
-| meeting (확장) | 신규 7 + 수정 2 | MeetingParticipant, MidpointStationCandidate, LocationService, MidpointCalculationService |
+| FC-8 | PlaceSelectionService | BEFORE→RECOMMENDED |
+| FC-9 | PlacePickService | (전원/마감/호스트)→VOTING |
+| FC-11/12 | PlaceVoteService | VOTING(세션·이동부담) |
+| FC-13 | PlaceConfirmService | VOTING→CONFIRMED |
+| 배치 | PlaceSelectionScheduler | 담기/투표 마감 |
 
-## 핵심 설계 결정
+## 5. 데이터 모델 (신규, V18~)
+- meeting +category_labels/vibes/reservable/parking (V18)
+- meeting_place_recommendation(V20) / meeting_place_pick(V21)
+- meeting_place_vote_session(V22) / meeting_place_vote(V23)
+- meeting_travel_burden(V24) / meeting_confirmed_place(V25)
+- locationStatus 데이터 마이그레이션(V26)
 
-1. **PostGIS 쿼리 위치**: SubwayStationJpaRepository의 `@Query(nativeQuery=true)` — JPQL로 ST_Centroid 등 표현 불가
-2. **도메인 좌표 표현**: double lat/lng (기존 Coordinate 패턴 일치), JpaEntity에서 `org.locationtech.jts.geom.Point` 변환
-3. **계산 위치**: DB 레벨 (PostGIS), Java 레벨 계산 없음 — 공간 인덱스 활용 극대화
-4. **MidpointCalculationService가 subway context 접근**: SubwayStationRepository 인터페이스 주입 (컨텍스트 간 DI)
+## 6. NFR 반영
+- PostGIS 네이티브 추천, 그래프 부팅 로드(싱글턴), 단일출발 다익스트라로 비용 최소화
+- 이동부담 DB 스냅샷(Cloud Run 다중 인스턴스 안전), 스케줄러 배치
+- Security 베이스라인 ON, 순수 도메인 서비스 PBT(Partial) 대상
 
-## 데이터 흐름
-
-### POST /meetings/{id}/location/start
-```
-LocationController
-→ LocationService.startLocationPhase(meetingId, memberId)
-    1. MeetingRepository.findById()
-    2. GroupMemberRepository.findByGroupIdAndMemberId() → HOST 확인
-    3. meeting.startLocationPhase() → LocationStatus.IN_PROGRESS
-    4. MidpointCalculationService.calculate(meetingId)
-        → SubwayStationRepository.findCandidatesNearMeetingCenter(meetingId, 3)
-            → native SQL: meeting_participant centroid → subway_station 2km 이내 top 3
-    5. candidates → MidpointStationCandidate 변환 → saveAll()
-    6. MeetingRepository.save(meeting)
-→ 200 OK
-```
-
-### GET /meetings/{id}/midpoint-stations
-```
-LocationController
-→ LocationService.getMidpointStations(meetingId, memberId)
-    1. GroupMemberRepository → 멤버 확인
-    2. MidpointStationCandidateRepository.findByMeetingIdOrderByRank()
-→ MidpointStationCandidateResponse { candidates: [...] }
-```
-
-### Meeting 생성 시 (기존 수정)
-```
-CreateMeetingService (또는 MeetingService)
-    1. (기존) meeting 저장
-    2. (신규) groupMemberRepository.findByGroupId()
-    3. (신규) departurePlaceRepository.findDefaultByMemberIdIn()
-    4. (신규) MeetingParticipant 생성 → saveAll()
-```
-
-## 상세 문서 참조
-- [components.md](components.md)
-- [component-methods.md](component-methods.md)
-- [services.md](services.md)
-- [component-dependency.md](component-dependency.md)
+## 7. 검증
+- 일관성: 컴포넌트↔메서드↔서비스↔의존성 4문서 상호 정합 확인 완료
+- 미해결(데이터 태스크): vibe 표준목록 정비 — Construction 데이터 단계 (occasion은 기존 데이터 재사용, 해결됨)

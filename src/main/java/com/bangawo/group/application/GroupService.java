@@ -32,9 +32,12 @@ public class GroupService {
     private final com.bangawo.meeting.domain.MeetingParticipantRepository meetingParticipantRepository;
     private final DeparturePlaceRepository departurePlaceRepository;
 
-    public CreateGroupResponse createGroupWithMeeting(Long memberId, String name, String themeTagCode) {
+    public CreateGroupResponse createGroupWithMeeting(Long memberId, String name, String themeTagCode,
+                                                       List<String> categoryLabels, List<String> vibes,
+                                                       Boolean reservable, Boolean parking) {
         Group group = groupRepository.save(Group.create(name, themeTagCode));
-        Meeting meeting = meetingRepository.save(Meeting.create(group.getId(), name, themeTagCode));
+        Meeting meeting = meetingRepository.save(
+                Meeting.create(group.getId(), name, themeTagCode, categoryLabels, vibes, reservable, parking));
         groupMemberRepository.save(GroupMember.createHost(group.getId(), memberId));
 
         var departure = departurePlaceRepository.findDefaultByMemberId(memberId);
@@ -48,7 +51,9 @@ public class GroupService {
         return new CreateGroupResponse(group.getId(), meeting.getId(), group.getName(), group.getThemeTagCode());
     }
 
-    public Long createNextMeeting(Long groupId, Long memberId, String name, String themeTagCode) {
+    public Long createNextMeeting(Long groupId, Long memberId, String name, String themeTagCode,
+                                   List<String> categoryLabels, List<String> vibes,
+                                   Boolean reservable, Boolean parking) {
         GroupMember caller = groupMemberRepository.findByGroupIdAndMemberId(groupId, memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_GROUP_MEMBER));
         if (caller.getRole() != GroupMemberRole.HOST) {
@@ -61,7 +66,8 @@ public class GroupService {
             throw new BusinessException(ErrorCode.MEETING_NOT_CLOSED);
         }
 
-        Meeting newMeeting = meetingRepository.save(Meeting.create(groupId, name, themeTagCode));
+        Meeting newMeeting = meetingRepository.save(
+                Meeting.create(groupId, name, themeTagCode, categoryLabels, vibes, reservable, parking));
         return newMeeting.getId();
     }
 

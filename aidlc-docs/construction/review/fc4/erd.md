@@ -90,13 +90,17 @@ erDiagram
         TIMESTAMPTZ updated_at "수정 시각"
     }
 
-    %% [FC-4 신규] meeting — 모임
+    %% [FC-4 신규, FC-8 컬럼 추가] meeting — 모임
     meeting {
         BIGINT id PK "모임 고유 ID"
         BIGINT group_id FK "소속 그룹 ID"
         VARCHAR(30) name "모임명 (그룹명과 동일한 값으로 생성)"
         VARCHAR(30) theme_tag_code "테마 태그 코드 (theme_tag.code 참조)"
-        VARCHAR(15) location_status "장소 선정 상태 (BEFORE/IN_PROGRESS/COMPLETED)"
+        TEXT_ARRAY category_labels "FC-8 추천용 음식 카테고리 선호 (고정 11종 중 선택, 선택 입력)"
+        TEXT_ARRAY vibes "FC-8 추천용 분위기 태그 선호 (place.vibe 표준목록, 선택 입력)"
+        BOOLEAN reservable "FC-8 추천 HARD 필터 — 예약가능만. NULL=조건 없음"
+        BOOLEAN parking "FC-8 추천 HARD 필터 — 주차가능만. NULL=조건 없음"
+        VARCHAR(15) location_status "장소 선정 상태 (BEFORE/RECOMMENDED/VOTING/CONFIRMED)"
         VARCHAR(15) date_vote_status "날짜 투표 상태 (BEFORE/IN_PROGRESS/COMPLETED)"
         DATE confirmed_date "확정된 모임 날짜 (미확정 시 null)"
         TIMESTAMPTZ created_at "생성 시각"

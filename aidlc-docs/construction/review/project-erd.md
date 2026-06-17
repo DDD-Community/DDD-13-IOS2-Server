@@ -94,16 +94,20 @@ erDiagram
         TIMESTAMPTZ updated_at "수정 시각"
     }
 
-    %% [FC-4 + V9 확장] meeting — 모임
+    %% [FC-4 + V9 + V18 확장] meeting — 모임
     meeting {
         BIGINT id PK "모임 고유 ID"
         BIGINT group_id FK "소속 그룹 ID"
         VARCHAR(30) name "모임명"
         VARCHAR(30) theme_tag_code "테마 태그 코드"
-        VARCHAR(10) status "모임 진행 상태 (ACTIVE/CLOSED)"
-        VARCHAR(15) location_status "장소 선정 상태 (BEFORE/IN_PROGRESS/COMPLETED)"
+        VARCHAR(10) status "모임 진행 상태 (ACTIVE/CLOSED) — V9"
+        VARCHAR(15) location_status "장소 선정 상태 (BEFORE/RECOMMENDED/VOTING/CONFIRMED) — V18 코멘트 기준"
         VARCHAR(15) date_vote_status "날짜 투표 상태 (BEFORE/IN_PROGRESS/COMPLETED)"
         DATE confirmed_date "확정된 모임 날짜 (미확정 시 null)"
+        TEXT_ARRAY category_labels "FC-8 추천 음식 카테고리 선호 (선택) — V18"
+        TEXT_ARRAY vibes "FC-8 추천 분위기 선호 (선택) — V18"
+        BOOLEAN reservable "FC-8 HARD 필터 예약가능, NULL=조건없음 — V18"
+        BOOLEAN parking "FC-8 HARD 필터 주차가능, NULL=조건없음 — V18"
         TIMESTAMPTZ created_at "생성 시각"
         TIMESTAMPTZ updated_at "수정 시각"
     }
@@ -192,6 +196,94 @@ erDiagram
     member ||--o{ group_member : "1회원 N그룹참여"
     member ||--o{ meeting_participant : "1회원 N모임참여"
     group_info ||--o{ group_invite : "1그룹 N초대코드"
+    %% [V12] place — 장소 마스터 (네이버 place_id 기준)
+    place {
+        BIGINT id PK "장소 고유 ID"
+        BIGINT place_id UK "네이버 place_id (NOT NULL UNIQUE)"
+        VARCHAR(100) name "상호명"
+        VARCHAR(50) branch "지점명 (nullable)"
+        VARCHAR(100) category "네이버 원본 카테고리"
+        VARCHAR(20) category_label "한식/일식/중식/양식/카페/디저트/주점/분식/아시아음식/기타"
+        TEXT address "주소"
+        DOUBLE latitude "위도"
+        DOUBLE longitude "경도"
+        GEOGRAPHY location_point "PostGIS geography(Point,4326)"
+        BOOLEAN has_room "룸 보유 (NULL=정보없음)"
+        BOOLEAN has_group_seat "단체석 보유"
+        BOOLEAN has_parking "주차 가능"
+        BOOLEAN reservable "예약 가능"
+        INT max_group_size "최대 단체 인원"
+        TEXT_ARRAY vibe "AI 분위기 태그 배열 (예: 감성적,차분한)"
+        TEXT_ARRAY occasion "AI 용도 태그 배열 — theme_tag.display_name과 직접 비교"
+        VARCHAR(2) size_fit "소/중/대"
+        TEXT summary "AI 요약"
+        VARCHAR(200) naver_url "네이버 URL"
+        NUMERIC rating "평점 NUMERIC(3,2)"
+        INT review_count "리뷰 수"
+        TIMESTAMPTZ created_at "등록 시각"
+        TIMESTAMPTZ updated_at "수정 시각"
+    }
+    %% [V20] meeting_place_recommendation — 추천 15 스냅샷
+    meeting_place_recommendation {
+        BIGINT id PK
+        BIGINT meeting_id FK
+        BIGINT place_id FK
+        INT rank "1..15"
+        DOUBLE score
+        BIGINT nearest_station_id FK "귀속역"
+        TIMESTAMPTZ created_at
+    }
+    %% [장소선정 신규] meeting_place_pick — 담기
+    meeting_place_pick {
+        BIGINT id PK
+        BIGINT meeting_id FK
+        BIGINT member_id FK
+        BIGINT place_id FK
+        TIMESTAMPTZ picked_at
+    }
+    %% [장소선정 신규] meeting_place_vote_session — 투표 세션
+    meeting_place_vote_session {
+        BIGINT id PK
+        BIGINT meeting_id FK,UK
+        TIMESTAMPTZ started_at
+        TIMESTAMPTZ deadline
+        VARCHAR status "IN_PROGRESS/CLOSED"
+    }
+    %% [장소선정 신규] meeting_place_vote — 투표(익명집계)
+    meeting_place_vote {
+        BIGINT id PK
+        BIGINT session_id FK
+        BIGINT member_id FK
+        BIGINT place_id FK
+        TIMESTAMPTZ voted_at
+    }
+    %% [장소선정 신규] meeting_travel_burden — 이동부담 스냅샷
+    meeting_travel_burden {
+        BIGINT id PK
+        BIGINT meeting_id FK
+        BIGINT member_id FK
+        BIGINT place_id FK
+        INT seconds "소요초"
+        INT transfers "환승수"
+    }
+    %% [장소선정 신규] meeting_confirmed_place — 확정 장소
+    meeting_confirmed_place {
+        BIGINT id PK
+        BIGINT meeting_id FK,UK
+        BIGINT place_id FK
+        VARCHAR place_name
+        TEXT address
+        TIMESTAMPTZ confirmed_at
+    }
+    %% [기존] subway_edge — 이동 그래프(V17)
+    subway_edge {
+        BIGINT id PK
+        BIGINT from_station_id FK
+        BIGINT to_station_id FK
+        INT weight_sec
+        VARCHAR edge_type "RIDE/TRANSFER"
+    }
+
     terms ||--o{ terms_agreement : "1약관 N동의이력"
     theme_tag ||--o{ group_info : "1태그 N그룹"
     theme_tag ||--o{ meeting : "1태그 N모임"
@@ -202,6 +294,17 @@ erDiagram
     meeting ||--o{ midpoint_station_candidate : "1모임 N역후보"
     date_vote_session ||--o{ date_vote_option : "1세션 N후보"
     date_vote_option ||--o{ date_vote_record : "1후보 N투표기록"
+    meeting ||--o{ meeting_place_recommendation : "1모임 N추천"
+    place ||--o{ meeting_place_recommendation : "1장소 N추천"
+    meeting ||--o{ meeting_place_pick : "1모임 N담기"
+    place ||--o{ meeting_place_pick : "1장소 N담기"
+    meeting ||--|| meeting_place_vote_session : "1모임 1세션"
+    meeting_place_vote_session ||--o{ meeting_place_vote : "1세션 N투표"
+    place ||--o{ meeting_place_vote : "1장소 N투표"
+    meeting ||--o{ meeting_travel_burden : "1모임 N이동부담"
+    place ||--o{ meeting_travel_burden : "1장소 N이동부담"
+    meeting ||--|| meeting_confirmed_place : "1모임 1확정"
+    subway_station ||--o{ subway_edge : "역 그래프 엣지"
 ```
 
 ## 테이블 목록
@@ -222,6 +325,16 @@ erDiagram
 | `date_vote_option` | V8 (FC-7) | 투표 후보 날짜 |
 | `date_vote_record` | V8 (FC-7) | 투표 기록 |
 | `meeting_participant` | V11 + V15 (MVP2) | 모임별 참여자 출발지 (합류 시 생성, V15에서 lat/lng nullable) |
-| `subway_station` | V12 (MVP2) | 지하철역 마스터 (PostGIS) |
+| `place` | V12 (MVP2) | 장소 마스터 (네이버 place_id, PostGIS) |
 | `midpoint_station_candidate` | V13 (MVP2) | 중간지점 역 후보 (rank 1~3) |
 | `group_invite` | V14 (FC-5) | 그룹 초대 코드 (48시간 만료) |
+| `subway_station` | V16 (MVP2) | 지하철역 마스터 (PostGIS) |
+| `subway_edge` | V17 (MVP2) | 지하철 이동 그래프 (RIDE/TRANSFER, weight_sec) |
+| `meeting` (확장) | **V18** | + category_labels[], vibes[], reservable, parking (장소추천 옵션) |
+| `meeting_place_recommendation` | **V20** | 추천 15 스냅샷 (rank/score/귀속역) — place 테이블 변경 없음(기존 occasion 재사용) |
+| `meeting_place_pick` | **V21** | 장소 담기 (모임원×장소) |
+| `meeting_place_vote_session` | **V22** | 장소 투표 세션 (마감일) |
+| `meeting_place_vote` | **V23** | 장소 투표 (익명 집계) |
+| `meeting_travel_burden` | **V24** | 이동부담 스냅샷 (소요초/환승수) |
+| `meeting_confirmed_place` | **V25** | 확정 장소 고정 저장 |
+| `meeting` locationStatus | **V26** | 4-state 데이터 마이그레이션 |

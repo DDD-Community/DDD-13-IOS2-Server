@@ -1,63 +1,49 @@
-# Unit of Work — 중간지점 역 후보 추출 (MVP2)
+# Unit of Work — 장소 선정~확정 (FC-8~13)
 
-## Unit 1: meeting_participant 도입
+> 모놀리식 단일 서비스 내 **논리 모듈(유닛)** 분해. 분해 기준 = 의존 순서 + 바운디드 컨텍스트 + FC 경계.
 
-**목적**: 모임별 참여자 출발지 스냅샷 테이블 도입 + 모임 생성 시 자동 복사
+## U1. 기반 — 상태/생성흐름수정/에러코드
+- LocationStatus 4-state 교체 + `Meeting.startLocationPhase/toVoting/toConfirmed` 가드
+- **기존 그룹/미팅 생성 흐름 수정(신규 아님)**: 미팅은 별도 생성 API 없음 — 그룹 생성 시 함께 생성됨
+  - `CreateGroupRequest`(POST /groups/create) + categoryLabels/vibes
+  - `CreateMeetingRequest`(다음 미팅, GroupController) + categoryLabels/vibes
+  - `GroupService.createGroupWithMeeting / createNextMeeting` 시그니처 확장 → `Meeting.create` 전달
+  - meeting 컬럼(categories/vibes) 저장. 그룹 테이블엔 저장 안 함
+- ErrorCode 신규(장소담기/투표/마감/확정)
+- Flyway: V18(meeting 컬럼), V26(locationStatus 데이터 마이그레이션)
+- review 매핑: `review/fc4`(생성 수정), `review/fc8`(상태/가드)
+- **선행 유닛 — 나머지 전부 의존**
 
-**산출물**:
-- `V11__create_meeting_participant.sql`
-- `MeetingParticipant` (meeting.domain)
-- `MeetingParticipantRepository` (meeting.domain)
-- `MeetingParticipantJpaEntity` (meeting.infrastructure)
-- `MeetingParticipantJpaRepository` (meeting.infrastructure)
-- `MeetingParticipantRepositoryImpl` (meeting.infrastructure)
-- `MeetingService` 또는 `CreateMeetingService` 수정 — 모임 생성 후 meeting_participant 자동 생성
+## U2. 추천 — place 컨텍스트 + FC-8
+- place 도메인/리포(PostGIS 후보), RecommendationCandidate, PlaceScorer, PlaceOption
+- meeting_place_recommendation(V20) — place는 기존 occasion 재사용, 컬럼 변경 없음
+- PlaceSelectionService(start), 추천조회, `POST location/start` 확장, `GET /places/options`
+- 의존: U1
 
-**완료 기준**:
-- meeting 생성 시 group_member 멤버 수만큼 meeting_participant 레코드 생성
-- 각 레코드에 is_default departure_place 좌표가 PostGIS geometry로 저장
-- compileJava 성공
+## U3. 담기 — FC-9
+- MeetingPlacePick(V21), PlacePickService
+- 역탭/카테고리/필터 목록 API, 담기/취소, 담기현황, 담기완료→VOTING 전환
+- 담기마감 스케줄러(+3일, 0개 top3)
+- 카드거리: U4 그래프 의존(또는 직선거리 임시) — **권장: U4 선행 후 통합**, 분리 시 직선거리 임시
+- 의존: U2 (그래프 카드거리는 U4)
 
----
+## U4. 그래프+투표 — FC-11/12
+- SubwayGraph(부팅 로드) + ShortestPathService + SubwayEdgeRepository(V17 활용)
+- MeetingPlaceVoteSession(V22), MeetingPlaceVote(V23), MeetingTravelBurden(V24)
+- PlaceVoteService(세션생성+이동부담 스냅샷, 투표, 현황), 투표 API
+- 투표마감 스케줄러
+- 의존: U3 (그래프는 U2와 병렬 가능)
 
-## Unit 2: subway context 신규
+## U5. 확정 — FC-13
+- MeetingConfirmedPlace(V25), PlaceConfirmService(4단계 순위), 결과 API
+- 전원투표/마감 트리거 연결
+- 의존: U4
 
-**목적**: 지하철역 공간 데이터 도메인 + PostGIS native 쿼리 구현
+## 코드 위치
+- place → `com.bangawo.place.{domain,application,presentation,infrastructure}`
+- subway 확장 → `com.bangawo.subway.{domain,infrastructure}`
+- meeting 확장 → 기존 `com.bangawo.meeting.*`
+- 신규 코드는 워크스페이스 루트(aidlc-docs 아님)
 
-**산출물**:
-- `V12__create_subway_station.sql` (DDL만, GIST 인덱스 포함)
-- `SubwayStation` (subway.domain)
-- `StationCandidate` (subway.domain — 쿼리 결과 value object)
-- `SubwayStationRepository` (subway.domain)
-- `SubwayStationJpaEntity` (subway.infrastructure)
-- `SubwayStationJpaRepository` (subway.infrastructure — native @Query)
-- `SubwayStationRepositoryImpl` (subway.infrastructure)
-
-**완료 기준**:
-- subway_station 테이블 DDL 생성 완료
-- native SQL로 centroid 계산 + 2km 이내 역 조회 쿼리 구현
-- compileJava 성공
-
----
-
-## Unit 3: midpoint 계산 + API
-
-**목적**: location 단계 시작 시 역 후보 계산/저장 + 조회 API
-
-**산출물**:
-- `V13__create_midpoint_station_candidate.sql`
-- `MidpointStationCandidate` (meeting.domain)
-- `MidpointStationCandidateRepository` (meeting.domain)
-- `MidpointStationCandidateJpaEntity` / `JpaRepository` / `RepositoryImpl` (meeting.infrastructure)
-- `MidpointCalculationService` (meeting.application)
-- `LocationService` (meeting.application)
-- `ErrorCode` 추가 (PARTICIPANT_DEPARTURE_NOT_SET, MIDPOINT_STATION_NOT_FOUND, LOCATION_PHASE_ALREADY_STARTED)
-- `Meeting.startLocationPhase()` 메서드 추가 (meeting.domain)
-- `LocationController` (meeting.presentation)
-- `MidpointStationCandidateResponse` (meeting.presentation.dto)
-
-**완료 기준**:
-- POST /meetings/{id}/location/start → 역 3개 저장
-- GET /meetings/{id}/midpoint-stations → rank 1/2/3 반환
-- 비호스트 호출 시 403
-- compileJava 성공
+## 데이터 태스크 (코드와 분리, 비차단)
+- vibe 표준목록 정비 — GCP 연결 시 수행 (occasion은 기존 데이터로 충분, 별도 적재 불필요)
