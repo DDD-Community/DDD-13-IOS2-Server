@@ -462,3 +462,8 @@ Clarification 2 원문: "A가 가장 괜찮아보이네 역 후보도 보여줘�
 **Action**: U3(담기 FC-9) 코드 생성 플랜 작성 및 승인 요청
 **Plan file**: `aidlc-docs/construction/internal/plans/unit-3-fc9-code-generation-plan.md`
 **Status**: AWAITING_APPROVAL
+
+---
+## 2026-06-17T09:00:00+09:00 — U3 FC-9 Code Generation Plan Approved & Generation Started
+
+**Status**: APPROVED (proceeding)

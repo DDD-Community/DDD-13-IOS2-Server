@@ -1,9 +1,6 @@
 package com.bangawo.meeting.infrastructure.persistence;
 
-import com.bangawo.meeting.domain.DateVoteStatus;
-import com.bangawo.meeting.domain.LocationStatus;
-import com.bangawo.meeting.domain.Meeting;
-import com.bangawo.meeting.domain.MeetingStatus;
+import com.bangawo.meeting.domain.*;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -63,6 +60,9 @@ public class MeetingJpaEntity {
     @Column(name = "confirmed_date")
     private LocalDate confirmedDate;
 
+    @Column(name = "pick_deadline")
+    private LocalDateTime pickDeadline;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -83,6 +83,7 @@ public class MeetingJpaEntity {
         entity.locationStatus = meeting.getLocationStatus();
         entity.dateVoteStatus = meeting.getDateVoteStatus();
         entity.confirmedDate = meeting.getConfirmedDate();
+        entity.pickDeadline = meeting.getPickDeadline();
         entity.createdAt = meeting.getCreatedAt();
         entity.updatedAt = meeting.getUpdatedAt();
         return entity;
@@ -102,6 +103,7 @@ public class MeetingJpaEntity {
                 .locationStatus(locationStatus)
                 .dateVoteStatus(dateVoteStatus)
                 .confirmedDate(confirmedDate)
+                .pickDeadline(pickDeadline)
                 .createdAt(createdAt)
                 .updatedAt(updatedAt)
                 .build();

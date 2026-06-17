@@ -59,20 +59,20 @@ meeting/infrastructure/scheduler/MeetingScheduler.java        ← processExpired
 
 ### Step 1. Domain — MeetingPlacePick + Repository
 
-- [ ] 1.1 신규 `MeetingPlacePick` (id, meetingId, memberId, placeId, pickedAt) + `of()` factory
-- [ ] 1.2 신규 `MeetingPlacePickRepository` 인터페이스
+- [x] 1.1 신규 `MeetingPlacePick` (id, meetingId, memberId, placeId, pickedAt) + `of()` factory
+- [x] 1.2 신규 `MeetingPlacePickRepository` 인터페이스
   - save / existsByMeetingIdAndMemberIdAndPlaceId / deleteByMeetingIdAndMemberIdAndPlaceId
   - findByMeetingId / existsByMeetingId / countByMeetingIdAndMemberId
-- [ ] 1.3 `Meeting.java` 수정
+- [x] 1.3 `Meeting.java` 수정
   - `pickDeadline: LocalDateTime` 필드 + Builder 파라미터 추가
   - `completeRecommendation()` 수정: `this.pickDeadline = LocalDateTime.now().plusDays(3).withHour(23).withMinute(59).withSecond(59).withNano(0)`
   - `isPickDeadlineExpired(): boolean` 추가
-- [ ] 1.4 `MeetingRepository` 수정 — `findRecommendedWithExpiredPickDeadline(LocalDateTime now)` 추가
+- [x] 1.4 `MeetingRepository` 수정 — `findRecommendedWithExpiredPickDeadline(LocalDateTime now)` 추가
 
 ### Step 2. Domain Unit Test
 
-- [ ] 2.1 `MeetingPlacePickTest` 신규 — `of()` 필드 확인
-- [ ] 2.2 `Meeting` 기존 테스트 클래스에 pickDeadline 케이스 추가
+- [x] 2.1 `MeetingPlacePickTest` 신규 — `of()` 필드 확인
+- [x] 2.2 `Meeting` 기존 테스트 클래스에 pickDeadline 케이스 추가
   - `completeRecommendation()` 호출 시 pickDeadline = now + 3d 23:59:59
   - `isPickDeadlineExpired()` 만료 전/후
 
@@ -80,7 +80,7 @@ meeting/infrastructure/scheduler/MeetingScheduler.java        ← processExpired
 
 ### Step 4. Application — PlacePickService
 
-- [ ] 4.1 신규 `PlacePickService`
+- [x] 4.1 신규 `PlacePickService`
   - 의존: MeetingRepository, GroupMemberRepository, MeetingParticipantRepository,
     MeetingPlacePickRepository, MeetingPlaceRecommendationRepository,
     PlaceRepository, MemberRepository
@@ -113,7 +113,7 @@ meeting/infrastructure/scheduler/MeetingScheduler.java        ← processExpired
 
 ### Step 5. Application Unit Test
 
-- [ ] 5.1 `PlacePickServiceTest` 신규
+- [x] 5.1 `PlacePickServiceTest` 신규
   - getPlaces: stationId 필터, cardDistance null
   - pickPlace: 정상/멱등/LOCATION_NOT_RECOMMENDED/PLACE_PICK_CLOSED/전원완료 자동전환
   - cancelPick: 정상/PLACE_PICK_CLOSED/없는 pick no-op
@@ -123,11 +123,11 @@ meeting/infrastructure/scheduler/MeetingScheduler.java        ← processExpired
 
 ### Step 7. Presentation — DTOs + Controller
 
-- [ ] 7.1 `PlaceCardResponse` (record): placeId, name, categoryLabel, address, vibes, cardDistance, pickCount, pickedByMe
-- [ ] 7.2 `MemberPickStatus` (record): memberId, nickname, done
-- [ ] 7.3 `PickStatusResponse` (record): members(List<MemberPickStatus>), myPicks(List<Long>)
-- [ ] 7.4 `StartVoteRequest` (record): durationDays(@NotNull)
-- [ ] 7.5 신규 `PlacePickController` (meeting.presentation)
+- [x] 7.1 `PlaceCardResponse` (record): placeId, name, categoryLabel, address, vibes, cardDistance, pickCount, pickedByMe
+- [x] 7.2 `MemberPickStatus` (record): memberId, nickname, done
+- [x] 7.3 `PickStatusResponse` (record): members(List<MemberPickStatus>), myPicks(List<Long>)
+- [x] 7.4 `StartVoteRequest` (record): durationDays(@NotNull)
+- [x] 7.5 신규 `PlacePickController` (meeting.presentation)
   - `GET  /api/v1/meetings/{meetingId}/places`
   - `POST /api/v1/meetings/{meetingId}/places/{placeId}/pick` → 204
   - `DELETE /api/v1/meetings/{meetingId}/places/{placeId}/pick` → 204
@@ -136,50 +136,50 @@ meeting/infrastructure/scheduler/MeetingScheduler.java        ← processExpired
 
 ### Step 8. API Layer Unit Testing
 
-- [ ] 8.1 스킵 (통합테스트 커버)
+- [x] 8.1 스킵 (통합테스트 커버)
 
 ### Step 9. API Layer Summary
 
 ### Step 10. Repository Layer — Infrastructure
 
-- [ ] 10.1 `MeetingPlacePickJpaEntity` — @Table(meeting_place_pick), from/toDomain
-- [ ] 10.2 `MeetingPlacePickJpaRepository` extends JpaRepository — 필요 메서드 선언
-- [ ] 10.3 `MeetingPlacePickRepositoryImpl` — 전 메서드 구현
-- [ ] 10.4 `MeetingJpaEntity` 수정 — `pick_deadline TIMESTAMPTZ` 컬럼 추가, from/toDomain 반영
-- [ ] 10.5 `MeetingJpaRepository` 수정 — `findByLocationStatusAndPickDeadlineBefore` 추가
-- [ ] 10.6 `MeetingRepositoryImpl` 수정 — `findRecommendedWithExpiredPickDeadline` 구현
+- [x] 10.1 `MeetingPlacePickJpaEntity` — @Table(meeting_place_pick), from/toDomain
+- [x] 10.2 `MeetingPlacePickJpaRepository` extends JpaRepository — 필요 메서드 선언
+- [x] 10.3 `MeetingPlacePickRepositoryImpl` — 전 메서드 구현
+- [x] 10.4 `MeetingJpaEntity` 수정 — `pick_deadline TIMESTAMPTZ` 컬럼 추가, from/toDomain 반영
+- [x] 10.5 `MeetingJpaRepository` 수정 — `findByLocationStatusAndPickDeadlineBefore` 추가
+- [x] 10.6 `MeetingRepositoryImpl` 수정 — `findRecommendedWithExpiredPickDeadline` 구현
 
 ### Step 11. Repository Layer Unit Testing
 
-- [ ] 11.1 스킵 (통합테스트 커버)
+- [x] 11.1 스킵 (통합테스트 커버)
 
 ### Step 12. Repository Layer Summary
 
 ### Step 13. Scheduler — PlacePickSchedulerService + MeetingScheduler 연결
 
-- [ ] 13.1 신규 `PlacePickSchedulerService` (application)
+- [x] 13.1 신규 `PlacePickSchedulerService` (application)
   - `processExpiredPickDeadlines()`:
     meetings = findRecommendedWithExpiredPickDeadline(now) → 각 meeting.toVoting() + save
     (0개 auto-candidate 처리는 U4 vote session 생성 시)
 
-- [ ] 13.2 `MeetingScheduler` 수정
+- [x] 13.2 `MeetingScheduler` 수정
   - `PlacePickSchedulerService` 주입
   - processScheduled()에서 processExpiredPickDeadlines() 호출 + try-catch
 
 ### Step 14. Database Migration Scripts
 
-- [ ] 14.1 `V21__create_meeting_place_pick.sql`
+- [x] 14.1 `V21__create_meeting_place_pick.sql`
   - CREATE TABLE meeting_place_pick (id, meeting_id FK, member_id FK, place_id FK, picked_at)
   - UNIQUE(meeting_id, member_id, place_id)
   - ALTER TABLE meeting ADD COLUMN pick_deadline TIMESTAMPTZ
 
 ### Step 15. Documentation Generation
 
-- [ ] 15.1 `review/fc9/api.md` — 요청/응답 예시 보강
+- [x] 15.1 `review/fc9/api.md` — 요청/응답 예시 보강
 
 ### Step 16. Deployment Artifacts
 
-- [ ] 16.1 해당 없음
+- [x] 16.1 해당 없음
 
 ---
 

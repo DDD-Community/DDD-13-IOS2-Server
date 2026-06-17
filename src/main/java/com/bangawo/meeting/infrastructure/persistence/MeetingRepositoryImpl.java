@@ -1,12 +1,11 @@
 package com.bangawo.meeting.infrastructure.persistence;
 
-import com.bangawo.meeting.domain.Meeting;
-import com.bangawo.meeting.domain.MeetingRepository;
-import com.bangawo.meeting.domain.MeetingStatus;
+import com.bangawo.meeting.domain.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,6 +40,14 @@ public class MeetingRepositoryImpl implements MeetingRepository {
     @Override
     public List<Meeting> findActiveByConfirmedDateBefore(LocalDate today) {
         return jpaRepository.findByStatusAndConfirmedDateBefore(MeetingStatus.ACTIVE, today)
+                .stream()
+                .map(MeetingJpaEntity::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Meeting> findRecommendedWithExpiredPickDeadline(LocalDateTime now) {
+        return jpaRepository.findByLocationStatusAndPickDeadlineBefore(LocationStatus.RECOMMENDED, now)
                 .stream()
                 .map(MeetingJpaEntity::toDomain)
                 .toList();

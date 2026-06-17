@@ -25,6 +25,7 @@ public class Meeting {
     private LocationStatus locationStatus;
     private DateVoteStatus dateVoteStatus;
     private LocalDate confirmedDate;
+    private LocalDateTime pickDeadline;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -32,7 +33,8 @@ public class Meeting {
     public Meeting(Long id, Long groupId, String name, String themeTagCode,
                    List<String> categoryLabels, List<String> vibes, Boolean reservable, Boolean parking,
                    MeetingStatus status, LocationStatus locationStatus, DateVoteStatus dateVoteStatus,
-                   LocalDate confirmedDate, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                   LocalDate confirmedDate, LocalDateTime pickDeadline,
+                   LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.groupId = groupId;
         this.name = name;
@@ -45,6 +47,7 @@ public class Meeting {
         this.locationStatus = locationStatus;
         this.dateVoteStatus = dateVoteStatus;
         this.confirmedDate = confirmedDate;
+        this.pickDeadline = pickDeadline;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -114,7 +117,12 @@ public class Meeting {
 
     public void completeRecommendation() {
         this.locationStatus = LocationStatus.RECOMMENDED;
+        this.pickDeadline = LocalDateTime.now().plusDays(3).withHour(23).withMinute(59).withSecond(59).withNano(0);
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public boolean isPickDeadlineExpired() {
+        return pickDeadline != null && LocalDateTime.now().isAfter(pickDeadline);
     }
 
     public void toVoting() {
