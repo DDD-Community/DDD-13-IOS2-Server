@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface SubwayStationJpaRepository extends JpaRepository<SubwayStationJpaEntity, Long> {
 
@@ -55,4 +56,16 @@ public interface SubwayStationJpaRepository extends JpaRepository<SubwayStationJ
             """)
     List<Object[]> findRawCandidatesNearMeetingCenter(@Param("meetingId") Long meetingId,
                                                        @Param("limit") int limit);
+
+    @Query(nativeQuery = true, value = """
+            SELECT MIN(s.station_id)
+            FROM subway_station s
+            ORDER BY ST_DistanceSphere(
+                s.location_point::geometry,
+                ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geometry
+            )
+            LIMIT 1
+            """)
+    Optional<Long> findNearestStationId(@Param("latitude") double latitude,
+                                        @Param("longitude") double longitude);
 }

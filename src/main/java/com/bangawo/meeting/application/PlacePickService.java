@@ -36,6 +36,8 @@ public class PlacePickService {
     private final MeetingPlaceRecommendationRepository meetingPlaceRecommendationRepository;
     private final PlaceRepository placeRepository;
     private final MemberRepository memberRepository;
+    private final PlaceVoteService placeVoteService;
+
     @Transactional(readOnly = true)
     public List<PlaceCardResponse> getPlaces(Long meetingId, Long memberId,
                                               Long stationId, String category,
@@ -55,8 +57,7 @@ public class PlacePickService {
         }
 
         List<Long> placeIds = recommendations.stream()
-                .map(MeetingPlaceRecommendation::getPlaceId)
-                .toList();
+                .map(MeetingPlaceRecommendation::getPlaceId).toList();
 
         Map<Long, Place> placeById = placeRepository.findByIds(placeIds).stream()
                 .collect(Collectors.toMap(Place::getId, p -> p));
@@ -66,8 +67,7 @@ public class PlacePickService {
                 .collect(Collectors.groupingBy(MeetingPlacePick::getPlaceId, Collectors.counting()));
         Set<Long> myPickedPlaceIds = allPicks.stream()
                 .filter(p -> memberId.equals(p.getMemberId()))
-                .map(MeetingPlacePick::getPlaceId)
-                .collect(Collectors.toSet());
+                .map(MeetingPlacePick::getPlaceId).collect(Collectors.toSet());
 
         return recommendations.stream()
                 .map(r -> {
@@ -76,25 +76,16 @@ public class PlacePickService {
                     if (category != null && !category.equals(place.getCategoryLabel())) return null;
                     if (Boolean.TRUE.equals(reservable) && !Boolean.TRUE.equals(place.getReservable())) return null;
                     if (Boolean.TRUE.equals(parking) && !Boolean.TRUE.equals(place.getHasParking())) return null;
-
                     List<String> vibes = place.getVibe() != null
-                            ? place.getVibe().stream().limit(3).toList()
-                            : List.of();
-
-                    return new PlaceCardResponse(
-                            r.getPlaceId(),
-                            place.getName(),
-                            place.getCategoryLabel(),
-                            place.getAddress(),
-                            vibes,
-                            null,
+                            ? place.getVibe().stream().limit(3).toList() : List.of();
+                    return new PlaceCardResponse(r.getPlaceId(), place.getName(),
+                            place.getCategoryLabel(), place.getAddress(), vibes, null,
                             pickCountByPlaceId.getOrDefault(r.getPlaceId(), 0L).intValue(),
-                            myPickedPlaceIds.contains(r.getPlaceId())
-                    );
+                            myPickedPlaceIds.contains(r.getPlaceId()));
                 })
-                .filter(r -> r != null)
-                .toList();
+                .filter(r -> r != null).toList();
     }
+
     @Transactional
     public void pickPlace(Long meetingId, Long memberId, Long placeId) {
         Meeting meeting = meetingRepository.findById(meetingId)
@@ -132,6 +123,7 @@ public class PlacePickService {
 
         meetingPlacePickRepository.deleteByMeetingIdAndMemberIdAndPlaceId(meetingId, memberId, placeId);
     }
+
     @Transactional(readOnly = true)
     public PickStatusResponse getPickStatus(Long meetingId, Long memberId) {
         Meeting meeting = meetingRepository.findById(meetingId)
@@ -143,8 +135,7 @@ public class PlacePickService {
         List<MeetingPlacePick> allPicks = meetingPlacePickRepository.findByMeetingId(meetingId);
 
         Set<Long> participantMemberIds = participants.stream()
-                .map(MeetingParticipant::getMemberId)
-                .collect(Collectors.toSet());
+                .map(MeetingParticipant::getMemberId).collect(Collectors.toSet());
         Map<Long, Member> memberById = memberRepository.findAllById(participantMemberIds).stream()
                 .collect(Collectors.toMap(Member::getId, m -> m));
 
@@ -163,11 +154,11 @@ public class PlacePickService {
 
         List<Long> myPicks = allPicks.stream()
                 .filter(p -> memberId.equals(p.getMemberId()))
-                .map(MeetingPlacePick::getPlaceId)
-                .toList();
+                .map(MeetingPlacePick::getPlaceId).toList();
 
         return new PickStatusResponse(memberStatuses, myPicks);
     }
+
     @Transactional
     public void startVoting(Long meetingId, Long memberId, int durationDays) {
         Meeting meeting = meetingRepository.findById(meetingId)
@@ -197,6 +188,7 @@ public class PlacePickService {
 
         meeting.toVoting();
         meetingRepository.save(meeting);
+        placeVoteService.createSession(meetingId, durationDays);
     }
 
     private void checkAndAutoTransitionToVoting(Meeting meeting) {
@@ -214,6 +206,7 @@ public class PlacePickService {
         if (allDone) {
             meeting.toVoting();
             meetingRepository.save(meeting);
+            placeVoteService.createSessionWithDefaultDuration(meeting.getId());
         }
     }
 }

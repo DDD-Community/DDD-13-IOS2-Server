@@ -60,9 +60,9 @@
 - [x] U1 기반 — LocationStatus 4-state, Meeting 가드, categoryLabels/vibes 입력확장, ErrorCode 8건, V18 (완료, 승인됨)
 - [x] U2 추천 (FC-8) — 완료
 - [x] U3 담기 (FC-9) — 완료
-- [ ] U4 그래프+투표 (FC-11/12)
-- [ ] U5 확정 (FC-13)
-- current_unit: U4
+- [x] U4 그래프+투표 (FC-11/12)
+- [x] U5 확정 (FC-13)
+- current_unit: COMPLETE
 
 ## Previous Cycle (완료 — FC-4~7 MVP2 subway/midpoint)
 - INCEPTION + CONSTRUCTION 완료 (meeting_participant, subway context, midpoint 계산 API)

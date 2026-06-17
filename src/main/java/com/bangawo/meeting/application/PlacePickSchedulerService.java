@@ -16,6 +16,7 @@ import java.util.List;
 public class PlacePickSchedulerService {
 
     private final MeetingRepository meetingRepository;
+    private final PlaceVoteService placeVoteService;
 
     @Transactional
     public void processExpiredPickDeadlines() {
@@ -24,6 +25,7 @@ public class PlacePickSchedulerService {
             try {
                 meeting.toVoting();
                 meetingRepository.save(meeting);
+                placeVoteService.createSessionWithDefaultDuration(meeting.getId());
                 log.info("담기 마감 VOTING 전환 meetingId={}", meeting.getId());
             } catch (Exception e) {
                 log.error("담기 마감 VOTING 전환 실패 meetingId={}", meeting.getId(), e);
