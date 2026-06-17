@@ -94,16 +94,20 @@ erDiagram
         TIMESTAMPTZ updated_at "수정 시각"
     }
 
-    %% [FC-4 + V9 확장] meeting — 모임
+    %% [FC-4 + V9 + V18 확장] meeting — 모임
     meeting {
         BIGINT id PK "모임 고유 ID"
         BIGINT group_id FK "소속 그룹 ID"
         VARCHAR(30) name "모임명"
         VARCHAR(30) theme_tag_code "테마 태그 코드"
-        VARCHAR(10) status "모임 진행 상태 (ACTIVE/CLOSED)"
-        VARCHAR(15) location_status "장소 선정 상태 (BEFORE/IN_PROGRESS/COMPLETED)"
+        VARCHAR(10) status "모임 진행 상태 (ACTIVE/CLOSED) — V9"
+        VARCHAR(15) location_status "장소 선정 상태 (BEFORE/RECOMMENDED/VOTING/CONFIRMED) — V18 코멘트 기준"
         VARCHAR(15) date_vote_status "날짜 투표 상태 (BEFORE/IN_PROGRESS/COMPLETED)"
         DATE confirmed_date "확정된 모임 날짜 (미확정 시 null)"
+        TEXT_ARRAY category_labels "FC-8 추천 음식 카테고리 선호 (선택) — V18"
+        TEXT_ARRAY vibes "FC-8 추천 분위기 선호 (선택) — V18"
+        BOOLEAN reservable "FC-8 HARD 필터 예약가능, NULL=조건없음 — V18"
+        BOOLEAN parking "FC-8 HARD 필터 주차가능, NULL=조건없음 — V18"
         TIMESTAMPTZ created_at "생성 시각"
         TIMESTAMPTZ updated_at "수정 시각"
     }
@@ -192,19 +196,34 @@ erDiagram
     member ||--o{ group_member : "1회원 N그룹참여"
     member ||--o{ meeting_participant : "1회원 N모임참여"
     group_info ||--o{ group_invite : "1그룹 N초대코드"
-    %% [장소선정 신규] place — 장소 마스터
+    %% [V12] place — 장소 마스터 (네이버 place_id 기준)
     place {
-        BIGINT id PK
-        BIGINT place_id UK "네이버 place_id"
-        VARCHAR category_label "한식/카페/.../기타"
-        TEXT_ARRAY vibe "분위기 태그"
-        TEXT_ARRAY occasion "%% [기존] AI 용도 태그 — theme_tag.display_name과 직접 비교(신규 컬럼 없음)"
-        BOOLEAN reservable
-        BOOLEAN has_parking
-        NUMERIC rating
-        GEOGRAPHY location_point "PostGIS"
+        BIGINT id PK "장소 고유 ID"
+        BIGINT place_id UK "네이버 place_id (NOT NULL UNIQUE)"
+        VARCHAR(100) name "상호명"
+        VARCHAR(50) branch "지점명 (nullable)"
+        VARCHAR(100) category "네이버 원본 카테고리"
+        VARCHAR(20) category_label "한식/일식/중식/양식/카페/디저트/주점/분식/아시아음식/기타"
+        TEXT address "주소"
+        DOUBLE latitude "위도"
+        DOUBLE longitude "경도"
+        GEOGRAPHY location_point "PostGIS geography(Point,4326)"
+        BOOLEAN has_room "룸 보유 (NULL=정보없음)"
+        BOOLEAN has_group_seat "단체석 보유"
+        BOOLEAN has_parking "주차 가능"
+        BOOLEAN reservable "예약 가능"
+        INT max_group_size "최대 단체 인원"
+        TEXT_ARRAY vibe "AI 분위기 태그 배열 (예: 감성적,차분한)"
+        TEXT_ARRAY occasion "AI 용도 태그 배열 — theme_tag.display_name과 직접 비교"
+        VARCHAR(2) size_fit "소/중/대"
+        TEXT summary "AI 요약"
+        VARCHAR(200) naver_url "네이버 URL"
+        NUMERIC rating "평점 NUMERIC(3,2)"
+        INT review_count "리뷰 수"
+        TIMESTAMPTZ created_at "등록 시각"
+        TIMESTAMPTZ updated_at "수정 시각"
     }
-    %% [장소선정 신규] meeting_place_recommendation — 추천 15 스냅샷
+    %% [V20] meeting_place_recommendation — 추천 15 스냅샷
     meeting_place_recommendation {
         BIGINT id PK
         BIGINT meeting_id FK
@@ -225,7 +244,7 @@ erDiagram
     %% [장소선정 신규] meeting_place_vote_session — 투표 세션
     meeting_place_vote_session {
         BIGINT id PK
-        BIGINT meeting_id FK UK
+        BIGINT meeting_id FK,UK
         TIMESTAMPTZ started_at
         TIMESTAMPTZ deadline
         VARCHAR status "IN_PROGRESS/CLOSED"
@@ -250,7 +269,7 @@ erDiagram
     %% [장소선정 신규] meeting_confirmed_place — 확정 장소
     meeting_confirmed_place {
         BIGINT id PK
-        BIGINT meeting_id FK UK
+        BIGINT meeting_id FK,UK
         BIGINT place_id FK
         VARCHAR place_name
         TEXT address
