@@ -1,6 +1,8 @@
 package com.bangawo.meeting.infrastructure.scheduler;
 
 import com.bangawo.meeting.application.MeetingSchedulerService;
+import com.bangawo.meeting.application.PlacePickSchedulerService;
+import com.bangawo.meeting.application.PlaceVoteSchedulerService;
 import com.bangawo.meeting.application.VoteSchedulerService;
 import com.bangawo.meeting.domain.DateVoteSession;
 import com.bangawo.meeting.domain.DateVoteSessionRepository;
@@ -23,11 +25,15 @@ public class MeetingScheduler {
     private final MeetingRepository meetingRepository;
     private final VoteSchedulerService voteSchedulerService;
     private final MeetingSchedulerService meetingSchedulerService;
+    private final PlacePickSchedulerService placePickSchedulerService;
+    private final PlaceVoteSchedulerService placeVoteSchedulerService;
 
     @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
     public void processScheduled() {
         processExpiredVoteSessions();
         processExpiredMeetings();
+        processExpiredPlacePicks();
+        processExpiredPlaceVoteSessions();
     }
 
     private void processExpiredVoteSessions() {
@@ -53,6 +59,22 @@ public class MeetingScheduler {
             } catch (Exception e) {
                 log.error("모임 자동 종료 실패 meetingId={}", meeting.getId(), e);
             }
+        }
+    }
+
+    private void processExpiredPlacePicks() {
+        try {
+            placePickSchedulerService.processExpiredPickDeadlines();
+        } catch (Exception e) {
+            log.error("담기 마감 VOTING 전환 일괄 처리 실패", e);
+        }
+    }
+
+    private void processExpiredPlaceVoteSessions() {
+        try {
+            placeVoteSchedulerService.closeExpiredSessions();
+        } catch (Exception e) {
+            log.error("투표 마감 CONFIRMED 전환 일괄 처리 실패", e);
         }
     }
 }

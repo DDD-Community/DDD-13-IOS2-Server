@@ -462,3 +462,40 @@ Clarification 2 원문: "A가 가장 괜찮아보이네 역 후보도 보여줘�
 **Action**: U3(담기 FC-9) 코드 생성 플랜 작성 및 승인 요청
 **Plan file**: `aidlc-docs/construction/internal/plans/unit-3-fc9-code-generation-plan.md`
 **Status**: AWAITING_APPROVAL
+
+---
+## 2026-06-17T09:00:00+09:00 — U3 FC-9 Code Generation Plan Approved & Generation Started
+
+**Status**: APPROVED (proceeding)
+
+## [2026-06-17] U4+U5 코드 생성 플랜 작성
+
+- **timestamp**: 2026-06-17T00:00:00+09:00
+- **unit**: U4 (FC-11/12) + U5 (FC-13)
+- **branch**: feature/fc11-fc13-vote-confirm
+- **plan**: aidlc-docs/construction/internal/plans/u4-u5-code-generation-plan.md
+- **steps**: 27 steps (U4: 1-19, U5: 20-27)
+- **status**: AWAITING_APPROVAL
+
+## [2026-06-17] U4+U5 코드 생성 완료
+
+- **timestamp**: 2026-06-17T01:00:00+09:00
+- **status**: COMPLETED
+- **build**: BUILD SUCCESSFUL
+- **steps_completed**: 27/27
+- **new_files**: 34개 (migrations 4, domain 9, infrastructure 15, application 3, presentation 3, dto 3)
+- **modified_files**: 4개 (PlacePickService, PlacePickSchedulerService, MeetingScheduler, SubwayStationRepository*)
+
+---
+
+## [2026-06-17] Build and Test — CONSTRUCTION COMPLETE
+
+- **timestamp**: 2026-06-17T02:00:00+09:00
+- **branch**: feature/fc11-fc13-vote-confirm
+- **command**: `./gradlew clean build --no-daemon`
+- **build_status**: BUILD SUCCESSFUL
+- **test_result**: 77 tests, 0 failures, 0 skipped
+- **test_fix**: PlacePickServiceTest — @Mock PlaceVoteService 추가, stubbing 보완
+- **migrations**: V22~V25 추가 (vote_session, vote, travel_burden, confirmed_place)
+- **new_units**: U4 (FC-11/12 Subway Graph + Vote), U5 (FC-13 Auto Confirm)
+- **phase_transition**: CONSTRUCTION → OPERATIONS
