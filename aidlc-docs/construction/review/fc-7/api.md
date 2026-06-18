@@ -31,6 +31,7 @@ GET /api/v1/meetings/{meetingId}
       "profileImageUrl": "https://...",
       "isHost": true,
       "isMe": true,
+      "attendanceStatus": "JOIN",
       "departurePlaces": [
         {
           "id": 1,

@@ -22,6 +22,7 @@ public record MeetingDetailResponse(
             String profileImageUrl,
             boolean isHost,
             boolean isMe,
+            String attendanceStatus,
             List<DeparturePlaceInfo> departurePlaces
     ) {}
 

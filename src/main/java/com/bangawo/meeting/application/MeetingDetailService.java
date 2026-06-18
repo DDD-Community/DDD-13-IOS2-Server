@@ -10,6 +10,8 @@ import com.bangawo.group.domain.GroupMemberRole;
 import com.bangawo.group.domain.ThemeTag;
 import com.bangawo.group.domain.ThemeTagRepository;
 import com.bangawo.meeting.domain.Meeting;
+import com.bangawo.meeting.domain.MeetingParticipant;
+import com.bangawo.meeting.domain.MeetingParticipantRepository;
 import com.bangawo.meeting.domain.MeetingRepository;
 import com.bangawo.meeting.presentation.dto.MeetingDetailResponse;
 import com.bangawo.member.domain.departure.DeparturePlace;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 public class MeetingDetailService {
 
     private final MeetingRepository meetingRepository;
+    private final MeetingParticipantRepository meetingParticipantRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final MemberRepository memberRepository;
     private final DeparturePlaceRepository departurePlaceRepository;
@@ -54,6 +57,10 @@ public class MeetingDetailService {
         Map<Long, Member> memberMap = memberRepository.findAllById(memberIds)
                 .stream()
                 .collect(Collectors.toMap(Member::getId, m -> m));
+
+        Map<Long, String> attendanceByMember = meetingParticipantRepository.findByMeetingId(meetingId)
+                .stream()
+                .collect(Collectors.toMap(MeetingParticipant::getMemberId, MeetingParticipant::getAttendanceStatus));
 
         Map<Long, List<DeparturePlace>> placesByMember = departurePlaceRepository
                 .findAllByMemberIdIn(List.copyOf(memberIds))
@@ -87,6 +94,7 @@ public class MeetingDetailService {
                             active ? m.getProfileImageUrl() : null,
                             gm.getRole() == GroupMemberRole.HOST,
                             gm.getMemberId().equals(memberId),
+                            attendanceByMember.get(gm.getMemberId()),
                             places
                     );
                 })
