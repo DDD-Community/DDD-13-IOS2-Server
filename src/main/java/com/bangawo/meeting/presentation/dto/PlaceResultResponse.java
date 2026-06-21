@@ -1,17 +1,17 @@
 package com.bangawo.meeting.presentation.dto;
 
+import com.bangawo.place.presentation.dto.PlaceSummary;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 public record PlaceResultResponse(
-        Long placeId,
-        String placeName,
-        String address,
+        PlaceSummary place,
         LocalDateTime confirmedAt,
         List<CandidateResult> candidates
 ) {
     public record CandidateResult(
-            Long placeId,
+            PlaceSummary place,
             int voteCount,
             long totalSeconds,
             long totalTransfers

@@ -5,6 +5,9 @@ import com.bangawo.global.error.ErrorCode;
 import com.bangawo.group.domain.GroupMemberRepository;
 import com.bangawo.meeting.domain.*;
 import com.bangawo.meeting.presentation.dto.PlaceVoteStatusResponse;
+import com.bangawo.place.domain.Place;
+import com.bangawo.place.domain.PlaceRepository;
+import com.bangawo.place.presentation.dto.PlaceSummary;
 import com.bangawo.subway.domain.SubwayGraph;
 import com.bangawo.subway.domain.SubwayStationRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +35,7 @@ public class PlaceVoteService {
     private final SubwayGraph subwayGraph;
     private final SubwayStationRepository subwayStationRepository;
     private final PlaceConfirmService placeConfirmService;
+    private final PlaceRepository placeRepository;
 
     @Transactional
     public MeetingPlaceVoteSession createSession(Long meetingId, int durationDays) {
@@ -120,6 +124,10 @@ public class PlaceVoteService {
         Map<Long, List<MeetingTravelBurden>> burdensByPlaceId = allBurdens.stream()
                 .collect(Collectors.groupingBy(MeetingTravelBurden::getPlaceId));
 
+        Map<Long, Place> placeById = placeRepository.findByIds(
+                        recommendations.stream().map(MeetingPlaceRecommendation::getPlaceId).toList())
+                .stream().collect(Collectors.toMap(Place::getId, p -> p));
+
         List<MeetingParticipant> participants = meetingParticipantRepository.findByMeetingId(meetingId);
         Set<Long> voterIds = allVotes.stream().map(MeetingPlaceVote::getMemberId).collect(Collectors.toSet());
         Set<Long> activeIds = participants.stream()
@@ -140,7 +148,7 @@ public class PlaceVoteService {
                                     b.getSeconds() == maxSec))
                             .toList();
                     return new PlaceVoteStatusResponse.CandidateVoteInfo(
-                            r.getPlaceId(),
+                            PlaceSummary.from(placeById.get(r.getPlaceId())),
                             voteCountByPlaceId.getOrDefault(r.getPlaceId(), 0L).intValue(),
                             myVotedPlaceIds.contains(r.getPlaceId()),
                             burdenInfos);

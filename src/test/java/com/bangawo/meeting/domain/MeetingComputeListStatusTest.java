@@ -14,7 +14,7 @@ class MeetingComputeListStatusTest {
         return Meeting.builder()
                 .id(1L).groupId(1L).name("test").themeTagCode("DINING")
                 .locationStatus(loc).dateVoteStatus(date)
-                .confirmedDate(confirmedDate)
+                .confirmedDate(confirmedDate != null ? confirmedDate.atStartOfDay() : null)
                 .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now())
                 .build();
     }

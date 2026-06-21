@@ -61,7 +61,7 @@ erDiagram
         VARCHAR theme_tag_code FK "테마 태그 코드"
         VARCHAR location_status "BEFORE / IN_PROGRESS / COMPLETED"
         VARCHAR date_vote_status "BEFORE / IN_PROGRESS / COMPLETED"
-        DATE confirmed_date "확정 날짜 (null=미확정)"
+        TIMESTAMP confirmed_date "확정 일시 — 날짜+시간 (null=미확정)"
         TIMESTAMPTZ created_at "생성 시각"
         TIMESTAMPTZ updated_at "수정 시각"
     }

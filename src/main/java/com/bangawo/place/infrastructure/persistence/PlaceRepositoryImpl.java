@@ -54,4 +54,9 @@ public class PlaceRepositoryImpl implements PlaceRepository {
                 .map(PlaceJpaEntity::toDomain)
                 .toList();
     }
+
+    @Override
+    public java.util.Optional<Place> findById(Long id) {
+        return jpaRepository.findById(id).map(PlaceJpaEntity::toDomain);
+    }
 }

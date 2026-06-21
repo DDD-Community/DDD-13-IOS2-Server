@@ -29,7 +29,29 @@
 | 400 | PLACE_RECOMMENDATION_EMPTY | 6km까지 장소 0개 |
 
 ## GET /api/v1/meetings/{meetingId}/recommendations
-- 추천 15 조회: rank, placeId, name, categoryLabel, score, nearestStationId
+- 추천 15 조회: `rank`, `place`(PlaceSummary), `score`, `nearestStationId`
+- 장소 정보는 평탄 필드가 아니라 `place` 객체로 내려감
+```json
+[
+  { "rank": 1, "place": { "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ..." }, "score": 0.87, "nearestStationId": 240 }
+]
+```
+
+## PlaceSummary (공통)
+- placeId만 내려주던 응답에 임베드하는 표시용 공통 객체. 모든 장소 목록/후보/담기 응답에서 동일하게 사용
+```json
+{ "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ..." }
+```
+- 좌표·vibe·예약/주차·평점 등 **풀 상세는 `GET /api/v1/places/{placeId}`** 단건 API로 조회
+
+## GET /api/v1/places/{placeId}
+- 장소 상세 단건 조회: `placeId, name, categoryLabel, address, latitude, longitude, vibe[], occasion[], reservable, hasParking, rating`
+- 없는 placeId → 404 PLACE_NOT_FOUND
+```json
+{ "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ...",
+  "latitude": 37.5, "longitude": 127.0, "vibe": ["분위기좋은"], "occasion": ["회식"],
+  "reservable": true, "hasParking": false, "rating": 4.3 }
+```
 
 ## GET /api/v1/places/options
 - 모임 생성 화면용: category 고정 11종 + vibe 표준목록(place.vibe distinct)

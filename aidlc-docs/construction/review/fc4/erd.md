@@ -102,7 +102,7 @@ erDiagram
         BOOLEAN parking "FC-8 추천 HARD 필터 — 주차가능만. NULL=조건 없음"
         VARCHAR(15) location_status "장소 선정 상태 (BEFORE/RECOMMENDED/VOTING/CONFIRMED)"
         VARCHAR(15) date_vote_status "날짜 투표 상태 (BEFORE/IN_PROGRESS/COMPLETED)"
-        DATE confirmed_date "확정된 모임 날짜 (미확정 시 null)"
+        TIMESTAMP confirmed_date "확정된 모임 일시 — 날짜+시간 (미확정 시 null)"
         TIMESTAMPTZ created_at "생성 시각"
         TIMESTAMPTZ updated_at "수정 시각"
     }
