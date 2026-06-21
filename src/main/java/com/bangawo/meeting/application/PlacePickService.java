@@ -189,7 +189,8 @@ public class PlacePickService {
         }
 
         LocalDate voteDeadlineDate = LocalDate.now().plusDays(durationDays);
-        if (meeting.getConfirmedDate() != null && !voteDeadlineDate.isBefore(meeting.getConfirmedDate())) {
+        if (meeting.getConfirmedDate() != null
+                && !voteDeadlineDate.isBefore(meeting.getConfirmedDate().toLocalDate())) {
             throw new BusinessException(ErrorCode.PLACE_VOTE_DEADLINE_INVALID);
         }
 

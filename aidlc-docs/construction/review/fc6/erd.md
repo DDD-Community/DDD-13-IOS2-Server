@@ -100,7 +100,7 @@ erDiagram
         VARCHAR(30) theme_tag_code "테마 태그 코드"
         VARCHAR(15) location_status "장소 선정 상태 (BEFORE/IN_PROGRESS/COMPLETED)"
         VARCHAR(15) date_vote_status "날짜 투표 상태 (BEFORE/IN_PROGRESS/COMPLETED)"
-        DATE confirmed_date "확정된 모임 날짜 — CLOSED 판단 기준 (null이면 미확정)"
+        TIMESTAMP confirmed_date "확정된 모임 일시 — 날짜+시간, CLOSED 판단 기준 (null이면 미확정)"
         TIMESTAMPTZ created_at "생성 시각 — 정렬 기준"
         TIMESTAMPTZ updated_at "수정 시각"
     }

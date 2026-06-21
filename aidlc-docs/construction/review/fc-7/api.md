@@ -24,6 +24,7 @@ GET /api/v1/meetings/{meetingId}
   "locationStatus": "BEFORE",
   "dateVoteStatus": "IN_PROGRESS",
   "confirmedDate": null,
+  "_note": "confirmedDate는 날짜+시간(ISO-8601 LocalDateTime, 예: 2026-06-15T19:00:00). 미확정 시 null",
   "members": [
     {
       "memberId": 10,
@@ -65,8 +66,9 @@ POST /api/v1/meetings/{meetingId}/date-vote/host-pick
 
 **Request**
 ```json
-{ "date": "2026-06-15" }
+{ "date": "2026-06-15T19:00:00" }
 ```
+> 모임 일정은 **날짜+시간**(ISO-8601 LocalDateTime). 시간까지 필수.
 
 **Response**: 204 No Content
 
@@ -77,7 +79,7 @@ POST /api/v1/meetings/{meetingId}/date-vote/host-pick
 | 그룹 구성원 아님 | GROUP_003 | 403 |
 | 호스트 아님 | GROUP_004 | 403 |
 | 이미 투표 시작됨 | MEETING_002 | 400 |
-| 날짜가 오늘 이전 | MEETING_006 | 400 |
+| 일시가 현재 이전 | MEETING_006 | 400 |
 
 ---
 
@@ -90,10 +92,11 @@ POST /api/v1/meetings/{meetingId}/date-vote
 **Request**
 ```json
 {
-  "candidateDates": ["2026-06-10", "2026-06-14", "2026-06-17"],
+  "candidateDates": ["2026-06-10T19:00:00", "2026-06-14T18:00:00", "2026-06-17T19:30:00"],
   "durationDays": 3
 }
 ```
+> 후보는 **날짜+시간**(ISO-8601 LocalDateTime). 후보별 시간이 다를 수 있음.
 
 **Response**: 204 No Content
 
@@ -104,8 +107,8 @@ POST /api/v1/meetings/{meetingId}/date-vote
 | 그룹 구성원 아님 | GROUP_003 | 403 |
 | 호스트 아님 | GROUP_004 | 403 |
 | 이미 투표 시작됨 | MEETING_002 | 400 |
-| 후보 날짜 개수 오류 (1~10개 아님) | MEETING_007 | 400 |
-| 후보 날짜가 오늘 이전이거나 중복 | MEETING_006 | 400 |
+| 후보 개수 오류 (1~10개 아님) | MEETING_007 | 400 |
+| 후보 일시가 현재 이전이거나 중복 | MEETING_006 | 400 |
 | durationDays가 1/3/7 아님 | MEETING_008 | 400 |
 
 ---
@@ -151,7 +154,7 @@ GET /api/v1/meetings/{meetingId}/date-vote
   "options": [
     {
       "optionId": 1,
-      "candidateDate": "2026-06-10",
+      "candidateDate": "2026-06-10T19:00:00",
       "voteCount": 3,
       "isMyVote": true,
       "voters": [
