@@ -152,9 +152,16 @@ public class PlacePickService {
                 })
                 .toList();
 
-        List<Long> myPicks = allPicks.stream()
+        List<Long> myPickPlaceIds = allPicks.stream()
                 .filter(p -> memberId.equals(p.getMemberId()))
-                .map(MeetingPlacePick::getPlaceId).toList();
+                .map(MeetingPlacePick::getPlaceId).distinct().toList();
+        Map<Long, Place> placeById = placeRepository.findByIds(myPickPlaceIds).stream()
+                .collect(Collectors.toMap(Place::getId, p -> p));
+        List<com.bangawo.place.presentation.dto.PlaceSummary> myPicks = myPickPlaceIds.stream()
+                .map(placeById::get)
+                .filter(java.util.Objects::nonNull)
+                .map(com.bangawo.place.presentation.dto.PlaceSummary::from)
+                .toList();
 
         return new PickStatusResponse(memberStatuses, myPicks);
     }

@@ -1,10 +1,10 @@
 package com.bangawo.meeting.presentation.dto;
 
+import com.bangawo.place.presentation.dto.PlaceSummary;
+
 public record RecommendationItemResponse(
         int rank,
-        Long placeId,
-        String name,
-        String categoryLabel,
+        PlaceSummary place,
         double score,
         Long nearestStationId
 ) {}
