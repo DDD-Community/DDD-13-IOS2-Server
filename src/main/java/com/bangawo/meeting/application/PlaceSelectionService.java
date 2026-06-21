@@ -148,17 +148,12 @@ public class PlaceSelectionService {
                 .collect(java.util.stream.Collectors.toMap(Place::getId, p -> p));
 
         return recommendations.stream()
-                .map(r -> {
-                    Place place = placeById.get(r.getPlaceId());
-                    return new RecommendationItemResponse(
-                            r.getRank(),
-                            r.getPlaceId(),
-                            place != null ? place.getName() : null,
-                            place != null ? place.getCategoryLabel() : null,
-                            r.getScore(),
-                            r.getNearestStationId()
-                    );
-                })
+                .map(r -> new RecommendationItemResponse(
+                        r.getRank(),
+                        com.bangawo.place.presentation.dto.PlaceSummary.from(placeById.get(r.getPlaceId())),
+                        r.getScore(),
+                        r.getNearestStationId()
+                ))
                 .toList();
     }
 

@@ -61,6 +61,9 @@ public enum ErrorCode {
     PLACE_VOTE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "MEETING_020", "투표 가능 개수를 초과했습니다"),
     PLACE_NOT_CONFIRMED(HttpStatus.BAD_REQUEST, "MEETING_021", "아직 장소가 확정되지 않았습니다"),
 
+    // Place
+    PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "PLACE_001", "장소를 찾을 수 없습니다"),
+
     // Storage
     STORAGE_INVALID_TYPE(HttpStatus.BAD_REQUEST, "STORAGE_001", "지원하지 않는 이미지 형식입니다"),
     STORAGE_SIGNED_URL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STORAGE_002", "이미지 업로드 URL 생성에 실패했습니다"),

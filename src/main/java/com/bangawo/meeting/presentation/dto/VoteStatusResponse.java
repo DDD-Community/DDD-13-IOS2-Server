@@ -4,6 +4,7 @@ import com.bangawo.meeting.domain.DateVoteStatus;
 import com.bangawo.meeting.domain.SessionStatus;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record VoteStatusResponse(
@@ -14,7 +15,7 @@ public record VoteStatusResponse(
 ) {
     public record VoteOptionInfo(
             Long optionId,
-            LocalDate candidateDate,
+            LocalDateTime candidateDate,
             int voteCount,
             boolean isMyVote,
             List<VoterInfo> voters

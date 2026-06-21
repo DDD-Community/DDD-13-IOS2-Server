@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -58,7 +57,7 @@ public class MeetingJpaEntity {
     private DateVoteStatus dateVoteStatus;
 
     @Column(name = "confirmed_date")
-    private LocalDate confirmedDate;
+    private LocalDateTime confirmedDate;
 
     @Column(name = "pick_deadline")
     private LocalDateTime pickDeadline;

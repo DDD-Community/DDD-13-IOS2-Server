@@ -3,7 +3,7 @@ package com.bangawo.meeting.presentation.dto;
 import com.bangawo.meeting.domain.DateVoteStatus;
 import com.bangawo.meeting.domain.LocationStatus;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record MeetingDetailResponse(
@@ -13,7 +13,7 @@ public record MeetingDetailResponse(
         String themeTagDisplay,
         LocationStatus locationStatus,
         DateVoteStatus dateVoteStatus,
-        LocalDate confirmedDate,
+        LocalDateTime confirmedDate,
         List<MemberDetailInfo> members
 ) {
     public record MemberDetailInfo(

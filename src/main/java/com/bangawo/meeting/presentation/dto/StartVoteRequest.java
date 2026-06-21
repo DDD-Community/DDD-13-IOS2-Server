@@ -4,10 +4,10 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record StartVoteRequest(
-        @NotEmpty @Size(min = 1, max = 10) List<@NotNull LocalDate> candidateDates,
+        @NotEmpty @Size(min = 1, max = 10) List<@NotNull LocalDateTime> candidateDates,
         @NotNull Integer durationDays
 ) {}

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,11 +35,11 @@ public class DateVoteService {
     private final MemberRepository memberRepository;
 
     @Transactional
-    public void startHostPick(Long meetingId, Long memberId, LocalDate date) {
+    public void startHostPick(Long meetingId, Long memberId, LocalDateTime date) {
         Meeting meeting = getMeeting(meetingId);
         requireHost(meeting.getGroupId(), memberId);
 
-        if (date == null || !date.isAfter(LocalDate.now())) {
+        if (date == null || !date.isAfter(LocalDateTime.now())) {
             throw new BusinessException(ErrorCode.INVALID_CANDIDATE_DATE);
         }
 
@@ -55,14 +56,14 @@ public class DateVoteService {
         Meeting meeting = getMeeting(meetingId);
         requireHost(meeting.getGroupId(), memberId);
 
-        List<LocalDate> candidateDates = request.candidateDates();
+        List<LocalDateTime> candidateDates = request.candidateDates();
         if (candidateDates == null || candidateDates.isEmpty() || candidateDates.size() > 10) {
             throw new BusinessException(ErrorCode.INVALID_CANDIDATE_COUNT);
         }
 
-        LocalDate today = LocalDate.now();
-        for (LocalDate d : candidateDates) {
-            if (!d.isAfter(today)) {
+        LocalDateTime now = LocalDateTime.now();
+        for (LocalDateTime d : candidateDates) {
+            if (!d.isAfter(now)) {
                 throw new BusinessException(ErrorCode.INVALID_CANDIDATE_DATE);
             }
         }

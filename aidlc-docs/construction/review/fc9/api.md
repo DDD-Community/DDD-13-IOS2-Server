@@ -63,7 +63,14 @@
 **권한**: 그룹 구성원
 
 ### 응답 (200 OK)
-
+- `members`: 모임원별 담기완료 여부(진행 확인용)
+- `myPicks`: 내가 담은 장소 목록 — **PlaceSummary 배열**(과거 placeId 배열에서 변경, FC-8 PlaceSummary 참조)
+```json
+{
+  "members": [ { "memberId": 1, "nickname": "철수", "done": true } ],
+  "myPicks": [ { "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ..." } ]
+}
+```
 
 ---
 

@@ -176,7 +176,7 @@ class MeetingListServiceTest {
         return Meeting.builder()
                 .id(id).groupId(groupId).name("테스트").themeTagCode("DINING")
                 .locationStatus(loc).dateVoteStatus(date)
-                .confirmedDate(confirmedDate)
+                .confirmedDate(confirmedDate != null ? confirmedDate.atStartOfDay() : null)
                 .createdAt(createdAt).updatedAt(createdAt).build();
     }
 

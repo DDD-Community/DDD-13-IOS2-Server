@@ -109,17 +109,20 @@ public class PlaceConfirmService {
                 .collect(Collectors.groupingBy(MeetingTravelBurden::getPlaceId,
                         Collectors.summingLong(MeetingTravelBurden::getTransfers)));
 
+        Map<Long, Place> placeById = placeRepository.findByIds(candidateIds).stream()
+                .collect(Collectors.toMap(Place::getId, p -> p));
+
         List<com.bangawo.meeting.presentation.dto.PlaceResultResponse.CandidateResult> candidates =
                 candidateIds.stream()
                         .map(id -> new com.bangawo.meeting.presentation.dto.PlaceResultResponse.CandidateResult(
-                                id,
+                                com.bangawo.place.presentation.dto.PlaceSummary.from(placeById.get(id)),
                                 voteCount.getOrDefault(id, 0L).intValue(),
                                 secondsSum.getOrDefault(id, 0L),
                                 transfersSum.getOrDefault(id, 0L)))
                         .toList();
 
         return new com.bangawo.meeting.presentation.dto.PlaceResultResponse(
-                confirmed.getPlaceId(), confirmed.getPlaceName(),
-                confirmed.getAddress(), confirmed.getConfirmedAt(), candidates);
+                com.bangawo.place.presentation.dto.PlaceSummary.from(placeById.get(confirmed.getPlaceId())),
+                confirmed.getConfirmedAt(), candidates);
     }
 }

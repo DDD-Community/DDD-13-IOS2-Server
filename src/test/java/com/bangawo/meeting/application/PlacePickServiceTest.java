@@ -54,7 +54,7 @@ class PlacePickServiceTest {
                 .status(MeetingStatus.ACTIVE)
                 .locationStatus(LocationStatus.RECOMMENDED)
                 .dateVoteStatus(DateVoteStatus.COMPLETED)
-                .confirmedDate(LocalDate.now().plusDays(10))
+                .confirmedDate(LocalDate.now().plusDays(10).atStartOfDay())
                 .pickDeadline(LocalDateTime.now().plusDays(2))
                 .build();
         memberGroupMember = GroupMember.builder()

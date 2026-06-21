@@ -6,7 +6,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "date_vote_option")
@@ -22,7 +22,7 @@ public class DateVoteOptionJpaEntity {
     private Long sessionId;
 
     @Column(name = "candidate_date", nullable = false)
-    private LocalDate candidateDate;
+    private LocalDateTime candidateDate;
 
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
