@@ -24,6 +24,7 @@ public enum ErrorCode {
     DEPARTURE_PLACE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "MEMBER_003", "출발지는 최대 3개까지 등록 가능합니다"),
     DEFAULT_DEPARTURE_PLACE_CANNOT_DELETE(HttpStatus.BAD_REQUEST, "MEMBER_004", "기본 출발지는 삭제할 수 없습니다"),
     DEPARTURE_PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_005", "출발지를 찾을 수 없습니다"),
+    REGISTRATION_NOT_COMPLETED(HttpStatus.FORBIDDEN, "MEMBER_006", "회원가입(기본 출발지 등록)을 완료해야 모임에 참가할 수 있습니다"),
 
     // Terms
     REQUIRED_TERMS_NOT_AGREED(HttpStatus.BAD_REQUEST, "TERMS_001", "필수 약관에 동의해야 합니다"),
