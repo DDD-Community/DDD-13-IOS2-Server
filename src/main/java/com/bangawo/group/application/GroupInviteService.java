@@ -1,5 +1,7 @@
 package com.bangawo.group.application;
 
+import com.bangawo.auth.domain.Member;
+import com.bangawo.auth.domain.MemberRepository;
 import com.bangawo.global.error.BusinessException;
 import com.bangawo.global.error.ErrorCode;
 import com.bangawo.group.domain.*;
@@ -30,6 +32,7 @@ public class GroupInviteService {
     private final MeetingRepository meetingRepository;
     private final MeetingParticipantRepository meetingParticipantRepository;
     private final DeparturePlaceRepository departurePlaceRepository;
+    private final MemberRepository memberRepository;
 
     public String issueInviteCode(Long groupId, Long requestMemberId) {
         groupRepository.findById(groupId)
@@ -52,6 +55,12 @@ public class GroupInviteService {
     }
 
     public Long joinGroup(String inviteCode, Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        if (!member.isRegistered()) {
+            throw new BusinessException(ErrorCode.REGISTRATION_NOT_COMPLETED);
+        }
+
         GroupInvite invite = groupInviteRepository.findByCode(inviteCode)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVITE_CODE_NOT_FOUND));
 

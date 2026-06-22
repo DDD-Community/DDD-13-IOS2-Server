@@ -1,5 +1,7 @@
 package com.bangawo.group.application;
 
+import com.bangawo.auth.domain.Member;
+import com.bangawo.auth.domain.MemberRepository;
 import com.bangawo.global.error.BusinessException;
 import com.bangawo.global.error.ErrorCode;
 import com.bangawo.group.domain.Group;
@@ -31,10 +33,17 @@ public class GroupService {
     private final ThemeTagRepository themeTagRepository;
     private final com.bangawo.meeting.domain.MeetingParticipantRepository meetingParticipantRepository;
     private final DeparturePlaceRepository departurePlaceRepository;
+    private final MemberRepository memberRepository;
 
     public CreateGroupResponse createGroupWithMeeting(Long memberId, String name, String themeTagCode,
                                                        List<String> categoryLabels, List<String> vibes,
                                                        Boolean reservable, Boolean parking) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        if (!member.isRegistered()) {
+            throw new BusinessException(ErrorCode.REGISTRATION_NOT_COMPLETED);
+        }
+
         Group group = groupRepository.save(Group.create(name, themeTagCode));
         Meeting meeting = meetingRepository.save(
                 Meeting.create(group.getId(), name, themeTagCode, categoryLabels, vibes, reservable, parking));
