@@ -147,8 +147,9 @@ public class PlacePickService {
                 .map(p -> {
                     Member member = memberById.get(p.getMemberId());
                     String nickname = member != null ? member.getNickname() : "";
+                    String profileImageUrl = member != null ? member.getProfileImageUrl() : null;
                     boolean done = pickCountByMemberId.getOrDefault(p.getMemberId(), 0L) >= 1;
-                    return new MemberPickStatus(p.getMemberId(), nickname, done);
+                    return new MemberPickStatus(p.getMemberId(), nickname, profileImageUrl, done);
                 })
                 .toList();
 
