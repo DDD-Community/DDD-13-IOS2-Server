@@ -49,25 +49,37 @@
   "candidates": [
     {
       "rank": 1,
+      "stationId": 1001,
       "stationName": "홍대입구",
       "lines": "2호선, 공항철도",
-      "distanceKm": 0.842
+      "distanceKm": 0.842,
+      "latitude": 37.5571,
+      "longitude": 126.9245
     },
     {
       "rank": 2,
+      "stationId": 1052,
       "stationName": "합정",
       "lines": "2호선, 6호선",
-      "distanceKm": 1.205
+      "distanceKm": 1.205,
+      "latitude": 37.5495,
+      "longitude": 126.9136
     },
     {
       "rank": 3,
+      "stationId": 1066,
       "stationName": "상수",
       "lines": "6호선",
-      "distanceKm": 1.631
+      "distanceKm": 1.631,
+      "latitude": 37.5478,
+      "longitude": 126.9227
     }
   ]
 }
 ```
+
+> `stationId`는 `meeting_place_recommendation.nearestStationId` 와 매핑되는 **역 탭 키**다. FC-9 `GET /places?stationId=` 필터에 그대로 전달한다.
+> `latitude`/`longitude`는 지도 핀 표시용.
 
 ### 에러 케이스
 

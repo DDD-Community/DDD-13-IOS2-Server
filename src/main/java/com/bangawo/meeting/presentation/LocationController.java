@@ -24,7 +24,8 @@ public class LocationController {
 
     private final PlaceSelectionService placeSelectionService;
 
-    @Operation(summary = "장소 정하기 시작 — 호스트가 시작 시 중간역 3개 + 장소 추천 15개 산출, RECOMMENDED 전이")
+    @Operation(summary = "장소 정하기 시작 — 호스트가 시작 시 중간역 3개 + 장소 추천 15개 산출, RECOMMENDED 전이",
+            description = "radiusKm 미입력 시 기본 2km로 검색. 최대 6km이며 초과 시 400. 호스트만 호출 가능.")
     @PostMapping("/{meetingId}/location/start")
     @ResponseStatus(HttpStatus.OK)
     public void startLocationPhase(@PathVariable Long meetingId,

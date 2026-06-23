@@ -28,10 +28,11 @@ BEFORE ──[POST /location/start (HOST)]──→ IN_PROGRESS
 8. PostGIS 쿼리 실행
    - meeting_participant lat/lng → `ST_Collect` → `ST_Centroid` → center_point
    - subway_station 중 `ST_DWithin(center_point, 2000m)` 필터
-   - station_name 기준 GROUP BY, line_name `string_agg`
+   - station_name 기준 GROUP BY, line_name `string_agg`, `MIN(station_id)`, `MIN(latitude/longitude)`
    - dist_m ASC 정렬, LIMIT 3
    - 결과 없으면 400
-9. midpoint_station_candidate 저장 (rank 1~3)
+9. midpoint_station_candidate 저장 (rank 1~3) — **station_id / latitude / longitude 포함**
+   - `station_id` = 위 `MIN(station_id)` (장소 검색에 넘기는 stationIds 와 동일 값 → `meeting_place_recommendation.nearest_station_id` 와 정확히 매핑)
 10. meeting 저장
 
 > meeting_participant는 이 시점에 생성하지 않음 — 합류 시 이미 생성된 레코드를 조회만 함

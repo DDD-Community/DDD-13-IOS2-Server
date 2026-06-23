@@ -76,9 +76,12 @@ erDiagram
         BIGINT id PK "auto increment PK"
         BIGINT meeting_id FK "meeting 참조"
         INT rank "후보 순위 (1/2/3)"
+        BIGINT station_id FK "subway_station 참조 — 역 탭 키 (V27 추가)"
         VARCHAR station_name "역명"
         VARCHAR lines "노선 목록 (쉼표 구분)"
         NUMERIC distance_km "중심까지 거리 (km, 소수 3자리)"
+        DOUBLE latitude "역 위도 — 지도 핀 (V27 추가)"
+        DOUBLE longitude "역 경도 — 지도 핀 (V27 추가)"
     }
 
     member ||--o{ departure_place : "보유"
@@ -88,4 +91,5 @@ erDiagram
     meeting ||--o{ meeting_participant : "참여자 스냅샷"
     member ||--o{ meeting_participant : "참여"
     meeting ||--o{ midpoint_station_candidate : "역 후보"
+    subway_station ||--o{ midpoint_station_candidate : "역 마스터 참조"
 ```

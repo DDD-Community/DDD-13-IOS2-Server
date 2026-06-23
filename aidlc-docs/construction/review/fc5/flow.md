@@ -21,15 +21,15 @@
 `POST /api/v1/groups/join`
 
 1. JWT → memberId 추출
-2. group_invite 조회 (code) — 없으면 404
-3. `invite.isExpired()` 확인 — 만료면 400
-4. groupMember 조회 (groupId + memberId) — 이미 있으면 400
-5. `GroupMember.createMember(groupId, memberId)` 저장 (`role=MEMBER`, `attendanceStatus=JOIN`)
-6. 해당 그룹의 최신 meeting 조회
+2. member 조회 → `isRegistered` 확인 — 미가입이면 403 (MEMBER_006)
+3. group_invite 조회 (code) — 없으면 404
+4. `invite.isExpired()` 확인 — 만료면 400
+5. groupMember 조회 (groupId + memberId) — 이미 있으면 400
+6. `GroupMember.createMember(groupId, memberId)` 저장 (`role=MEMBER`, `attendanceStatus=JOIN`)
+7. 해당 그룹의 최신 meeting 조회
    - meeting이 존재하고 CLOSED가 아니면 → meeting_participant 생성
-     - 기본 출발지 있으면 lat/lng 채움
-     - 없으면 lat/lng = null
-7. 200 OK
+     - 가입 완료 보장 → 기본 출발지 lat/lng 항상 채워짐
+8. 200 OK
 
 ---
 
