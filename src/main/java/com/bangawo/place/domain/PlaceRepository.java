@@ -1,6 +1,7 @@
 package com.bangawo.place.domain;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface PlaceRepository {
     List<RecommendationCandidate> findCandidates(List<Long> midpointStationIds, double radiusMeters,
@@ -9,4 +10,6 @@ public interface PlaceRepository {
     List<String> findDistinctVibes();
 
     List<Place> findByIds(List<Long> ids);
+
+    Optional<Place> findById(Long id);
 }

@@ -1,5 +1,7 @@
 package com.bangawo.meeting.presentation.dto;
 
+import com.bangawo.place.presentation.dto.PlaceSummary;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -11,7 +13,7 @@ public record PlaceVoteStatusResponse(
         List<CandidateVoteInfo> candidates
 ) {
     public record CandidateVoteInfo(
-            Long placeId,
+            PlaceSummary place,
             int voteCount,
             boolean isMyVote,
             List<MemberBurdenInfo> travelBurdens

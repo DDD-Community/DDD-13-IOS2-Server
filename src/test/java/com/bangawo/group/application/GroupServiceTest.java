@@ -1,5 +1,8 @@
 package com.bangawo.group.application;
 
+import com.bangawo.auth.domain.Member;
+import com.bangawo.auth.domain.MemberRepository;
+import com.bangawo.auth.domain.SocialProvider;
 import com.bangawo.group.domain.Group;
 import com.bangawo.group.domain.GroupMember;
 import com.bangawo.group.domain.GroupMemberRepository;
@@ -22,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -35,7 +39,17 @@ class GroupServiceTest {
     @Mock ThemeTagRepository themeTagRepository;
     @Mock MeetingParticipantRepository meetingParticipantRepository;
     @Mock DeparturePlaceRepository departurePlaceRepository;
+    @Mock MemberRepository memberRepository;
     @InjectMocks GroupService groupService;
+
+    private Member registeredMember(Long id) {
+        return Member.builder()
+                .id(id).socialProvider(SocialProvider.KAKAO).socialUserId("u" + id)
+                .nickname("닉").status(com.bangawo.auth.domain.MemberStatus.ACTIVE)
+                .isRegistered(true)
+                .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now())
+                .build();
+    }
 
     @Test
     void createGroupWithMeeting_categoryLabels_vibes_reservable_parking이_Meeting에_전달된다() {
@@ -43,6 +57,7 @@ class GroupServiceTest {
                 .id(1L).name("팀 회식").themeTagCode("DINING")
                 .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now())
                 .build();
+        when(memberRepository.findById(20L)).thenReturn(Optional.of(registeredMember(20L)));
         when(groupRepository.save(any())).thenReturn(savedGroup);
         when(meetingRepository.save(any())).thenAnswer(inv -> {
             Meeting m = inv.getArgument(0);
@@ -67,6 +82,23 @@ class GroupServiceTest {
         assertThat(captor.getValue().getVibes()).containsExactly("왁자지껄");
         assertThat(captor.getValue().getReservable()).isTrue();
         assertThat(captor.getValue().getParking()).isNull();
+    }
+
+    @Test
+    void createGroupWithMeeting_회원가입_미완료_회원은_차단된다() {
+        Member notRegistered = Member.builder()
+                .id(20L).socialProvider(SocialProvider.KAKAO).socialUserId("u20")
+                .status(com.bangawo.auth.domain.MemberStatus.ACTIVE).isRegistered(false)
+                .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now())
+                .build();
+        when(memberRepository.findById(20L)).thenReturn(Optional.of(notRegistered));
+
+        assertThatThrownBy(() -> groupService.createGroupWithMeeting(20L, "팀 회식", "DINING",
+                List.of("한식"), List.of("왁자지껄"), true, null))
+                .isInstanceOf(com.bangawo.global.error.BusinessException.class)
+                .hasMessageContaining("회원가입");
+
+        verify(groupRepository, org.mockito.Mockito.never()).save(any());
     }
 
     @Test

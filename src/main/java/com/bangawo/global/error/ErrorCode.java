@@ -24,6 +24,7 @@ public enum ErrorCode {
     DEPARTURE_PLACE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "MEMBER_003", "출발지는 최대 3개까지 등록 가능합니다"),
     DEFAULT_DEPARTURE_PLACE_CANNOT_DELETE(HttpStatus.BAD_REQUEST, "MEMBER_004", "기본 출발지는 삭제할 수 없습니다"),
     DEPARTURE_PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_005", "출발지를 찾을 수 없습니다"),
+    REGISTRATION_NOT_COMPLETED(HttpStatus.FORBIDDEN, "MEMBER_006", "회원가입(기본 출발지 등록)을 완료해야 모임에 참가할 수 있습니다"),
 
     // Terms
     REQUIRED_TERMS_NOT_AGREED(HttpStatus.BAD_REQUEST, "TERMS_001", "필수 약관에 동의해야 합니다"),
@@ -60,6 +61,9 @@ public enum ErrorCode {
     PLACE_VOTE_NOT_IN_PROGRESS(HttpStatus.BAD_REQUEST, "MEETING_019", "투표가 진행 중이 아닙니다"),
     PLACE_VOTE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "MEETING_020", "투표 가능 개수를 초과했습니다"),
     PLACE_NOT_CONFIRMED(HttpStatus.BAD_REQUEST, "MEETING_021", "아직 장소가 확정되지 않았습니다"),
+
+    // Place
+    PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "PLACE_001", "장소를 찾을 수 없습니다"),
 
     // Storage
     STORAGE_INVALID_TYPE(HttpStatus.BAD_REQUEST, "STORAGE_001", "지원하지 않는 이미지 형식입니다"),

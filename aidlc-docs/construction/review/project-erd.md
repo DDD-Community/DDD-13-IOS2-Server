@@ -103,7 +103,7 @@ erDiagram
         VARCHAR(10) status "모임 진행 상태 (ACTIVE/CLOSED) — V9"
         VARCHAR(15) location_status "장소 선정 상태 (BEFORE/RECOMMENDED/VOTING/CONFIRMED) — V18 코멘트 기준"
         VARCHAR(15) date_vote_status "날짜 투표 상태 (BEFORE/IN_PROGRESS/COMPLETED)"
-        DATE confirmed_date "확정된 모임 날짜 (미확정 시 null)"
+        TIMESTAMP confirmed_date "확정된 모임 일시 — 날짜+시간 (미확정 시 null)"
         TEXT_ARRAY category_labels "FC-8 추천 음식 카테고리 선호 (선택) — V18"
         TEXT_ARRAY vibes "FC-8 추천 분위기 선호 (선택) — V18"
         BOOLEAN reservable "FC-8 HARD 필터 예약가능, NULL=조건없음 — V18"
@@ -137,7 +137,7 @@ erDiagram
     date_vote_option {
         BIGINT id PK "후보 날짜 고유 ID"
         BIGINT session_id FK "소속 투표 세션 ID"
-        DATE candidate_date "후보 날짜"
+        TIMESTAMP candidate_date "후보 일시 — 날짜+시간"
         INT sort_order "정렬 순서 (0부터)"
     }
 
