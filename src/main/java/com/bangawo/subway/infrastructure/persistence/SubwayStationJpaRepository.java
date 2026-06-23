@@ -58,7 +58,7 @@ public interface SubwayStationJpaRepository extends JpaRepository<SubwayStationJ
                                                        @Param("limit") int limit);
 
     @Query(nativeQuery = true, value = """
-            SELECT MIN(s.station_id)
+            SELECT s.station_id
             FROM subway_station s
             ORDER BY ST_DistanceSphere(
                 s.location_point::geometry,
