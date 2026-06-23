@@ -23,7 +23,9 @@ public class SubwayStationRepositoryImpl implements SubwayStationRepository {
                         ((Number) row[3]).longValue(),
                         (String) row[0],
                         (String) row[1],
-                        ((BigDecimal) row[2]).doubleValue()
+                        ((BigDecimal) row[2]).doubleValue(),
+                        ((Number) row[4]).doubleValue(),
+                        ((Number) row[5]).doubleValue()
                 ))
                 .toList();
     }

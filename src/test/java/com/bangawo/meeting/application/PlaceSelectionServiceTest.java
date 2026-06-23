@@ -75,9 +75,9 @@ class PlaceSelectionServiceTest {
 
     private List<StationCandidate> threeStations() {
         return List.of(
-                new StationCandidate(100L, "강남역", "2호선", 0.5),
-                new StationCandidate(101L, "역삼역", "2호선", 1.2),
-                new StationCandidate(102L, "선릉역", "2호선", 1.8)
+                new StationCandidate(100L, "강남역", "2호선", 0.5, 37.4979, 127.0276),
+                new StationCandidate(101L, "역삼역", "2호선", 1.2, 37.5006, 127.0365),
+                new StationCandidate(102L, "선릉역", "2호선", 1.8, 37.5045, 127.0490)
         );
     }
 

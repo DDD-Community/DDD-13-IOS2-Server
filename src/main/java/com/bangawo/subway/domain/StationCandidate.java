@@ -1,3 +1,4 @@
 package com.bangawo.subway.domain;
 
-public record StationCandidate(Long stationId, String stationName, String lines, double distanceKm) {}
+public record StationCandidate(Long stationId, String stationName, String lines, double distanceKm,
+                               double latitude, double longitude) {}

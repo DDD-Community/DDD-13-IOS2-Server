@@ -28,7 +28,9 @@
 - 내림차순 **상위 15** (미만이면 가능한 만큼, 역별 최소보장 없음)
 
 ## 역 귀속
-- 각 후보를 3개 역 중 **최근접역**에 라벨 → FC-9 역 탭 필터 기준
+- 각 후보를 3개 역 중 **최근접역**에 라벨(`meeting_place_recommendation.nearest_station_id`) → FC-9 역 탭 필터 기준
+- 3개 역 탭 소스인 `midpoint_station_candidate`는 **동일한 `station_id`**(중간역 쿼리의 `MIN(station_id)`, 장소 검색에 넘긴 stationIds)를 저장 → 탭(`station_id`) ↔ 장소(`nearest_station_id`) 정확히 조인됨
+- `latitude`/`longitude`도 함께 저장 → 프론트 지도 핀 표시 가능 (V27)
 
 ## 결과
 - meeting_place_recommendation 15건 스냅샷 저장, locationStatus → RECOMMENDED

@@ -183,9 +183,12 @@ erDiagram
         BIGINT id PK "고유 ID"
         BIGINT meeting_id FK "소속 모임 ID"
         INT rank "후보 순위 (1=가장 가까운 역)"
+        BIGINT station_id FK "subway_station 참조 — 역 탭 키 (V27)"
         VARCHAR(100) station_name "역명"
         VARCHAR(200) lines "노선 목록 (예: 2호선, 6호선)"
         NUMERIC distance_km "중심점까지 거리 (km)"
+        DOUBLE latitude "역 위도 — 지도 핀 (V27)"
+        DOUBLE longitude "역 경도 — 지도 핀 (V27)"
     }
 
     member ||--o{ refresh_token : "1회원 N토큰"
@@ -292,6 +295,7 @@ erDiagram
     meeting ||--o| date_vote_session : "1모임 0~1세션"
     meeting ||--o{ meeting_participant : "1모임 N참여자스냅샷"
     meeting ||--o{ midpoint_station_candidate : "1모임 N역후보"
+    subway_station ||--o{ midpoint_station_candidate : "역 마스터 참조"
     date_vote_session ||--o{ date_vote_option : "1세션 N후보"
     date_vote_option ||--o{ date_vote_record : "1후보 N투표기록"
     meeting ||--o{ meeting_place_recommendation : "1모임 N추천"
@@ -326,7 +330,7 @@ erDiagram
 | `date_vote_record` | V8 (FC-7) | 투표 기록 |
 | `meeting_participant` | V11 + V15 (MVP2) | 모임별 참여자 출발지 (합류 시 생성, V15에서 lat/lng nullable) |
 | `place` | V12 (MVP2) | 장소 마스터 (네이버 place_id, PostGIS) |
-| `midpoint_station_candidate` | V13 (MVP2) | 중간지점 역 후보 (rank 1~3) |
+| `midpoint_station_candidate` | V13 (MVP2), V27 | 중간지점 역 후보 (rank 1~3) — V27에서 station_id·latitude·longitude 추가 |
 | `group_invite` | V14 (FC-5) | 그룹 초대 코드 (48시간 만료) |
 | `subway_station` | V16 (MVP2) | 지하철역 마스터 (PostGIS) |
 | `subway_edge` | V17 (MVP2) | 지하철 이동 그래프 (RIDE/TRANSFER, weight_sec) |

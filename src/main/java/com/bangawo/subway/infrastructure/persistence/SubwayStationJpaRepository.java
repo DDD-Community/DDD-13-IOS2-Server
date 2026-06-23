@@ -39,7 +39,9 @@ public interface SubwayStationJpaRepository extends JpaRepository<SubwayStationJ
                         s.location_point::geometry,
                         c.geom::geometry
                     )) AS dist_m,
-                    MIN(s.station_id) AS station_id
+                    MIN(s.station_id) AS station_id,
+                    MIN(s.latitude) AS latitude,
+                    MIN(s.longitude) AS longitude
                 FROM subway_station s, center_point c, chosen_radius r
                 WHERE r.radius IS NOT NULL
                   AND ST_DWithin(s.location_point, c.geom, r.radius)
@@ -49,7 +51,9 @@ public interface SubwayStationJpaRepository extends JpaRepository<SubwayStationJ
                 station_name,
                 lines,
                 ROUND(CAST(dist_m AS numeric) / 1000, 3) AS distance_km,
-                station_id
+                station_id,
+                latitude,
+                longitude
             FROM candidates
             ORDER BY dist_m ASC
             LIMIT :limit
