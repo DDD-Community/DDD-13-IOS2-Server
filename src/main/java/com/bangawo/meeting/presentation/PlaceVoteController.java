@@ -5,6 +5,7 @@ import com.bangawo.meeting.application.PlaceVoteService;
 import com.bangawo.meeting.presentation.dto.PlaceResultResponse;
 import com.bangawo.meeting.presentation.dto.PlaceVoteStatusResponse;
 import com.bangawo.meeting.presentation.dto.PlaceVoteSubmitRequest;
+import com.bangawo.meeting.presentation.dto.StartPlaceVoteRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -21,6 +22,16 @@ public class PlaceVoteController {
 
     private final PlaceVoteService placeVoteService;
     private final PlaceConfirmService placeConfirmService;
+
+    @Operation(summary = "투표 시작 — 호스트 전용, 후보 ≥1 필요, VOTING 전환 + 마감일 설정")
+    @PostMapping("/{meetingId}/place-vote")
+    @ResponseStatus(HttpStatus.OK)
+    public void startVoting(@PathVariable Long meetingId,
+                            @Valid @RequestBody StartPlaceVoteRequest request,
+                            Authentication authentication) {
+        Long memberId = Long.parseLong(authentication.getName());
+        placeVoteService.startVoting(meetingId, memberId, request.durationDays());
+    }
 
     @Operation(summary = "장소 투표 제출 — 다중선택(후보 50% 내림, 최소1), 재투표 허용")
     @PostMapping("/{meetingId}/place-vote/submit")

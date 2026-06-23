@@ -3,10 +3,8 @@ package com.bangawo.meeting.presentation;
 import com.bangawo.meeting.application.PlacePickService;
 import com.bangawo.meeting.presentation.dto.PickStatusResponse;
 import com.bangawo.meeting.presentation.dto.PlaceCardResponse;
-import com.bangawo.meeting.presentation.dto.StartPlaceVoteRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -61,15 +59,5 @@ public class PlacePickController {
                                              Authentication authentication) {
         Long memberId = Long.parseLong(authentication.getName());
         return placePickService.getPickStatus(meetingId, memberId);
-    }
-
-    @Operation(summary = "투표 시작 — 호스트 전용, 후보 ≥1 필요, VOTING 전환 + 마감일 설정")
-    @PostMapping("/{meetingId}/place-vote")
-    @ResponseStatus(HttpStatus.OK)
-    public void startVoting(@PathVariable Long meetingId,
-                             @Valid @RequestBody StartPlaceVoteRequest request,
-                             Authentication authentication) {
-        Long memberId = Long.parseLong(authentication.getName());
-        placePickService.startVoting(meetingId, memberId, request.durationDays());
     }
 }
