@@ -2,7 +2,9 @@ package com.bangawo.meeting.application;
 
 import com.bangawo.global.error.BusinessException;
 import com.bangawo.global.error.ErrorCode;
+import com.bangawo.group.domain.GroupMember;
 import com.bangawo.group.domain.GroupMemberRepository;
+import com.bangawo.group.domain.GroupMemberRole;
 import com.bangawo.meeting.domain.*;
 import com.bangawo.meeting.presentation.dto.PlaceVoteStatusResponse;
 import com.bangawo.place.domain.Place;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,10 +27,12 @@ import java.util.stream.Collectors;
 public class PlaceVoteService {
 
     private static final int DEFAULT_DURATION_DAYS = 3;
+    private static final Set<Integer> VALID_DURATION_DAYS = Set.of(1, 3, 7);
 
     private final MeetingRepository meetingRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final MeetingParticipantRepository meetingParticipantRepository;
+    private final MeetingPlacePickRepository meetingPlacePickRepository;
     private final MeetingPlaceVoteSessionRepository voteSessionRepository;
     private final MeetingPlaceVoteRepository voteRepository;
     private final MeetingTravelBurdenRepository travelBurdenRepository;
@@ -36,6 +41,42 @@ public class PlaceVoteService {
     private final SubwayStationRepository subwayStationRepository;
     private final PlaceConfirmService placeConfirmService;
     private final PlaceRepository placeRepository;
+
+    @Transactional
+    public void startVoting(Long meetingId, Long memberId, int durationDays) {
+        Meeting meeting = meetingRepository.findById(meetingId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEETING_NOT_FOUND));
+
+        GroupMember caller = groupMemberRepository
+                .findByGroupIdAndMemberId(meeting.getGroupId(), memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_GROUP_MEMBER));
+        if (caller.getRole() != GroupMemberRole.HOST) {
+            throw new BusinessException(ErrorCode.NOT_GROUP_HOST);
+        }
+
+        if (meeting.getLocationStatus() != LocationStatus.RECOMMENDED) {
+            throw new BusinessException(ErrorCode.LOCATION_NOT_RECOMMENDED);
+        }
+        if (!meetingPlacePickRepository.existsByMeetingId(meetingId)) {
+            throw new BusinessException(ErrorCode.LOCATION_NOT_RECOMMENDED);
+        }
+        if (voteSessionRepository.findByMeetingId(meetingId).isPresent()) {
+            throw new BusinessException(ErrorCode.PLACE_VOTE_ALREADY_STARTED);
+        }
+        if (!VALID_DURATION_DAYS.contains(durationDays)) {
+            throw new BusinessException(ErrorCode.INVALID_DURATION_DAYS);
+        }
+
+        LocalDate voteDeadlineDate = LocalDate.now().plusDays(durationDays);
+        if (meeting.getConfirmedDate() != null
+                && !voteDeadlineDate.isBefore(meeting.getConfirmedDate().toLocalDate())) {
+            throw new BusinessException(ErrorCode.PLACE_VOTE_DEADLINE_INVALID);
+        }
+
+        meeting.toVoting();
+        meetingRepository.save(meeting);
+        createSession(meetingId, durationDays);
+    }
 
     @Transactional
     public MeetingPlaceVoteSession createSession(Long meetingId, int durationDays) {

@@ -24,7 +24,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -45,7 +44,6 @@ class PlacePickServiceTest {
 
     private Meeting recommendedMeeting;
     private GroupMember memberGroupMember;
-    private GroupMember hostGroupMember;
 
     @BeforeEach
     void setUp() {
@@ -59,8 +57,6 @@ class PlacePickServiceTest {
                 .build();
         memberGroupMember = GroupMember.builder()
                 .groupId(10L).memberId(2L).role(GroupMemberRole.MEMBER).build();
-        hostGroupMember = GroupMember.builder()
-                .groupId(10L).memberId(1L).role(GroupMemberRole.HOST).build();
     }
 
     @Test
@@ -146,29 +142,5 @@ class PlacePickServiceTest {
         verify(meetingRepository).save(any(Meeting.class));
         assertThat(recommendedMeeting.getLocationStatus()).isEqualTo(LocationStatus.VOTING);
         verify(placeVoteService).createSessionWithDefaultDuration(1L);
-    }
-
-    @Test
-    void startVoting_invalid_duration_throws() {
-        given(meetingRepository.findById(1L)).willReturn(Optional.of(recommendedMeeting));
-        given(groupMemberRepository.findByGroupIdAndMemberId(10L, 1L)).willReturn(Optional.of(hostGroupMember));
-        given(meetingPlacePickRepository.existsByMeetingId(1L)).willReturn(true);
-
-        assertThatThrownBy(() -> service.startVoting(1L, 1L, 2))
-                .isInstanceOf(BusinessException.class);
-    }
-
-    @Test
-    void startVoting_success() {
-        given(meetingRepository.findById(1L)).willReturn(Optional.of(recommendedMeeting));
-        given(groupMemberRepository.findByGroupIdAndMemberId(10L, 1L)).willReturn(Optional.of(hostGroupMember));
-        given(meetingPlacePickRepository.existsByMeetingId(1L)).willReturn(true);
-        given(placeVoteService.createSession(anyLong(), anyInt())).willReturn(null);
-
-        service.startVoting(1L, 1L, 3);
-
-        assertThat(recommendedMeeting.getLocationStatus()).isEqualTo(LocationStatus.VOTING);
-        verify(meetingRepository).save(recommendedMeeting);
-        verify(placeVoteService).createSession(1L, 3);
     }
 }

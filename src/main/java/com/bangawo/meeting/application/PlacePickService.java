@@ -4,9 +4,7 @@ import com.bangawo.auth.domain.Member;
 import com.bangawo.auth.domain.MemberRepository;
 import com.bangawo.global.error.BusinessException;
 import com.bangawo.global.error.ErrorCode;
-import com.bangawo.group.domain.GroupMember;
 import com.bangawo.group.domain.GroupMemberRepository;
-import com.bangawo.group.domain.GroupMemberRole;
 import com.bangawo.meeting.domain.*;
 import com.bangawo.meeting.presentation.dto.MemberPickStatus;
 import com.bangawo.meeting.presentation.dto.PickStatusResponse;
@@ -17,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,8 +23,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class PlacePickService {
-
-    private static final Set<Integer> VALID_DURATION_DAYS = Set.of(1, 3, 7);
 
     private final MeetingRepository meetingRepository;
     private final GroupMemberRepository groupMemberRepository;
@@ -147,8 +142,9 @@ public class PlacePickService {
                 .map(p -> {
                     Member member = memberById.get(p.getMemberId());
                     String nickname = member != null ? member.getNickname() : "";
+                    String profileImageUrl = member != null ? member.getProfileImageUrl() : null;
                     boolean done = pickCountByMemberId.getOrDefault(p.getMemberId(), 0L) >= 1;
-                    return new MemberPickStatus(p.getMemberId(), nickname, done);
+                    return new MemberPickStatus(p.getMemberId(), nickname, profileImageUrl, done);
                 })
                 .toList();
 
@@ -164,39 +160,6 @@ public class PlacePickService {
                 .toList();
 
         return new PickStatusResponse(memberStatuses, myPicks);
-    }
-
-    @Transactional
-    public void startVoting(Long meetingId, Long memberId, int durationDays) {
-        Meeting meeting = meetingRepository.findById(meetingId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEETING_NOT_FOUND));
-
-        GroupMember caller = groupMemberRepository
-                .findByGroupIdAndMemberId(meeting.getGroupId(), memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_GROUP_MEMBER));
-        if (caller.getRole() != GroupMemberRole.HOST) {
-            throw new BusinessException(ErrorCode.NOT_GROUP_HOST);
-        }
-
-        if (meeting.getLocationStatus() != LocationStatus.RECOMMENDED) {
-            throw new BusinessException(ErrorCode.LOCATION_NOT_RECOMMENDED);
-        }
-        if (!meetingPlacePickRepository.existsByMeetingId(meetingId)) {
-            throw new BusinessException(ErrorCode.LOCATION_NOT_RECOMMENDED);
-        }
-        if (!VALID_DURATION_DAYS.contains(durationDays)) {
-            throw new BusinessException(ErrorCode.INVALID_DURATION_DAYS);
-        }
-
-        LocalDate voteDeadlineDate = LocalDate.now().plusDays(durationDays);
-        if (meeting.getConfirmedDate() != null
-                && !voteDeadlineDate.isBefore(meeting.getConfirmedDate().toLocalDate())) {
-            throw new BusinessException(ErrorCode.PLACE_VOTE_DEADLINE_INVALID);
-        }
-
-        meeting.toVoting();
-        meetingRepository.save(meeting);
-        placeVoteService.createSession(meetingId, durationDays);
     }
 
     private void checkAndAutoTransitionToVoting(Meeting meeting) {

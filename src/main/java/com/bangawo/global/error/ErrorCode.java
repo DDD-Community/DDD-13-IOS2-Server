@@ -61,6 +61,7 @@ public enum ErrorCode {
     PLACE_VOTE_NOT_IN_PROGRESS(HttpStatus.BAD_REQUEST, "MEETING_019", "투표가 진행 중이 아닙니다"),
     PLACE_VOTE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "MEETING_020", "투표 가능 개수를 초과했습니다"),
     PLACE_NOT_CONFIRMED(HttpStatus.BAD_REQUEST, "MEETING_021", "아직 장소가 확정되지 않았습니다"),
+    PLACE_VOTE_ALREADY_STARTED(HttpStatus.BAD_REQUEST, "MEETING_022", "이미 장소 투표가 시작되었습니다"),
 
     // Place
     PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "PLACE_001", "장소를 찾을 수 없습니다"),
