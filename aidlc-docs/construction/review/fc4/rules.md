@@ -13,11 +13,13 @@
 ## 인가 규칙
 
 - **로그인한 사용자만** 그룹을 만들 수 있다. (미로그인 시 401)
+- **회원가입(기본 출발지 등록)을 완료한(`is_registered=true`) 사용자만** 그룹을 만들 수 있다. (미완료 시 403 MEMBER_006) — meeting_participant 좌표 null 삽입 방지
 
 ## 제약사항
 
 | 항목 | 제약 | 위반 시 |
 |---|---|---|
+| 가입 완료 | member.is_registered = true | 403 MEMBER_006 |
 | 이름 길이 | 1자 이상, 30자 이하 | HTTP 400 |
 | 테마 태그 | theme_tag 중 하나 필수 선택(현재 15종) | HTTP 400 |
 | categoryLabels | 고정 11종 내 값(배열, 선택) | HTTP 400 |
