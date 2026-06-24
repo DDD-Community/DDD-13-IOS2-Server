@@ -514,3 +514,84 @@ Clarification 2 원문: "A가 가장 괜찮아보이네 역 후보도 보여줘�
 - **awaiting**: Application Design + Review 승인 → CONSTRUCTION READY
 - **inception_complete**: FC-12/13 보완 INCEPTION 완료 → phase CONSTRUCTION / READY
 - **handoff**: 사용자 별도 @construction 에이전트로 구현 진행 예정 (복붙 프롬프트 제공)
+
+## FC-12/13 보완 — Functional Design
+**Timestamp**: 2026-06-24T00:00:00+09:00
+**User Input**: FC-12/13 보완 사이클 Construction 시작 — Functional Design 단계
+**AI Response**: Functional Design 산출물 3종 생성 완료
+- `aidlc-docs/construction/internal/fc12-13-fix/functional-design/domain-entities.md`
+- `aidlc-docs/construction/internal/fc12-13-fix/functional-design/business-rules.md`
+- `aidlc-docs/construction/internal/fc12-13-fix/functional-design/business-logic-model.md`
+**Context**: CONSTRUCTION - Functional Design 완료, 승인 대기 중
+
+---
+
+## FC-12/13 보완 — Functional Design (Opus 재검토)
+**Timestamp**: 2026-06-24T00:00:00+09:00
+**User Input**: 모델 Opus로 전환 후 construction 재진행 — Functional Design 재검토
+**AI Response**: 실제 코드 대조로 이전(Sonnet) 설계 3건 정정
+- 마이그레이션 버전: V26 → **V28** (V26/V27 이미 존재)
+- Member 위치: `com.bangawo.auth.domain.Member.getNickname()`, `MemberRepository.findAllById`
+- 호스트 완료현황 기준: USER-pickers → **활성 참여자(ABSENT 제외)** 집합 (기존 PickStatus 패턴)
+- 백필 단일 진입점: createSession 진입부에서 backfillCandidatesIfNeeded 호출 (모든 경로 공유)
+- 신규 ErrorCode MEETING_023 확정 (022까지 사용 중)
+**Context**: CONSTRUCTION - Functional Design 재검토 완료, 승인 대기
+
+---
+
+## FC-12/13 보완 — R4 결정 변경 (INCEPTION 갱신)
+**Timestamp**: 2026-06-24T00:00:00+09:00
+**User Input**: "멤버별 투표 참여 현황" 화면을 모든 구성원이 볼 수 있어야 함 → 명세부터 갱신 요청
+**AI Response**: R4 결정 변경 (호스트 전용 → 전원 공개), 명세·리뷰·기능설계 동기화
+- requirements-fc12-13-fix.md R4: 전원 공개로 수정
+- aidlc-state.md 결정사항 #4: 전원 공개로 수정
+- review/fc12/rules.md, api.md: memberStatuses 전원 제공으로 수정
+- functional-design business-rules R4 / business-logic-model #4: 호스트 분기 제거
+- 익명성 유지: 완료/미완료만 노출, 투표 대상은 전원 비공개
+**Context**: CONSTRUCTION - Functional Design(R4 전원공개 반영) 재승인 대기
+
+---
+
+## FC-12/13 보완 — R9 친구들 거리보기 추가 (INCEPTION 갱신, 스코프 변경)
+**Timestamp**: 2026-06-24T00:00:00+09:00
+**User Input**: 장소 상세의 "친구들 거리보기" 버튼용 단일 장소 이동부담 API 필요 → 명세부터 진행
+**AI Response**: MVP 제외였던 "친구들 거리보기"를 포함으로 스코프 변경, 명세 동기화
+- requirements R9 신규(단일 장소 이동부담 조회), 범위제외에서 제거
+- aidlc-state 결정사항 #10 추가(거리보기 포함)
+- review/fc12/api.md: GET .../place-vote/{placeId}/travel-burden 엔드포인트 추가
+- functional-design: R10 규칙 + getPlaceTravelBurden 메서드/DTO 추가
+- 데이터=meeting_travel_burden 스냅샷 재사용(신규 계산 없음)
+**Context**: CONSTRUCTION - Functional Design(R4 전원공개 + R9 거리보기) 최종 승인 대기
+
+---
+
+## FC-12/13 보완 — Code Generation Part 1 (플랜)
+**Timestamp**: 2026-06-24T00:00:00+09:00
+**User Input**: "몰라 진행해" (Functional Design 승인 및 코드생성 진행)
+**AI Response**: Review 게이트 통과(fc12·fc13 각4종). 코드생성 플랜 작성 — 12단계
+- plans/fc12-13-fix-code-generation-plan.md
+- V28 마이그레이션, 도메인(PickSource/ofSystem), PlaceVoteService(백필·검증·정렬·전원현황·거리보기), PlaceConfirmService(공통비교자·rank·수동확정), DTO 3종, 컨트롤러 2엔드포인트, 테스트
+**Context**: CONSTRUCTION - Code Generation Part 1 완료, 플랜 승인 대기
+
+---
+
+## FC-12/13 보완 — Code Generation Part 2 (코드 생성 완료)
+**Timestamp**: 2026-06-24T00:00:00+09:00
+**User Input**: "너가좀 해봐 내가 말한대로 안됐으면 가만안둬" (코드 생성 진행)
+**AI Response**: 플랜 12단계 전부 실행, 테스트 94 passed / 0 failed
+- V28 마이그레이션, PickSource/ofSystem, 백필 단일진입점, placeId검증, 정렬, memberStatuses 전원공개, 공통비교자(min pickedAt), 1~3위 rank, confirmByHost, getPlaceTravelBurden(친구들 거리보기)
+- 신규 4 / 수정 12 파일, review 문서 V26→V28 동기화
+- 단위테스트: 백필 0/1/2/≥3, placeId검증, 동점4단계, rank, 수동확정, 거리보기
+**Context**: CONSTRUCTION - Code Generation 완료, 코드 승인 대기
+
+## Build and Test Stage (FC-12/13 보완)
+**Timestamp**: 2026-06-24T00:00:00+09:00
+**Build Status**: Success (`./gradlew clean build`, bangawo-0.0.1-SNAPSHOT.jar)
+**Test Status**: Pass — 94 tests, 0 failures, 0 errors
+**Files Generated/Updated**:
+- build-and-test-summary.md (77→94)
+- unit-test-instructions.md
+- build-instructions.md, integration-test-instructions.md (기존 유지)
+**Phase 전환**: CONSTRUCTION → OPERATIONS (READY)
+
+---

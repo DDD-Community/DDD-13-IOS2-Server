@@ -19,7 +19,7 @@
 ## GET /api/v1/meetings/{meetingId}/place-vote
 - ⭐ 후보 = 담긴 장소(백필 포함). 정렬: 투표 전 가나다순 / 후 득표순
 - 후보별 득표수(익명 집계), 내 투표, 후보별 이동부담(참여자별 소요시간·환승수, 최장 이동자)
-- ⭐ 호스트 호출 시 `memberStatuses[]`(구성원별 완료여부) 포함. 구성원 호출 시 null/미포함
+- ⭐ 🔄 `memberStatuses[]`(구성원별 완료여부)는 **모든 호출자(호스트·구성원)** 에게 제공 (2026-06-24 변경: 전원 공개)
 - 각 후보 장소 정보는 `place`(PlaceSummary)로 내려감
 ```json
 {
@@ -35,4 +35,18 @@
   ]
 }
 ```
-> `memberStatuses`는 호스트 응답에만 채워짐(익명성: 완료여부만, 투표 대상 비공개).
+> `memberStatuses`는 **모든 응답에 채워짐**(호스트/구성원 무관). 익명성: 완료여부만 노출, 투표 대상은 비공개.
+
+## GET /api/v1/meetings/{meetingId}/place-vote/{placeId}/travel-burden ⭐🔄 (친구들 거리보기)
+- 단일 장소에 대한 **모임원별 소요시간·환승** 목록. 상세 화면 "친구들 거리보기" 버튼용.
+- 데이터 = `meeting_travel_burden` 스냅샷(투표 시작 시 저장분). 신규 계산 없음. 스냅샷 없으면 빈 목록.
+- 권한: 모임 구성원.
+```json
+{
+  "place": { "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ...", "latitude": 37.5, "longitude": 127.0 },
+  "burdens": [
+    { "memberId": 1, "name": "홍길동", "seconds": 1800, "transfers": 1, "isLongest": false },
+    { "memberId": 2, "name": "김철수", "seconds": 3000, "transfers": 2, "isLongest": true }
+  ]
+}
+```

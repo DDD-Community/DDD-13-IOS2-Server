@@ -81,21 +81,23 @@
 - **STEP 6 Application Design**: 완료 — application-design-fc12-13-fix.md (백필=pick+source, 순위 조회시계산, 공통 Comparator, V26)
 - **STEP 7 Units Generation**: SKIP (단일 단위)
 - **Review Artifacts**: 완료 — fc12·fc13 각4 + overview + project-erd 갱신 (새 폴더 미생성, 기존 FC 확장)
+- **CONSTRUCTION**: 완료 — Functional Design + Code Generation(12단계) + Build&Test(94 passed, V28). R4 전원공개·R9 거리보기 스코프 반영
 
 ### 확정된 결정사항
 1. 투표 후보 = **담긴 장소(pick)** 기준 (추천 15개 아님)
 2. 담긴 후보 3개 미만 시 **추천 상위 순위로 백필 → 최소 3개 보장** 후 투표 시작 (0개 멈춤현상 해결)
 3. submitVote **placeId 후보소속 검증** 추가
-4. 호스트용 **완료/미완료 구성원 현황** 추가 (익명 유지)
+4. **멤버별 투표 참여 현황 = 전원 공개** (2026-06-24 변경: 호스트 전용→모든 구성원, 완료/미완료만 노출·투표대상 익명 유지)
 5. 정렬: 투표 전 가나다순 / 투표 후 득표순
 6. **수동 확정** 엔드포인트 추가 (자동 확정과 병행)
 7. **1~3위 순위 산출/저장** + 확정 결과 응답 확장 (후보<3이면 후보수만큼)
 8. 동점 4번째(등록순) = **그 장소 최초 담은 시각** 기준 정렬로 수정
 9. 푸시 알림 / 미응답 리마인드 / 실시간 투표현황 / H3 히스토리 / 낮은반응감지 → **MVP 제외**
+10. **친구들 거리보기 = 포함** (2026-06-24 변경: MVP제외→포함). 단일 장소 이동부담 조회 API 신규(R9), 스냅샷 재사용
 
 ## Phase
-- phase: CONSTRUCTION
+- phase: OPERATIONS
 - stage: READY
 - status: AWAITING_START
 - last_updated: 2026-06-24T00:00:00+09:00
-- note: FC-12/13 보완 INCEPTION 완료. 구현은 @construction에서 진행.
+- note: FC-12/13 보완 CONSTRUCTION 완료 (Build & Test 94 passed). V28 적용. @operations에서 배포 진행.
