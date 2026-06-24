@@ -4,6 +4,7 @@ import java.util.List;
 
 public interface MeetingPlacePickRepository {
     MeetingPlacePick save(MeetingPlacePick pick);
+    List<MeetingPlacePick> saveAll(List<MeetingPlacePick> picks);
     boolean existsByMeetingIdAndMemberIdAndPlaceId(Long meetingId, Long memberId, Long placeId);
     void deleteByMeetingIdAndMemberIdAndPlaceId(Long meetingId, Long memberId, Long placeId);
     List<MeetingPlacePick> findByMeetingId(Long meetingId);
