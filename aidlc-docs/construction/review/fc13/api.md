@@ -9,10 +9,10 @@
 - 미확정 시 PLACE_NOT_CONFIRMED(400) 또는 진행상태 반환
 ```json
 {
-  "place": { "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ..." },
+  "place": { "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ...", "latitude": 37.5, "longitude": 127.0 },
   "confirmedAt": "2026-06-21T12:00:00",
   "candidates": [
-    { "place": { "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ..." },
+    { "place": { "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ...", "latitude": 37.5, "longitude": 127.0 },
       "voteCount": 3, "totalSeconds": 7200, "totalTransfers": 4 }
   ]
 }
