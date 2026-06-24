@@ -68,7 +68,7 @@
 ```json
 {
   "members": [ { "memberId": 1, "nickname": "철수", "done": true } ],
-  "myPicks": [ { "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ..." } ]
+  "myPicks": [ { "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ...", "latitude": 37.5, "longitude": 127.0 } ]
 }
 ```
 

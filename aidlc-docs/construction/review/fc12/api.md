@@ -22,7 +22,7 @@
   "totalParticipants": 4, "votedCount": 2,
   "candidates": [
     {
-      "place": { "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ..." },
+      "place": { "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ...", "latitude": 37.5, "longitude": 127.0 },
       "voteCount": 3, "isMyVote": true,
       "travelBurdens": [ { "memberId": 1, "seconds": 1800, "transfers": 1, "isLongest": false } ]
     }

@@ -9,7 +9,9 @@ public record PlaceSummary(
         Long placeId,
         String name,
         String categoryLabel,
-        String address
+        String address,
+        Double latitude,
+        Double longitude
 ) {
     public static PlaceSummary from(Place place) {
         if (place == null) {
@@ -19,7 +21,9 @@ public record PlaceSummary(
                 place.getId(),
                 place.getName(),
                 place.getCategoryLabel(),
-                place.getAddress()
+                place.getAddress(),
+                place.getLatitude(),
+                place.getLongitude()
         );
     }
 }
