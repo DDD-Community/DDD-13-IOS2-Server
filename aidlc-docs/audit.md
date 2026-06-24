@@ -499,3 +499,18 @@ Clarification 2 원문: "A가 가장 괜찮아보이네 역 후보도 보여줘�
 - **migrations**: V22~V25 추가 (vote_session, vote, travel_burden, confirmed_place)
 - **new_units**: U4 (FC-11/12 Subway Graph + Vote), U5 (FC-13 Auto Confirm)
 - **phase_transition**: CONSTRUCTION → OPERATIONS
+
+## 2026-06-24 — New Cycle: FC-12/13 보완 (mvp3-1 갭)
+- **trigger**: 사용자 mvp3-1.md 상세 PRD 추가, 기존 구현 갭 발견
+- **gap_analysis**: docs/prd/mvp3-1-gap-analysis.md 작성
+- **key_findings**: 투표후보=추천15개 오구현(B1), 50%제한 오기준(B2), placeId 미검증(B5), 호스트 완료현황 누락(M7/Swagger불일치), 1~3위 순위 미산출(M3), 동점 등록순서 미정렬, 0개 담기 시 멈춤
+- **decisions**: 후보=담긴장소, <3개 추천백필로 3개보장, placeId검증, 호스트현황, 정렬, 수동확정, 1~3위, 등록순=최초담은시각 / 알림·실시간·H3·낮은반응·거리보기 제외
+- **STEP1 workspace_detection**: 완료 (Brownfield, RE skip)
+- **STEP3 requirements**: requirements-fc12-13-fix.md 작성 (질문게이트 생략 — 결정 확정됨)
+- **awaiting**: 요구사항 승인
+- **STEP5 workflow_planning**: 완료·승인 — execution-plan-fc12-13-fix.md
+- **STEP6 application_design**: 완료 — application-design-fc12-13-fix.md (결정: 백필=meeting_place_pick+source 컬럼/V26, member_id nullable, 순위 조회시계산, 공통 Comparator, 수동확정 엔드포인트)
+- **review_artifacts**: fc12·fc13 각4 + overview + project-erd 갱신 (기존 FC 확장, 새 폴더 금지 준수)
+- **awaiting**: Application Design + Review 승인 → CONSTRUCTION READY
+- **inception_complete**: FC-12/13 보완 INCEPTION 완료 → phase CONSTRUCTION / READY
+- **handoff**: 사용자 별도 @construction 에이전트로 구현 진행 예정 (복붙 프롬프트 제공)

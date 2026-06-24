@@ -236,12 +236,13 @@ erDiagram
         BIGINT nearest_station_id FK "귀속역"
         TIMESTAMPTZ created_at
     }
-    %% [장소선정 신규] meeting_place_pick — 담기
+    %% [장소선정 신규] meeting_place_pick — 담기(+V26 source 백필구분)
     meeting_place_pick {
         BIGINT id PK
         BIGINT meeting_id FK
-        BIGINT member_id FK
+        BIGINT member_id FK "V26 nullable, SYSTEM은 NULL"
         BIGINT place_id FK
+        VARCHAR source "V26 USER/SYSTEM"
         TIMESTAMPTZ picked_at
     }
     %% [장소선정 신규] meeting_place_vote_session — 투표 세션
@@ -336,7 +337,7 @@ erDiagram
 | `subway_edge` | V17 (MVP2) | 지하철 이동 그래프 (RIDE/TRANSFER, weight_sec) |
 | `meeting` (확장) | **V18** | + category_labels[], vibes[], reservable, parking (장소추천 옵션) |
 | `meeting_place_recommendation` | **V20** | 추천 15 스냅샷 (rank/score/귀속역) — place 테이블 변경 없음(기존 occasion 재사용) |
-| `meeting_place_pick` | **V21** | 장소 담기 (모임원×장소) |
+| `meeting_place_pick` | **V21** (+**V26**) | 장소 담기 (모임원×장소). V26: `source`(USER/SYSTEM) 컬럼 + member_id nullable — 후보<3 시 추천 백필(SYSTEM) 적재, 투표 후보 집합 소스 |
 | `meeting_place_vote_session` | **V22** | 장소 투표 세션 (마감일) |
 | `meeting_place_vote` | **V23** | 장소 투표 (익명 집계) |
 | `meeting_travel_burden` | **V24** | 이동부담 스냅샷 (소요초/환승수) |

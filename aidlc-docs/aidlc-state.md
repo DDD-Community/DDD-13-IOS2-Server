@@ -69,8 +69,33 @@
 - INCEPTION + CONSTRUCTION 완료 (meeting_participant, subway context, midpoint 계산 API)
 - 산출물: aidlc-docs/inception/, aidlc-docs/construction/ (이전 사이클)
 
+## New Cycle (진행중) — FC-12/13 보완 (mvp3-1 갭)
+- **Feature**: 장소 투표/확정 보완 (PRD `docs/prd/mvp3-1.md` + 갭분석 `docs/prd/mvp3-1-gap-analysis.md`)
+- **Type**: Brownfield 수정/확장 (기존 fc12·fc13 FC 폴더 갱신, 새 폴더 금지)
+- **Session Start**: 2026-06-24
+- **STEP 1 Workspace Detection**: 완료 — Brownfield, RE 아티팩트 존재·현행 유지 → RE SKIP
+- **STEP 2 Reverse Engineering**: SKIP (아티팩트 존재, meeting 컨텍스트 직접 검토 완료)
+- **STEP 3 Requirements Analysis**: 완료 (승인) — requirements-fc12-13-fix.md
+- **STEP 4 User Stories**: SKIP (백엔드 API·역할 단순·버그픽스)
+- **STEP 5 Workflow Planning**: 완료 — execution-plan-fc12-13-fix.md (AD EXECUTE, Units SKIP)
+- **STEP 6 Application Design**: 완료 — application-design-fc12-13-fix.md (백필=pick+source, 순위 조회시계산, 공통 Comparator, V26)
+- **STEP 7 Units Generation**: SKIP (단일 단위)
+- **Review Artifacts**: 완료 — fc12·fc13 각4 + overview + project-erd 갱신 (새 폴더 미생성, 기존 FC 확장)
+
+### 확정된 결정사항
+1. 투표 후보 = **담긴 장소(pick)** 기준 (추천 15개 아님)
+2. 담긴 후보 3개 미만 시 **추천 상위 순위로 백필 → 최소 3개 보장** 후 투표 시작 (0개 멈춤현상 해결)
+3. submitVote **placeId 후보소속 검증** 추가
+4. 호스트용 **완료/미완료 구성원 현황** 추가 (익명 유지)
+5. 정렬: 투표 전 가나다순 / 투표 후 득표순
+6. **수동 확정** 엔드포인트 추가 (자동 확정과 병행)
+7. **1~3위 순위 산출/저장** + 확정 결과 응답 확장 (후보<3이면 후보수만큼)
+8. 동점 4번째(등록순) = **그 장소 최초 담은 시각** 기준 정렬로 수정
+9. 푸시 알림 / 미응답 리마인드 / 실시간 투표현황 / H3 히스토리 / 낮은반응감지 → **MVP 제외**
+
 ## Phase
-- phase: OPERATIONS
+- phase: CONSTRUCTION
 - stage: READY
 - status: AWAITING_START
-- last_updated: 2026-06-17T02:00:00+09:00
+- last_updated: 2026-06-24T00:00:00+09:00
+- note: FC-12/13 보완 INCEPTION 완료. 구현은 @construction에서 진행.

@@ -88,8 +88,10 @@ stateDiagram-v2
 | **FC-8** | 중간역 반경 장소 추천 15 | `POST /location/start`(확장)<br>`GET /recommendations`<br>`GET /places/options` | place(기존 occasion 재사용, 컬럼 변경 없음), meeting_place_recommendation |
 | **FC-9** | 후보 담기/취소 | `GET /places`<br>`POST·DELETE /places/{id}/pick`<br>`GET /places/pick-status` | meeting_place_pick |
 | **FC-11** | 투표 세션·마감일 | `POST /place-vote` | meeting_place_vote_session |
-| **FC-12** | 익명 다중 투표 + 이동부담 | `POST /place-vote/submit`<br>`GET /place-vote` | meeting_place_vote, meeting_travel_burden, subway_edge |
-| **FC-13** | 4단계 순위 자동확정 | `GET /place-result` | meeting_confirmed_place |
+| **FC-12** | 익명 다중 투표(후보=담긴장소, <3 추천백필) + 이동부담 + 호스트 완료현황 | `POST /place-vote/submit`<br>`GET /place-vote` | meeting_place_vote, meeting_travel_burden, subway_edge, meeting_place_pick(+source) |
+| **FC-13** | 4단계 순위 자동확정 + 1~3위 + 수동확정 | `GET /place-result`<br>`POST /place-confirm` | meeting_confirmed_place |
+
+> ⭐ 2026-06-24 mvp3-1 갭 보완: FC-12 후보 = 담긴 장소(추천15 아님)·placeId 검증·정렬·호스트 완료현황 / FC-13 동점4=최초담은시각·1~3위·수동확정. 푸시·실시간·H3 제외. 상세: `docs/prd/mvp3-1-gap-analysis.md`.
 
 > FC 폴더: `review/fc8`·`fc9`·`fc11`·`fc12`·`fc13` (PRD mvp3.md 번호). 기존 그룹 생명주기는 번호 충돌 회피로 `review/fc-group-lifecycle` 로 보관(과거 'FC-8' 라벨이었음).
 
