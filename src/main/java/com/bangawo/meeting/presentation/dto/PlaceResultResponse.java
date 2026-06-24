@@ -11,6 +11,7 @@ public record PlaceResultResponse(
         List<CandidateResult> candidates
 ) {
     public record CandidateResult(
+            int rank,
             PlaceSummary place,
             int voteCount,
             long totalSeconds,

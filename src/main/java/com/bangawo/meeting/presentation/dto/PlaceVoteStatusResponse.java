@@ -10,8 +10,15 @@ public record PlaceVoteStatusResponse(
         String sessionStatus,
         int totalParticipants,
         int votedCount,
+        List<MemberVoteStatus> memberStatuses,
         List<CandidateVoteInfo> candidates
 ) {
+    public record MemberVoteStatus(
+            Long memberId,
+            String name,
+            boolean completed
+    ) {}
+
     public record CandidateVoteInfo(
             PlaceSummary place,
             int voteCount,

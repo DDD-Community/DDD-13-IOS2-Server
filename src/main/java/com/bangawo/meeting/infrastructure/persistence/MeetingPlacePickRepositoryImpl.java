@@ -20,6 +20,12 @@ public class MeetingPlacePickRepositoryImpl implements MeetingPlacePickRepositor
     }
 
     @Override
+    public List<MeetingPlacePick> saveAll(List<MeetingPlacePick> picks) {
+        return jpaRepository.saveAll(picks.stream().map(MeetingPlacePickJpaEntity::from).toList())
+                .stream().map(MeetingPlacePickJpaEntity::toDomain).toList();
+    }
+
+    @Override
     public boolean existsByMeetingIdAndMemberIdAndPlaceId(Long meetingId, Long memberId, Long placeId) {
         return jpaRepository.existsByMeetingIdAndMemberIdAndPlaceId(meetingId, memberId, placeId);
     }

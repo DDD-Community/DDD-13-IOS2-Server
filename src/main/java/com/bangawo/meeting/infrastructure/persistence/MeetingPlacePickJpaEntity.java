@@ -1,6 +1,7 @@
 package com.bangawo.meeting.infrastructure.persistence;
 
 import com.bangawo.meeting.domain.MeetingPlacePick;
+import com.bangawo.meeting.domain.PickSource;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -27,7 +28,7 @@ public class MeetingPlacePickJpaEntity {
     @Column(name = "meeting_id", nullable = false)
     private Long meetingId;
 
-    @Column(name = "member_id", nullable = false)
+    @Column(name = "member_id")
     private Long memberId;
 
     @Column(name = "place_id", nullable = false)
@@ -36,6 +37,10 @@ public class MeetingPlacePickJpaEntity {
     @Column(name = "picked_at", nullable = false)
     private LocalDateTime pickedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source", nullable = false, length = 10)
+    private PickSource source;
+
     public static MeetingPlacePickJpaEntity from(MeetingPlacePick pick) {
         MeetingPlacePickJpaEntity entity = new MeetingPlacePickJpaEntity();
         entity.id = pick.getId();
@@ -43,6 +48,7 @@ public class MeetingPlacePickJpaEntity {
         entity.memberId = pick.getMemberId();
         entity.placeId = pick.getPlaceId();
         entity.pickedAt = pick.getPickedAt();
+        entity.source = pick.getSource();
         return entity;
     }
 
@@ -53,6 +59,7 @@ public class MeetingPlacePickJpaEntity {
                 .memberId(memberId)
                 .placeId(placeId)
                 .pickedAt(pickedAt)
+                .source(source)
                 .build();
     }
 }
