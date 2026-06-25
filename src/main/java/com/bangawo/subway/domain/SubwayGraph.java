@@ -31,12 +31,21 @@ public class SubwayGraph {
     }
 
     /**
-     * 단일 출발 다익스트라.
-     * @return Map<stationId, int[]{seconds, transfers}> — 도달 불가 역은 포함되지 않음
+     * 단일 출발 다익스트라 결과.
+     * @param dist Map<stationId, int[]{seconds, transfers}> — 도달 불가 역은 미포함
+     * @param prev Map<stationId, 직전 stationId> — 최단경로 역추적용. source는 키로 존재하지 않음
      */
-    public Map<Long, int[]> dijkstra(Long sourceStationId) {
+    public record DijkstraResult(Map<Long, int[]> dist, Map<Long, Long> prev) {
+    }
+
+    /**
+     * 단일 출발 다익스트라. 비용(소요초/환승수)과 경로복원용 직전역(prev)을 함께 반환.
+     */
+    public DijkstraResult dijkstra(Long sourceStationId) {
         // dist[stationId] = {totalSeconds, totalTransfers}
         Map<Long, int[]> dist = new HashMap<>();
+        // prev[stationId] = 최단경로상 직전 stationId
+        Map<Long, Long> prev = new HashMap<>();
         // PQ: {seconds, transfers, stationId}
         PriorityQueue<long[]> pq = new PriorityQueue<>(Comparator.comparingLong(a -> a[0]));
 
@@ -62,11 +71,39 @@ public class SubwayGraph {
                 if (nextBest == null || nextSec < nextBest[0]) {
                     int[] newDist = {(int) nextSec, (int) nextTransfers};
                     dist.put(nextId, newDist);
+                    prev.put(nextId, curStation);
                     pq.offer(new long[]{nextSec, nextTransfers, nextId});
                 }
             }
         }
 
-        return dist;
+        return new DijkstraResult(dist, prev);
+    }
+
+    /**
+     * prev 맵으로 출발역→도착역 경로(stationId 순서 리스트)를 복원.
+     * - dest == source → [source]
+     * - dest 도달 불가(prev에 없고 source도 아님) → [] (빈 리스트)
+     */
+    public static List<Long> reconstructPath(Map<Long, Long> prev, Long sourceStationId, Long destStationId) {
+        if (destStationId == null) {
+            return List.of();
+        }
+        if (destStationId.equals(sourceStationId)) {
+            return List.of(sourceStationId);
+        }
+        if (!prev.containsKey(destStationId)) {
+            return List.of();
+        }
+        LinkedList<Long> path = new LinkedList<>();
+        Long cur = destStationId;
+        while (cur != null) {
+            path.addFirst(cur);
+            if (cur.equals(sourceStationId)) {
+                break;
+            }
+            cur = prev.get(cur);
+        }
+        return path;
     }
 }

@@ -38,15 +38,29 @@
 > `memberStatuses`는 **모든 응답에 채워짐**(호스트/구성원 무관). 익명성: 완료여부만 노출, 투표 대상은 비공개.
 
 ## GET /api/v1/meetings/{meetingId}/place-vote/{placeId}/travel-burden ⭐🔄 (친구들 거리보기)
-- 단일 장소에 대한 **모임원별 소요시간·환승** 목록. 상세 화면 "친구들 거리보기" 버튼용.
-- 데이터 = `meeting_travel_burden` 스냅샷(투표 시작 시 저장분). 신규 계산 없음. 스냅샷 없으면 빈 목록.
+- 단일 장소에 대한 **모임 활성 참여자 전원**(요청자 포함)의 소요시간·환승·경로 목록. 상세 화면 "친구들 거리보기" 버튼용.
+- 데이터 = `meeting_travel_burden` 스냅샷(투표 시작 시 저장분). 신규 계산 없음.
 - 권한: 모임 구성원.
+- ⭐ (2026-06-25) 멤버별 항목에 `path` 추가 — 출발역→도착역 경로(역 좌표 순서 리스트), 지도 표시용. 스냅샷 저장분, 도달 불가 시 `[]`.
+- ⭐ (2026-06-25 보강) 멤버 기준 = 활성 참여자 전원. 스냅샷 없는 멤버도 포함(`seconds`/`transfers`=null, `path`=[]).
+- ⭐ 멤버별 추가 필드: `departureName`(출발지 이름, nullable), `isMe`(요청자 본인 여부). `isLongest`는 소요시간 보유 멤버 중 최대만 true.
 ```json
 {
   "place": { "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ...", "latitude": 37.5, "longitude": 127.0 },
   "burdens": [
-    { "memberId": 1, "name": "홍길동", "seconds": 1800, "transfers": 1, "isLongest": false },
-    { "memberId": 2, "name": "김철수", "seconds": 3000, "transfers": 2, "isLongest": true }
+    {
+      "memberId": 1, "name": "홍길동", "departureName": "집", "isMe": true,
+      "seconds": 1800, "transfers": 1, "isLongest": false,
+      "path": [
+        { "stationId": 201, "latitude": 37.49, "longitude": 127.02 },
+        { "stationId": 202, "latitude": 37.50, "longitude": 127.01 },
+        { "stationId": 245, "latitude": 37.50, "longitude": 127.00 }
+      ]
+    },
+    { "memberId": 2, "name": "김철수", "departureName": "회사", "isMe": false,
+      "seconds": 3000, "transfers": 2, "isLongest": true, "path": [] },
+    { "memberId": 3, "name": "이영희", "departureName": null, "isMe": false,
+      "seconds": null, "transfers": null, "isLongest": false, "path": [] }
   ]
 }
 ```

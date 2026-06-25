@@ -22,6 +22,7 @@ erDiagram
         bigint place_id FK
         int seconds "소요초"
         int transfers "환승수"
+        jsonb station_path "경로[{stationId,lat,lng}] ⭐V29"
     }
 ```
 - V23: meeting_place_vote (UNIQUE session_id, member_id, place_id)
@@ -30,3 +31,5 @@ erDiagram
 - ⭐ V28: `meeting_place_pick` 에 `source VARCHAR(10) DEFAULT 'USER'` 추가 + `member_id` nullable
   - 투표 후보 집합 = meeting_place_pick 전체(USER+SYSTEM)
   - 담기 현황/함께담기 N/완료 구성원 = source='USER' 만 (FC-9 참조)
+- ⭐ V29: `meeting_travel_burden` 에 `station_path JSONB` 추가 (이동경로 스냅샷, 반정규화)
+  - 값 = `[{stationId, latitude, longitude}, ...]` 출발→도착 순서. 친구들 거리보기 지도 표시용.

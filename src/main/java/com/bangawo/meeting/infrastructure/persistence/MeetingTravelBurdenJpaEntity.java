@@ -1,10 +1,15 @@
 package com.bangawo.meeting.infrastructure.persistence;
 
 import com.bangawo.meeting.domain.MeetingTravelBurden;
+import com.bangawo.meeting.domain.TravelPathPoint;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.util.List;
 
 @Entity
 @Table(
@@ -37,6 +42,10 @@ public class MeetingTravelBurdenJpaEntity {
     @Column(nullable = false)
     private int transfers;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "station_path", columnDefinition = "jsonb")
+    private List<TravelPathPoint> stationPath;
+
     public static MeetingTravelBurdenJpaEntity from(MeetingTravelBurden burden) {
         MeetingTravelBurdenJpaEntity entity = new MeetingTravelBurdenJpaEntity();
         entity.id = burden.getId();
@@ -45,6 +54,7 @@ public class MeetingTravelBurdenJpaEntity {
         entity.placeId = burden.getPlaceId();
         entity.seconds = burden.getSeconds();
         entity.transfers = burden.getTransfers();
+        entity.stationPath = burden.getStationPath();
         return entity;
     }
 
@@ -56,6 +66,7 @@ public class MeetingTravelBurdenJpaEntity {
                 .placeId(placeId)
                 .seconds(seconds)
                 .transfers(transfers)
+                .stationPath(stationPath)
                 .build();
     }
 }

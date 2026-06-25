@@ -269,6 +269,7 @@ erDiagram
         BIGINT place_id FK
         INT seconds "소요초"
         INT transfers "환승수"
+        JSONB station_path "경로[{stationId,lat,lng}] V29"
     }
     %% [장소선정 신규] meeting_confirmed_place — 확정 장소
     meeting_confirmed_place {
@@ -340,6 +341,6 @@ erDiagram
 | `meeting_place_pick` | **V21** (+**V28**) | 장소 담기 (모임원×장소). V28: `source`(USER/SYSTEM) 컬럼 + member_id nullable — 후보<3 시 추천 백필(SYSTEM) 적재, 투표 후보 집합 소스 |
 | `meeting_place_vote_session` | **V22** | 장소 투표 세션 (마감일) |
 | `meeting_place_vote` | **V23** | 장소 투표 (익명 집계) |
-| `meeting_travel_burden` | **V24** | 이동부담 스냅샷 (소요초/환승수) |
+| `meeting_travel_burden` | **V24** / V29 | 이동부담 스냅샷 (소요초/환승수/경로 station_path JSONB) |
 | `meeting_confirmed_place` | **V25** | 확정 장소 고정 저장 |
 | `meeting` locationStatus | **V26** | 4-state 데이터 마이그레이션 |
