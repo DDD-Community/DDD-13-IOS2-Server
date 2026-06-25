@@ -277,7 +277,6 @@ class PlaceVoteServiceTest {
                 .willReturn(List.of(userPick(100L), userPick(200L)));
         given(voteRepository.findBySessionId(99L))
                 .willReturn(List.of(MeetingPlaceVote.of(99L, 1L, 100L)));
-        given(travelBurdenRepository.findByMeetingId(1L)).willReturn(List.of());
         given(placeRepository.findByIds(any()))
                 .willReturn(List.of(place(100L, "가게A"), place(200L, "나게B")));
         given(meetingParticipantRepository.findByMeetingId(1L)).willReturn(List.of(

@@ -215,8 +215,9 @@ public class PlaceVoteService {
 
         /**
          * 투표 현황 조회.
-         * 흐름: 검증 → 후보/표/이동부담/장소/참여자 데이터 로드 → 집계(득표수·내 투표 여부·활성 참여 수)
+         * 흐름: 검증 → 후보/표/장소/참여자 데이터 로드 → 집계(득표수·내 투표 여부·활성 참여 수)
          *      → 후보 정렬(미투표=가나다순, 투표후=득표순) → 후보별/멤버별 응답 DTO 조립.
+         * 이동부담은 포함하지 않는다(PRD 12-3) — 상세는 거리보기 API(getPlaceTravelBurden) 참조.
          */
         @Transactional(readOnly = true)
         public PlaceVoteStatusResponse getVoteStatus(Long meetingId, Long memberId) {
@@ -246,11 +247,7 @@ public class PlaceVoteService {
                                 .filter(v -> memberId.equals(v.getMemberId()))
                                 .map(MeetingPlaceVote::getPlaceId).collect(Collectors.toSet());
 
-                // 4. 이동부담 스냅샷(장소별) + 장소 상세 로드
-                List<MeetingTravelBurden> allBurdens = travelBurdenRepository.findByMeetingId(meetingId);
-                Map<Long, List<MeetingTravelBurden>> burdensByPlaceId = allBurdens.stream()
-                                .collect(Collectors.groupingBy(MeetingTravelBurden::getPlaceId));
-
+                // 4. 후보 장소 상세 로드 (이동부담은 투표 현황에 미포함 — 거리보기 API에서 별도 제공)
                 Map<Long, Place> placeById = placeRepository.findByIds(candidatePlaceIds)
                                 .stream().collect(Collectors.toMap(Place::getId, p -> p));
 
@@ -274,25 +271,12 @@ public class PlaceVoteService {
                                 : nameAsc;
                 List<Long> sortedPlaceIds = candidatePlaceIds.stream().sorted(ordering).toList();
 
-                // 6. 후보별 응답 조립 — 각 후보의 멤버별 이동부담(최대 소요자 플래그 포함)과 득표/내투표 여부
+                // 6. 후보별 응답 조립 — 득표수 + 내 투표 여부 (이동부담 제외)
                 List<PlaceVoteStatusResponse.CandidateVoteInfo> candidates = sortedPlaceIds.stream()
-                                .map(placeId -> {
-                                        List<MeetingTravelBurden> burdens = burdensByPlaceId.getOrDefault(placeId,
-                                                        List.of());
-                                        long maxSec = burdens.stream()
-                                                        .mapToLong(MeetingTravelBurden::getSeconds).max().orElse(0);
-                                        List<PlaceVoteStatusResponse.MemberBurdenInfo> burdenInfos = burdens.stream()
-                                                        .map(b -> new PlaceVoteStatusResponse.MemberBurdenInfo(
-                                                                        b.getMemberId(), b.getSeconds(),
-                                                                        b.getTransfers(),
-                                                                        b.getSeconds() == maxSec))
-                                                        .toList();
-                                        return new PlaceVoteStatusResponse.CandidateVoteInfo(
-                                                        PlaceSummary.from(placeById.get(placeId)),
-                                                        voteCountByPlaceId.getOrDefault(placeId, 0L).intValue(),
-                                                        myVotedPlaceIds.contains(placeId),
-                                                        burdenInfos);
-                                })
+                                .map(placeId -> new PlaceVoteStatusResponse.CandidateVoteInfo(
+                                                PlaceSummary.from(placeById.get(placeId)),
+                                                voteCountByPlaceId.getOrDefault(placeId, 0L).intValue(),
+                                                myVotedPlaceIds.contains(placeId)))
                                 .toList();
 
                 // 멤버별 참여 현황 — 모든 호출자에게 제공(전원 공개). 활성 참여자 기준, 투표 대상은 비공개.

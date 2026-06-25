@@ -46,8 +46,9 @@ public class PlaceVoteController {
         placeVoteService.submitVote(meetingId, memberId, request.placeIds());
     }
 
-    @Operation(summary = "투표 현황 조회 — 후보별 득표수(익명) · 이동부담 · 모임원별 투표완료 현황(전원 공개)",
-            description = "후보=담긴 장소(백필 포함). 정렬: 미투표 시 가나다순 / 투표 후 득표순. memberStatuses는 호스트·구성원 모두에게 제공(완료여부만, 투표 대상은 비공개)")
+    @Operation(summary = "투표 현황 조회 — 후보별 득표수(익명) · 모임원별 투표완료 현황(전원 공개)",
+            description = "후보=담긴 장소(백필 포함). 정렬: 미투표 시 가나다순 / 투표 후 득표순. memberStatuses는 호스트·구성원 모두에게 제공(완료여부만, 투표 대상은 비공개). "
+                    + "이동부담은 PRD 12-3 범위 밖 — 친구들 거리보기 API(/{placeId}/travel-burden)에서 별도 제공")
     @GetMapping("/{meetingId}/place-vote")
     public PlaceVoteStatusResponse getVoteStatus(@PathVariable Long meetingId,
                                                   Authentication authentication) {

@@ -18,7 +18,8 @@
 
 ## GET /api/v1/meetings/{meetingId}/place-vote
 - ⭐ 후보 = 담긴 장소(백필 포함). 정렬: 투표 전 가나다순 / 후 득표순
-- 후보별 득표수(익명 집계), 내 투표, 후보별 이동부담(참여자별 소요시간·환승수, 최장 이동자)
+- 후보별 **득표수(익명 집계) + 내 투표 여부**만 제공
+- 🔄 (2026-06-25) **이동부담 제거** — PRD 12-3(투표 현황 = 득표수·참여인원) 범위 정렬. 이동부담은 친구들 거리보기 API에서만 제공
 - ⭐ 🔄 `memberStatuses[]`(구성원별 완료여부)는 **모든 호출자(호스트·구성원)** 에게 제공 (2026-06-24 변경: 전원 공개)
 - 각 후보 장소 정보는 `place`(PlaceSummary)로 내려감
 ```json
@@ -29,8 +30,7 @@
   "candidates": [
     {
       "place": { "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ...", "latitude": 37.5, "longitude": 127.0 },
-      "voteCount": 3, "isMyVote": true,
-      "travelBurdens": [ { "memberId": 1, "seconds": 1800, "transfers": 1, "isLongest": false } ]
+      "voteCount": 3, "isMyVote": true
     }
   ]
 }
