@@ -1,6 +1,7 @@
 package com.bangawo.subway.infrastructure.persistence;
 
 import com.bangawo.subway.domain.StationCandidate;
+import com.bangawo.subway.domain.StationCoordinate;
 import com.bangawo.subway.domain.SubwayStationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -33,5 +34,20 @@ public class SubwayStationRepositoryImpl implements SubwayStationRepository {
     @Override
     public Optional<Long> findNearestStationId(double latitude, double longitude) {
         return jpaRepository.findNearestStationId(latitude, longitude);
+    }
+
+    @Override
+    public List<StationCoordinate> findCoordinatesByIds(List<Long> stationIds) {
+        if (stationIds.isEmpty()) {
+            return List.of();
+        }
+        return jpaRepository.findCoordinatesByIds(stationIds)
+                .stream()
+                .map(row -> new StationCoordinate(
+                        ((Number) row[0]).longValue(),
+                        ((Number) row[1]).doubleValue(),
+                        ((Number) row[2]).doubleValue()
+                ))
+                .toList();
     }
 }

@@ -22,14 +22,6 @@ public record PlaceVoteStatusResponse(
     public record CandidateVoteInfo(
             PlaceSummary place,
             int voteCount,
-            boolean isMyVote,
-            List<MemberBurdenInfo> travelBurdens
-    ) {}
-
-    public record MemberBurdenInfo(
-            Long memberId,
-            int seconds,
-            int transfers,
-            boolean isLongest
+            boolean isMyVote
     ) {}
 }

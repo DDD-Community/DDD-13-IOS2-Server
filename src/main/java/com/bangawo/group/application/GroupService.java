@@ -52,9 +52,13 @@ public class GroupService {
         var departure = departurePlaceRepository.findDefaultByMemberId(memberId);
         Double lat = departure.map(d -> d.getCoordinate().getLatitude()).orElse(null);
         Double lng = departure.map(d -> d.getCoordinate().getLongitude()).orElse(null);
+        String depLabel = departure.map(d -> d.getLabel()).orElse(null);
+        String depPlaceName = departure.map(d -> d.getPlaceName()).orElse(null);
+        String depAddress = departure.map(d -> d.resolvedAddress()).orElse(null);
         meetingParticipantRepository.save(
                 MeetingParticipant.create(meeting.getId(), memberId, lat, lng,
-                        com.bangawo.group.domain.AttendanceStatus.JOIN.name())
+                        com.bangawo.group.domain.AttendanceStatus.JOIN.name(),
+                        depLabel, depPlaceName, depAddress)
         );
 
         return new CreateGroupResponse(group.getId(), meeting.getId(), group.getName(), group.getThemeTagCode());

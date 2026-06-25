@@ -39,6 +39,38 @@
 - 환승수 = 최단경로상 **TRANSFER 엣지 통과 수**
 - **투표 시작 시 1회 계산 → meeting_travel_burden DB 스냅샷** (Cloud Run 다중 인스턴스 안전)
 - 후보별 최장 이동자 식별(UI 강조용)
+- 🔄 (2026-06-25) 노출 위치 = **친구들 거리보기 API 전용**. 투표 현황(getVoteStatus)에는 **미포함**(PRD 12-3 = 득표수·참여인원만). 스냅샷 계산/저장은 거리보기용으로 유지.
+
+## 이동 경로 스냅샷 ⭐ (2026-06-25 추가)
+- 이동부담 계산과 **동일한 다익스트라 1회**로 **출발역→도착역 경로**도 함께 산출(prev 추적 + 경로복원).
+- 경로 = `[{stationId, latitude, longitude}, ...]` **출발지부터 목적지까지 순서 리스트**.
+- 저장 = `meeting_travel_burden.station_path` **JSONB 단일 컬럼**(반정규화). 별도 경로 테이블 금지(행 폭증 회피).
+- 좌표는 `subway_station` 기준 배치 조회로 채움.
+- 도달 불가 시 경로 = **빈 리스트** (seconds는 기존대로 무한대 처리).
+- 노출: **친구들 거리보기 API에만** 경로 포함. 투표 현황(getVoteStatus)은 요약만 유지(경로 미포함).
+
+## 친구들 거리보기 응답 ⭐ (2026-06-25 보강)
+- 멤버 기준 = 해당 모임 **활성 참여자(ABSENT 제외) 전원**(요청자 본인 포함).
+- burden 스냅샷 없는 멤버도 포함 → `seconds`/`transfers`=null, `path`=[].
+- 멤버별 제공: 닉네임, **출발지 이름(departureName)**, **본인 여부(isMe)**, 소요시간/환승, 경로, 최장이동자 플래그.
+- `isLongest` = **소요시간 보유 멤버 중** 최대값에만 true.
+- 신규 계산 없음(스냅샷 + 멤버 조회만).
+
+## 출발지 메타 저장 ⭐ (2026-06-25 추가)
+- `meeting_participant`에 출발지 **이름 메타를 직접 저장**(좌표 역매칭 폐기).
+  - `departure_label`(별칭), `departure_place_name`(카카오 장소명 nullable), `departure_address`(도로명 우선)
+- 저장 시점 = 참여자 출발지가 정해지는 **쓰기 시점**(모임 생성/초대 합류/출발지 변경). DeparturePlace에서 메타 추출해 함께 저장.
+- **표시명 규칙** `departureName()` = `placeName != null ? placeName : label` (둘 다 없으면 null).
+- 의미 = **참여 당시 스냅샷**. 회원이 나중에 저장 출발지를 수정해도 과거 참여 행은 불변.
+- 거리보기/참여자조회의 `departureName`은 이 저장값을 그대로 사용(좌표↔DeparturePlace 매칭 로직 제거).
+- 기존 행은 V30에서 기본 출발지 기준 best-effort 백필, 매칭 불가 시 null.
+
+## 장소투표 참여 팀원 조회 ⭐ (2026-06-25 추가)
+- 검증 = 모임 존재 + 호출자 그룹원 + **VOTING 상태 필수**(아니면 `PLACE_VOTE_NOT_IN_PROGRESS`).
+- 대상 = **활성 참여자(ABSENT 제외) 전원**.
+- 멤버별 제공: `memberId`, `name`(nickname), `profileImageUrl`(원본 object key), `departureName`(저장 메타), `isMe`(본인여부), `voted`(현재 세션 1표+ 제출 여부).
+- 익명성 무관(완료여부 노출은 기존 정책과 동일, 투표 대상은 비공개).
+- 정렬 = 참여 등록순.
 
 ## 전환 (CONFIRMED, 하나라도 충족)
 1. 전원 투표완료

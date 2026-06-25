@@ -10,6 +10,7 @@ import com.bangawo.group.domain.GroupMemberRole;
 import com.bangawo.meeting.domain.*;
 import com.bangawo.meeting.presentation.dto.PlaceTravelBurdenResponse;
 import com.bangawo.meeting.presentation.dto.PlaceVoteStatusResponse;
+import com.bangawo.meeting.presentation.dto.VoteParticipantsResponse;
 import com.bangawo.place.domain.Place;
 import com.bangawo.place.domain.PlaceRepository;
 import com.bangawo.subway.domain.SubwayGraph;
@@ -103,6 +104,20 @@ class PlaceVoteServiceTest {
 
     private Member member(Long id, String nickname) {
         return Member.builder().id(id).nickname(nickname).build();
+    }
+
+    private MeetingParticipant participant(Long memberId, Double lat, Double lng) {
+        return MeetingParticipant.builder()
+                .meetingId(1L).memberId(memberId).latitude(lat).longitude(lng)
+                .attendanceStatus("JOIN").build();
+    }
+
+    private MeetingParticipant participant(Long memberId, Double lat, Double lng,
+                                           String label, String placeName) {
+        return MeetingParticipant.builder()
+                .meetingId(1L).memberId(memberId).latitude(lat).longitude(lng)
+                .attendanceStatus("JOIN")
+                .departureLabel(label).departurePlaceName(placeName).build();
     }
 
     // ---------- startVoting ----------
@@ -235,8 +250,8 @@ class PlaceVoteServiceTest {
         given(meetingPlacePickRepository.findByMeetingId(1L))
                 .willReturn(List.of(userPick(100L), userPick(200L), userPick(300L), userPick(400L)));
         given(meetingParticipantRepository.findByMeetingId(1L)).willReturn(List.of(
-                MeetingParticipant.create(1L, 1L, 37.5, 127.0, "ATTENDING"),
-                MeetingParticipant.create(1L, 2L, 37.6, 127.1, "ATTENDING")));
+                MeetingParticipant.create(1L, 1L, 37.5, 127.0, "ATTENDING", null, null, null),
+                MeetingParticipant.create(1L, 2L, 37.6, 127.1, "ATTENDING", null, null, null)));
         given(voteRepository.countDistinctVotersBySessionId(99L)).willReturn(1L);
 
         List<MeetingPlaceVote> votes = service.submitVote(1L, 1L, List.of(100L, 200L));
@@ -262,12 +277,11 @@ class PlaceVoteServiceTest {
                 .willReturn(List.of(userPick(100L), userPick(200L)));
         given(voteRepository.findBySessionId(99L))
                 .willReturn(List.of(MeetingPlaceVote.of(99L, 1L, 100L)));
-        given(travelBurdenRepository.findByMeetingId(1L)).willReturn(List.of());
         given(placeRepository.findByIds(any()))
                 .willReturn(List.of(place(100L, "가게A"), place(200L, "나게B")));
         given(meetingParticipantRepository.findByMeetingId(1L)).willReturn(List.of(
-                MeetingParticipant.create(1L, 1L, 37.5, 127.0, "ATTENDING"),
-                MeetingParticipant.create(1L, 2L, 37.6, 127.1, "ATTENDING")));
+                MeetingParticipant.create(1L, 1L, 37.5, 127.0, "ATTENDING", null, null, null),
+                MeetingParticipant.create(1L, 2L, 37.6, 127.1, "ATTENDING", null, null, null)));
         given(memberRepository.findAllById(any()))
                 .willReturn(List.of(member(1L, "홍길동"), member(2L, "김철수")));
 
@@ -283,23 +297,102 @@ class PlaceVoteServiceTest {
     // ---------- getPlaceTravelBurden (친구들 거리보기) ----------
 
     @Test
-    void getPlaceTravelBurden_returns_member_burdens_with_longest_flag() {
+    void getPlaceTravelBurden_returns_all_active_members_with_path_departure_isMe() {
         given(meetingRepository.findById(1L)).willReturn(Optional.of(votingMeeting));
         given(groupMemberRepository.findByGroupIdAndMemberId(10L, 1L))
                 .willReturn(Optional.of(hostGroupMember));
+        // 활성 참여자 3명 (출발지 메타 스냅샷 직접 저장, 3번은 출발지 없음)
+        given(meetingParticipantRepository.findByMeetingId(1L)).willReturn(List.of(
+                participant(1L, 37.49, 127.02, "라벨무시", "집"),
+                participant(2L, 37.60, 127.10, "회사", null),
+                participant(3L, null, null, null, null)));
         given(travelBurdenRepository.findByMeetingIdAndPlaceId(1L, 100L)).willReturn(List.of(
-                MeetingTravelBurden.of(1L, 1L, 100L, 1800, 1),
-                MeetingTravelBurden.of(1L, 2L, 100L, 3000, 2)));
+                MeetingTravelBurden.of(1L, 1L, 100L, 1800, 1, List.of(
+                        new TravelPathPoint(201L, 37.49, 127.02),
+                        new TravelPathPoint(245L, 37.50, 127.00))),
+                MeetingTravelBurden.of(1L, 2L, 100L, 3000, 2, List.of())));
         given(memberRepository.findAllById(any()))
-                .willReturn(List.of(member(1L, "홍길동"), member(2L, "김철수")));
+                .willReturn(List.of(member(1L, "홍길동"), member(2L, "김철수"), member(3L, "이영희")));
         given(placeRepository.findByIds(List.of(100L))).willReturn(List.of(place(100L, "가게A")));
 
         PlaceTravelBurdenResponse res = service.getPlaceTravelBurden(1L, 100L, 1L);
 
         assertThat(res.place().placeId()).isEqualTo(100L);
-        assertThat(res.burdens()).hasSize(2);
+        assertThat(res.burdens()).hasSize(3);
         assertThat(res.burdens())
-                .anySatisfy(b -> { assertThat(b.memberId()).isEqualTo(2L); assertThat(b.isLongest()).isTrue(); })
-                .anySatisfy(b -> { assertThat(b.memberId()).isEqualTo(1L); assertThat(b.isLongest()).isFalse(); });
+                .anySatisfy(b -> { // 본인 + 좌표매칭 placeName + 경로
+                    assertThat(b.memberId()).isEqualTo(1L);
+                    assertThat(b.isMe()).isTrue();
+                    assertThat(b.departureName()).isEqualTo("집");
+                    assertThat(b.isLongest()).isFalse();
+                    assertThat(b.seconds()).isEqualTo(1800);
+                    assertThat(b.path()).hasSize(2);
+                    assertThat(b.path().get(0).stationId()).isEqualTo(201L);
+                })
+                .anySatisfy(b -> { // 최장 + label fallback
+                    assertThat(b.memberId()).isEqualTo(2L);
+                    assertThat(b.isMe()).isFalse();
+                    assertThat(b.departureName()).isEqualTo("회사");
+                    assertThat(b.isLongest()).isTrue();
+                    assertThat(b.path()).isEmpty();
+                })
+                .anySatisfy(b -> { // 스냅샷 없는 멤버 = null
+                    assertThat(b.memberId()).isEqualTo(3L);
+                    assertThat(b.seconds()).isNull();
+                    assertThat(b.transfers()).isNull();
+                    assertThat(b.departureName()).isNull();
+                    assertThat(b.isLongest()).isFalse();
+                    assertThat(b.path()).isEmpty();
+                });
+    }
+
+    // ---------- getVoteParticipants (장소투표 참여 팀원 조회) ----------
+
+    @Test
+    void getVoteParticipants_returns_active_members_with_departure_and_voted() {
+        given(meetingRepository.findById(1L)).willReturn(Optional.of(votingMeeting));
+        given(groupMemberRepository.findByGroupIdAndMemberId(10L, 1L))
+                .willReturn(Optional.of(hostGroupMember));
+        given(voteSessionRepository.findByMeetingId(1L))
+                .willReturn(Optional.of(MeetingPlaceVoteSession.builder().id(99L).meetingId(1L).build()));
+        // 활성 2명 + ABSENT 1명(제외)
+        given(meetingParticipantRepository.findByMeetingId(1L)).willReturn(List.of(
+                participant(1L, 37.49, 127.02, "라벨무시", "집"),
+                participant(2L, 37.60, 127.10, "회사", null),
+                MeetingParticipant.create(1L, 3L, null, null, "ABSENT", null, null, null)));
+        // 1번만 투표 제출
+        given(voteRepository.findBySessionId(99L))
+                .willReturn(List.of(MeetingPlaceVote.of(99L, 1L, 100L)));
+        given(memberRepository.findAllById(any()))
+                .willReturn(List.of(member(1L, "홍길동"), member(2L, "김철수")));
+
+        VoteParticipantsResponse res = service.getVoteParticipants(1L, 1L);
+
+        assertThat(res.participants()).hasSize(2);
+        assertThat(res.participants())
+                .anySatisfy(p -> {
+                    assertThat(p.memberId()).isEqualTo(1L);
+                    assertThat(p.name()).isEqualTo("홍길동");
+                    assertThat(p.departureName()).isEqualTo("집");
+                    assertThat(p.isMe()).isTrue();
+                    assertThat(p.voted()).isTrue();
+                })
+                .anySatisfy(p -> {
+                    assertThat(p.memberId()).isEqualTo(2L);
+                    assertThat(p.departureName()).isEqualTo("회사");
+                    assertThat(p.isMe()).isFalse();
+                    assertThat(p.voted()).isFalse();
+                });
+    }
+
+    @Test
+    void getVoteParticipants_throws_when_not_voting() {
+        given(meetingRepository.findById(1L)).willReturn(Optional.of(recommendedMeeting));
+        given(groupMemberRepository.findByGroupIdAndMemberId(10L, 1L))
+                .willReturn(Optional.of(hostGroupMember));
+
+        assertThatThrownBy(() -> service.getVoteParticipants(1L, 1L))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.PLACE_VOTE_NOT_IN_PROGRESS);
     }
 }

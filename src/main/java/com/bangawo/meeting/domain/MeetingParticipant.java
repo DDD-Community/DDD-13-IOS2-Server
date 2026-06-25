@@ -12,25 +12,37 @@ public class MeetingParticipant {
     private Double latitude;
     private Double longitude;
     private String attendanceStatus;
+    private String departureLabel;
+    private String departurePlaceName;
+    private String departureAddress;
 
     @Builder
     public MeetingParticipant(Long id, Long meetingId, Long memberId,
-                               Double latitude, Double longitude, String attendanceStatus) {
+                               Double latitude, Double longitude, String attendanceStatus,
+                               String departureLabel, String departurePlaceName, String departureAddress) {
         this.id = id;
         this.meetingId = meetingId;
         this.memberId = memberId;
         this.latitude = latitude;
         this.longitude = longitude;
         this.attendanceStatus = attendanceStatus;
+        this.departureLabel = departureLabel;
+        this.departurePlaceName = departurePlaceName;
+        this.departureAddress = departureAddress;
     }
 
     public static MeetingParticipant create(Long meetingId, Long memberId,
                                              Double latitude, Double longitude,
-                                             String attendanceStatus) {
+                                             String attendanceStatus,
+                                             String departureLabel, String departurePlaceName,
+                                             String departureAddress) {
         return MeetingParticipant.builder()
                 .meetingId(meetingId).memberId(memberId)
                 .latitude(latitude).longitude(longitude)
                 .attendanceStatus(attendanceStatus)
+                .departureLabel(departureLabel)
+                .departurePlaceName(departurePlaceName)
+                .departureAddress(departureAddress)
                 .build();
     }
 
@@ -38,8 +50,17 @@ public class MeetingParticipant {
         return latitude != null && longitude != null;
     }
 
-    public void updateDeparture(double latitude, double longitude) {
+    public void updateDeparture(double latitude, double longitude,
+                                String departureLabel, String departurePlaceName, String departureAddress) {
         this.latitude = latitude;
         this.longitude = longitude;
+        this.departureLabel = departureLabel;
+        this.departurePlaceName = departurePlaceName;
+        this.departureAddress = departureAddress;
+    }
+
+    /** 출발지 표시명: 카카오 장소명 우선, 없으면 사용자 별칭, 둘 다 없으면 null */
+    public String departureName() {
+        return departurePlaceName != null ? departurePlaceName : departureLabel;
     }
 }

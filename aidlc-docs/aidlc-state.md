@@ -95,9 +95,69 @@
 9. 푸시 알림 / 미응답 리마인드 / 실시간 투표현황 / H3 히스토리 / 낮은반응감지 → **MVP 제외**
 10. **친구들 거리보기 = 포함** (2026-06-24 변경: MVP제외→포함). 단일 장소 이동부담 조회 API 신규(R9), 스냅샷 재사용
 
+## New Cycle (진행중) — FC-12 보완: 이동경로(station path) 스냅샷 저장
+- **Feature**: 친구들 거리보기에 실제 이동경로(거쳐가는 역 좌표) 노출. 기존 FC-12 확장(새 폴더 금지).
+- **Type**: Brownfield 수정/확장 (fc12 FC 폴더 갱신)
+- **Session Start**: 2026-06-25
+- **STEP 1 Workspace Detection**: 완료 — Brownfield, RE 아티팩트 존재·현행 유지 → RE SKIP
+- **STEP 2 Reverse Engineering**: SKIP (meeting/subway 컨텍스트 직접 검토 완료)
+- **STEP 3 Requirements Analysis**: 완료 — requirements-fc12-station-path.md
+- **STEP 4 User Stories**: SKIP (백엔드 API·역할 단순·데이터 보강)
+- **STEP 5 Workflow Planning**: SKIP (단일 단위, 직접 AD)
+- **STEP 6 Application Design**: 완료 — application-design-fc12-station-path.md
+- **STEP 7 Units Generation**: SKIP (단일 단위)
+- **Review Artifacts**: 완료 — fc12 각4(rules/api/erd/flow) + project-erd 갱신 (새 폴더 미생성)
+- **CONSTRUCTION**: 완료 — V29(station_path JSONB), dijkstra prev/경로복원, 좌표 배치조회, 스냅샷 저장+응답 노출. Build & Test 94 passed.
+
+### 확정된 결정사항 (이번 사이클)
+1. 경로 저장 = 기존 `meeting_travel_burden`에 `station_path JSONB` 컬럼(반정규화). 별도 테이블 금지(행 폭증 회피).
+2. 경로 = `[{stationId, latitude, longitude}, ...]` 출발→도착 순서.
+3. dijkstra가 비용+경로(prev) 동시 반환(단일 계산 재사용). 호출부 PlaceVoteService 1곳.
+4. 좌표는 subway_station 배치 조회로 채움. 도달 불가 시 경로 빈 리스트.
+5. 경로 노출은 친구들 거리보기(R9)에만. getVoteStatus는 요약만 유지.
+
+## Cycle (완료) — FC-12 보완: 친구들 거리보기 응답 보강
+- **Feature**: 거리보기 응답을 모임 활성 참여자 전원으로 + 출발지이름/본인여부/경로 노출. 기존 FC-12 확장.
+- **Type**: Brownfield 수정/확장 (fc12 FC 폴더 갱신)
+- **Session Start**: 2026-06-25
+- **STEP 1~2**: SKIP (Brownfield, RE 현행 유지)
+- **STEP 3 Requirements Analysis**: 완료 — requirements-fc12-travel-burden-view.md
+- **STEP 4/5/7**: SKIP (백엔드 API·단일 단위)
+- **STEP 6 Application Design**: 완료 — application-design-fc12-travel-burden-view.md
+- **Review Artifacts**: 완료 — fc12 rules/api/flow 갱신 (스키마 변경 없음 → erd/project-erd 미변경)
+- **CONSTRUCTION**: 완료 — PlaceTravelBurdenResponse 확장(departureName/isMe/nullable seconds), getPlaceTravelBurden 참여자기준 재작성 + 출발지 좌표매칭. Build & Test 94 passed.
+
+### 확정된 결정사항 (이번 사이클)
+1. 거리보기 멤버 기준 = 모임 활성 참여자(ABSENT 제외) 전원, 요청자 포함. 스냅샷 없는 멤버도 포함(seconds/transfers=null, path=[]).
+2. departureName = 참여자 좌표↔DeparturePlace 매칭(placeName→label) → 기본 출발지 → null. 읽기 시점 해석, 스키마 변경 없음.
+3. isMe = 요청자 본인 여부. isLongest = 소요시간 보유 멤버 중 최대.
+
+## New Cycle (진행중) — FC-12 보완: "현재 장소 참여중인 팀원" 조회 API
+- **Feature**: meetingId로 현재 투표 참여 대상 팀원 목록(이름·프로필·출발지·투표여부) 조회. 기존 FC-12 확장(새 폴더 금지).
+- **Type**: Brownfield 신규 read-only 엔드포인트 (fc12 FC 폴더 갱신)
+- **Session Start**: 2026-06-25
+- **STEP 1 Workspace Detection**: 완료 — Brownfield, RE 아티팩트 존재·현행 유지 → RE SKIP
+- **STEP 2 Reverse Engineering**: SKIP (meeting 컨텍스트 직접 검토 완료)
+- **STEP 3 Requirements Analysis**: 완료 — requirements-fc12-vote-participants.md (스코프 확대: 출발지 메타 저장 + 신규 조회 API)
+- **STEP 4 User Stories**: SKIP (백엔드 API·역할 단순)
+- **STEP 5 Workflow Planning**: SKIP (단일 단위, 직접 AD)
+- **STEP 6 Application Design**: 완료 — application-design-fc12-vote-participants.md (V30, MeetingParticipant 메타필드, 쓰기3경로, 거리보기 리팩터, 신규 getVoteParticipants)
+- **STEP 7 Units Generation**: SKIP (단일 단위)
+- **Review Artifacts**: 완료 — fc12 각4(rules/api/erd/flow) + project-erd 갱신 (새 폴더 미생성)
+- **CONSTRUCTION**: 완료 — V30, MeetingParticipant 메타필드/departureName(), JpaEntity 매핑, 쓰기3경로(GroupService/GroupInviteService/PlaceSelectionService), getPlaceTravelBurden 좌표역매칭 제거, 신규 getVoteParticipants + VoteParticipantsResponse + Controller. Build & Test 96 passed.
+
+### 확정된 결정사항 (이번 사이클)
+1. 출발지 이름을 meeting_participant에 **직접 저장**(V30: departure_label/place_name/address). 좌표 역매칭 폐기.
+2. 쓰기 3경로(GroupService/GroupInviteService/PlaceSelectionService) 모두 DeparturePlace 메타 함께 저장.
+3. departureName() = placeName→label. 참여 당시 스냅샷(이후 출발지 수정 무관).
+4. getPlaceTravelBurden 리팩터 — resolveDepartureName/좌표매칭 제거, 저장값 사용.
+5. 신규 API GET /place-vote/participants — VOTING 필수, 활성참여자 전원, 멤버별 {name, profileImageUrl(원본key), departureName, isMe, voted}.
+6. 기존 행 V30 best-effort 백필(기본 출발지 기준), 매칭 불가 시 null.
+7. MeetingParticipant.create 시그니처 변경 → 기존 테스트 호출부 수정 필요.
+
 ## Phase
 - phase: OPERATIONS
 - stage: READY
 - status: AWAITING_START
-- last_updated: 2026-06-24T00:00:00+09:00
-- note: FC-12/13 보완 CONSTRUCTION 완료 (Build & Test 94 passed). V28 적용. @operations에서 배포 진행.
+- last_updated: 2026-06-25T00:00:00+09:00
+- note: FC-12 출발지 메타 저장(V30) + 장소투표 참여 팀원 조회 API 구현 완료. Build & Test 96 passed. @operations에서 배포 진행.

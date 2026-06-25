@@ -72,4 +72,11 @@ public interface SubwayStationJpaRepository extends JpaRepository<SubwayStationJ
             """)
     Optional<Long> findNearestStationId(@Param("latitude") double latitude,
                                         @Param("longitude") double longitude);
+
+    @Query(nativeQuery = true, value = """
+            SELECT s.station_id, s.latitude, s.longitude
+            FROM subway_station s
+            WHERE s.station_id IN (:ids)
+            """)
+    List<Object[]> findCoordinatesByIds(@Param("ids") List<Long> ids);
 }
