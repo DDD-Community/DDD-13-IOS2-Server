@@ -112,7 +112,7 @@ class PlaceSelectionServiceTest {
     void 출발지_미등록_참여자가_있으면_PARTICIPANT_DEPARTURE_NOT_SET() {
         when(meetingRepository.findById(1L)).thenReturn(Optional.of(meetingReadyForLocationPhase()));
         when(groupMemberRepository.findByGroupIdAndMemberId(10L, 20L)).thenReturn(Optional.of(host()));
-        MeetingParticipant noDeparture = MeetingParticipant.create(1L, 20L, null, null, AttendanceStatus.JOIN.name());
+        MeetingParticipant noDeparture = MeetingParticipant.create(1L, 20L, null, null, AttendanceStatus.JOIN.name(), null, null, null);
         when(meetingParticipantRepository.findByMeetingId(1L)).thenReturn(List.of(noDeparture));
 
         assertThatThrownBy(() -> service.startLocationPhase(1L, 20L, null))
@@ -125,7 +125,7 @@ class PlaceSelectionServiceTest {
         Meeting meeting = meetingReadyForLocationPhase();
         when(meetingRepository.findById(1L)).thenReturn(Optional.of(meeting));
         when(groupMemberRepository.findByGroupIdAndMemberId(10L, 20L)).thenReturn(Optional.of(host()));
-        MeetingParticipant participant = MeetingParticipant.create(1L, 20L, 37.5, 127.0, AttendanceStatus.JOIN.name());
+        MeetingParticipant participant = MeetingParticipant.create(1L, 20L, 37.5, 127.0, AttendanceStatus.JOIN.name(), null, null, null);
         when(meetingParticipantRepository.findByMeetingId(1L)).thenReturn(List.of(participant));
         when(midpointCalculationService.calculate(1L)).thenReturn(threeStations());
 
@@ -145,7 +145,7 @@ class PlaceSelectionServiceTest {
         Meeting meeting = meetingReadyForLocationPhase();
         when(meetingRepository.findById(1L)).thenReturn(Optional.of(meeting));
         when(groupMemberRepository.findByGroupIdAndMemberId(10L, 20L)).thenReturn(Optional.of(host()));
-        MeetingParticipant participant = MeetingParticipant.create(1L, 20L, 37.5, 127.0, AttendanceStatus.JOIN.name());
+        MeetingParticipant participant = MeetingParticipant.create(1L, 20L, 37.5, 127.0, AttendanceStatus.JOIN.name(), null, null, null);
         when(meetingParticipantRepository.findByMeetingId(1L)).thenReturn(List.of(participant));
         when(midpointCalculationService.calculate(1L)).thenReturn(threeStations());
 
@@ -164,7 +164,7 @@ class PlaceSelectionServiceTest {
         Meeting meeting = meetingReadyForLocationPhase();
         when(meetingRepository.findById(1L)).thenReturn(Optional.of(meeting));
         when(groupMemberRepository.findByGroupIdAndMemberId(10L, 20L)).thenReturn(Optional.of(host()));
-        MeetingParticipant participant = MeetingParticipant.create(1L, 20L, 37.5, 127.0, AttendanceStatus.JOIN.name());
+        MeetingParticipant participant = MeetingParticipant.create(1L, 20L, 37.5, 127.0, AttendanceStatus.JOIN.name(), null, null, null);
         when(meetingParticipantRepository.findByMeetingId(1L)).thenReturn(List.of(participant));
         when(midpointCalculationService.calculate(1L)).thenReturn(threeStations());
         when(placeRepository.findCandidates(anyList(), anyDouble(), eq(null), eq(null))).thenReturn(List.of());

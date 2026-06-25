@@ -623,3 +623,18 @@ Clarification 2 원문: "A가 가장 괜찮아보이네 역 후보도 보여줘�
   - PlaceVoteService: DeparturePlaceRepository 의존 추가, getPlaceTravelBurden을 활성 참여자 전원 기준으로 재작성(스냅샷 좌결합), resolveDepartureName(좌표매칭→기본→null)
   - 테스트 갱신: 참여자 전원/departureName/isMe/null seconds 검증
 - Build & Test: 94 passed, 0 failures.
+- 스코프 변경(사용자): 출발지 이름을 meeting_participant에 직접 저장하도록 스키마 보강 추가.
+- STEP 3 RA: 완료 — requirements-fc12-vote-participants.md.
+- STEP 4/5/7: SKIP. STEP 6 AD: 완료 — application-design-fc12-vote-participants.md.
+- Review Artifacts: fc12 rules/api/erd/flow + project-erd 갱신(새 폴더 미생성). Gate 통과.
+- Inception 완료, 사용자 승인 대기 (GATE).
+
+## [2026-06-25] CONSTRUCTION — FC-12 출발지 메타 + 참여 팀원 조회 API
+- V30: meeting_participant 출발지 메타 3컬럼 + 기본출발지 백필.
+- 도메인 MeetingParticipant: 메타필드 + create/updateDeparture 시그니처 확장 + departureName().
+- JpaEntity 매핑, DeparturePlace.resolvedAddress() 추가.
+- 쓰기 3경로(GroupService/GroupInviteService/PlaceSelectionService) 메타 저장.
+- getPlaceTravelBurden 좌표 역매칭(resolveDepartureName/coordMatches/departurePlaceRepository) 제거 → 저장값 사용.
+- 신규 GET /place-vote/participants — getVoteParticipants + VoteParticipantsResponse + Controller.
+- 테스트: 5-arg create 호출 수정, 거리보기 테스트 메타 기반 전환, 신규 API 2테스트 추가.
+- Build & Test: 96 passed, 0 failures.

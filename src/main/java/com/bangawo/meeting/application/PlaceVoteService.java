@@ -10,8 +10,7 @@ import com.bangawo.group.domain.GroupMemberRole;
 import com.bangawo.meeting.domain.*;
 import com.bangawo.meeting.presentation.dto.PlaceTravelBurdenResponse;
 import com.bangawo.meeting.presentation.dto.PlaceVoteStatusResponse;
-import com.bangawo.member.domain.departure.DeparturePlace;
-import com.bangawo.member.domain.departure.DeparturePlaceRepository;
+import com.bangawo.meeting.presentation.dto.VoteParticipantsResponse;
 import com.bangawo.place.domain.Place;
 import com.bangawo.place.domain.PlaceRepository;
 import com.bangawo.place.presentation.dto.PlaceSummary;
@@ -60,9 +59,6 @@ public class PlaceVoteService {
         private final PlaceConfirmService placeConfirmService;
         private final PlaceRepository placeRepository;
         private final MemberRepository memberRepository;
-        private final DeparturePlaceRepository departurePlaceRepository;
-
-        private static final double COORD_EPSILON = 1e-6;
 
         /**
          * 장소 투표 시작 (HOST 전용).
@@ -341,14 +337,11 @@ public class PlaceVoteService {
                 int maxSec = burdenByMemberId.values().stream()
                                 .mapToInt(MeetingTravelBurden::getSeconds).max().orElse(Integer.MIN_VALUE);
 
-                // 4. 멤버 닉네임 + 출발지 배치 조회
+                // 4. 멤버 닉네임 배치 조회 (출발지 이름은 참여자 스냅샷에서 직접 사용)
                 List<Long> memberIds = activeParticipants.stream()
                                 .map(MeetingParticipant::getMemberId).toList();
                 Map<Long, Member> memberById = memberRepository.findAllById(new HashSet<>(memberIds)).stream()
                                 .collect(Collectors.toMap(Member::getId, m -> m));
-                Map<Long, List<DeparturePlace>> departuresByMemberId = departurePlaceRepository
-                                .findAllByMemberIdIn(memberIds).stream()
-                                .collect(Collectors.groupingBy(DeparturePlace::getMemberId));
 
                 Place place = placeRepository.findByIds(List.of(placeId)).stream().findFirst().orElse(null);
 
@@ -370,8 +363,7 @@ public class PlaceVoteService {
                                                                                         pt.longitude()))
                                                                         .toList()
                                                         : List.of();
-                                        String departureName = resolveDepartureName(p,
-                                                        departuresByMemberId.getOrDefault(mid, List.of()));
+                                        String departureName = p.departureName();
 
                                         return new PlaceTravelBurdenResponse.MemberBurden(
                                                         mid, name, departureName, mid.equals(requestMemberId),
@@ -383,29 +375,53 @@ public class PlaceVoteService {
         }
 
         /**
-         * 출발지 이름 해석: 참여자 좌표와 일치하는 출발지(placeName→label) →
-         * 없으면 기본 출발지 → 그래도 없으면 null.
+         * 현재 장소투표에 참여중인 팀원 조회.
+         * 흐름: 모임/그룹원/VOTING 검증 → 세션 확인 → 활성 참여자 + 표(투표자) + 회원 배치조회
+         *      → 참여자별 {이름·프로필·출발지명·본인여부·투표여부} 조립(등록순).
          */
-        private String resolveDepartureName(MeetingParticipant participant, List<DeparturePlace> departures) {
-                if (!participant.hasCoordinate() || departures.isEmpty()) {
-                        return departures.stream().filter(DeparturePlace::isDefault).findFirst()
-                                        .map(this::departureLabel).orElse(null);
+        @Transactional(readOnly = true)
+        public VoteParticipantsResponse getVoteParticipants(Long meetingId, Long memberId) {
+                // 1. 모임 + 그룹원 검증
+                Meeting meeting = meetingRepository.findById(meetingId)
+                                .orElseThrow(() -> new BusinessException(ErrorCode.MEETING_NOT_FOUND));
+                groupMemberRepository.findByGroupIdAndMemberId(meeting.getGroupId(), memberId)
+                                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_GROUP_MEMBER));
+
+                // 2. 투표 진행 중 상태 + 세션 확인
+                if (meeting.getLocationStatus() != LocationStatus.VOTING) {
+                        throw new BusinessException(ErrorCode.PLACE_VOTE_NOT_IN_PROGRESS);
                 }
-                return departures.stream()
-                                .filter(d -> coordMatches(d, participant))
-                                .findFirst()
-                                .map(this::departureLabel)
-                                .orElseGet(() -> departures.stream().filter(DeparturePlace::isDefault).findFirst()
-                                                .map(this::departureLabel).orElse(null));
-        }
+                MeetingPlaceVoteSession session = voteSessionRepository.findByMeetingId(meetingId)
+                                .orElseThrow(() -> new BusinessException(ErrorCode.PLACE_VOTE_NOT_IN_PROGRESS));
 
-        private boolean coordMatches(DeparturePlace d, MeetingParticipant p) {
-                return Math.abs(d.getCoordinate().getLatitude() - p.getLatitude()) < COORD_EPSILON
-                                && Math.abs(d.getCoordinate().getLongitude() - p.getLongitude()) < COORD_EPSILON;
-        }
+                // 3. 활성 참여자(ABSENT 제외) + 투표 제출자(distinct) 집합
+                List<MeetingParticipant> activeParticipants = meetingParticipantRepository.findByMeetingId(meetingId)
+                                .stream()
+                                .filter(p -> !"ABSENT".equals(p.getAttendanceStatus()))
+                                .toList();
+                Set<Long> voterIds = voteRepository.findBySessionId(session.getId()).stream()
+                                .map(MeetingPlaceVote::getMemberId).collect(Collectors.toSet());
 
-        private String departureLabel(DeparturePlace d) {
-                return d.getPlaceName() != null ? d.getPlaceName() : d.getLabel();
+                // 4. 회원(닉네임/프로필) 배치 조회
+                List<Long> memberIds = activeParticipants.stream()
+                                .map(MeetingParticipant::getMemberId).toList();
+                Map<Long, Member> memberById = memberRepository.findAllById(new HashSet<>(memberIds)).stream()
+                                .collect(Collectors.toMap(Member::getId, m -> m));
+
+                // 5. 참여자별 DTO 조립 (참여 등록순 유지)
+                List<VoteParticipantsResponse.Participant> participants = activeParticipants.stream()
+                                .map(p -> {
+                                        Long mid = p.getMemberId();
+                                        Member m = memberById.get(mid);
+                                        String name = m != null ? m.getNickname() : "";
+                                        String profileImageUrl = m != null ? m.getProfileImageUrl() : null;
+                                        return new VoteParticipantsResponse.Participant(
+                                                        mid, name, profileImageUrl, p.departureName(),
+                                                        mid.equals(memberId), voterIds.contains(mid));
+                                })
+                                .toList();
+
+                return new VoteParticipantsResponse(participants);
         }
 
         /** 세션 존재 시 활성 참여자 전원이 투표했는지 외부 노출용 판정. (세션 없으면 false) */

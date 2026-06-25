@@ -158,7 +158,7 @@ erDiagram
         TIMESTAMPTZ created_at "발급 시각"
     }
 
-    %% [MVP2] meeting_participant — 모임별 참여자 출발지
+    %% [MVP2] meeting_participant — 모임별 참여자 출발지 (V30: 출발지 메타 추가)
     meeting_participant {
         BIGINT id PK "고유 ID"
         BIGINT meeting_id FK "소속 모임 ID"
@@ -166,6 +166,9 @@ erDiagram
         DOUBLE latitude "출발지 위도 (nullable — 출발지 미등록 시 null)"
         DOUBLE longitude "출발지 경도 (nullable — 출발지 미등록 시 null)"
         VARCHAR(10) attendance_status "참석 상태 (JOIN/LATE/ABSENT)"
+        VARCHAR(100) departure_label "출발지 별칭 (V30, nullable)"
+        VARCHAR(150) departure_place_name "카카오 장소명 (V30, nullable)"
+        VARCHAR(255) departure_address "출발지 주소 (V30, nullable)"
     }
 
     %% [MVP2] subway_station — 지하철역 마스터
@@ -330,7 +333,7 @@ erDiagram
 | `date_vote_session` | V8 (FC-7) | 날짜 투표 세션 |
 | `date_vote_option` | V8 (FC-7) | 투표 후보 날짜 |
 | `date_vote_record` | V8 (FC-7) | 투표 기록 |
-| `meeting_participant` | V11 + V15 (MVP2) | 모임별 참여자 출발지 (합류 시 생성, V15에서 lat/lng nullable) |
+| `meeting_participant` | V11 + V15 + V30 | 모임별 참여자 출발지 (합류 시 생성, V15 lat/lng nullable, V30 출발지 메타 label/place_name/address 추가) |
 | `place` | V12 (MVP2) | 장소 마스터 (네이버 place_id, PostGIS) |
 | `midpoint_station_candidate` | V13 (MVP2), V27 | 중간지점 역 후보 (rank 1~3) — V27에서 station_id·latitude·longitude 추가 |
 | `group_invite` | V14 (FC-5) | 그룹 초대 코드 (48시간 만료) |

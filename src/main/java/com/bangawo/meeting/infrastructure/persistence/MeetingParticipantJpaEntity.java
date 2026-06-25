@@ -31,6 +31,15 @@ public class MeetingParticipantJpaEntity {
     @Column(name = "attendance_status", nullable = false, length = 10)
     private String attendanceStatus;
 
+    @Column(name = "departure_label", length = 20)
+    private String departureLabel;
+
+    @Column(name = "departure_place_name", length = 100)
+    private String departurePlaceName;
+
+    @Column(name = "departure_address", length = 255)
+    private String departureAddress;
+
     public static MeetingParticipantJpaEntity from(MeetingParticipant domain) {
         MeetingParticipantJpaEntity e = new MeetingParticipantJpaEntity();
         e.id = domain.getId();
@@ -39,12 +48,10 @@ public class MeetingParticipantJpaEntity {
         e.latitude = domain.getLatitude();
         e.longitude = domain.getLongitude();
         e.attendanceStatus = domain.getAttendanceStatus();
+        e.departureLabel = domain.getDepartureLabel();
+        e.departurePlaceName = domain.getDeparturePlaceName();
+        e.departureAddress = domain.getDepartureAddress();
         return e;
-    }
-
-    public void updateCoords(Double latitude, Double longitude) {
-        this.latitude = latitude;
-        this.longitude = longitude;
     }
 
     public MeetingParticipant toDomain() {
@@ -52,6 +59,9 @@ public class MeetingParticipantJpaEntity {
                 .id(id).meetingId(meetingId).memberId(memberId)
                 .latitude(latitude).longitude(longitude)
                 .attendanceStatus(attendanceStatus)
+                .departureLabel(departureLabel)
+                .departurePlaceName(departurePlaceName)
+                .departureAddress(departureAddress)
                 .build();
     }
 }

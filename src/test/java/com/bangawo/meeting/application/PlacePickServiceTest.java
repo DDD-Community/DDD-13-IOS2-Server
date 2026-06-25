@@ -129,7 +129,7 @@ class PlacePickServiceTest {
 
     @Test
     void pickPlace_all_done_auto_transitions_to_voting() {
-        MeetingParticipant p1 = MeetingParticipant.create(1L, 2L, null, null, "JOIN");
+        MeetingParticipant p1 = MeetingParticipant.create(1L, 2L, null, null, "JOIN", null, null, null);
         given(meetingRepository.findById(1L)).willReturn(Optional.of(recommendedMeeting));
         given(groupMemberRepository.findByGroupIdAndMemberId(10L, 2L)).willReturn(Optional.of(memberGroupMember));
         given(meetingPlacePickRepository.existsByMeetingIdAndMemberIdAndPlaceId(1L, 2L, 100L)).willReturn(false);

@@ -89,9 +89,13 @@ public class GroupInviteService {
         Optional<DeparturePlace> departure = departurePlaceRepository.findDefaultByMemberId(memberId);
         Double lat = departure.map(d -> d.getCoordinate().getLatitude()).orElse(null);
         Double lng = departure.map(d -> d.getCoordinate().getLongitude()).orElse(null);
+        String depLabel = departure.map(DeparturePlace::getLabel).orElse(null);
+        String depPlaceName = departure.map(DeparturePlace::getPlaceName).orElse(null);
+        String depAddress = departure.map(DeparturePlace::resolvedAddress).orElse(null);
 
         meetingParticipantRepository.save(
-                MeetingParticipant.create(meeting.getId(), memberId, lat, lng, AttendanceStatus.JOIN.name())
+                MeetingParticipant.create(meeting.getId(), memberId, lat, lng, AttendanceStatus.JOIN.name(),
+                        depLabel, depPlaceName, depAddress)
         );
     }
 }

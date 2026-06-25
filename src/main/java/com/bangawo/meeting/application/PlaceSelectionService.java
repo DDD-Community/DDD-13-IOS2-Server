@@ -187,7 +187,10 @@ public class PlaceSelectionService {
 
                 participant.updateDeparture(
                                 departure.getCoordinate().getLatitude(),
-                                departure.getCoordinate().getLongitude());
+                                departure.getCoordinate().getLongitude(),
+                                departure.getLabel(),
+                                departure.getPlaceName(),
+                                departure.resolvedAddress());
                 meetingParticipantRepository.save(participant);
         }
 

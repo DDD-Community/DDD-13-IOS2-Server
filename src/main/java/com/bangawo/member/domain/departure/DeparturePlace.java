@@ -54,4 +54,9 @@ public class DeparturePlace {
         this.coordinate = new Coordinate(latitude, longitude);
         this.updatedAt = LocalDateTime.now();
     }
+
+    /** 표시용 주소: 도로명 우선, 비었으면 지번 주소 */
+    public String resolvedAddress() {
+        return (roadAddress != null && !roadAddress.isEmpty()) ? roadAddress : address;
+    }
 }

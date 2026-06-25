@@ -138,11 +138,26 @@
 - **Session Start**: 2026-06-25
 - **STEP 1 Workspace Detection**: 완료 — Brownfield, RE 아티팩트 존재·현행 유지 → RE SKIP
 - **STEP 2 Reverse Engineering**: SKIP (meeting 컨텍스트 직접 검토 완료)
-- **STEP 3 Requirements Analysis**: 진행중 — 질문지 작성, 사용자 답변 대기
+- **STEP 3 Requirements Analysis**: 완료 — requirements-fc12-vote-participants.md (스코프 확대: 출발지 메타 저장 + 신규 조회 API)
+- **STEP 4 User Stories**: SKIP (백엔드 API·역할 단순)
+- **STEP 5 Workflow Planning**: SKIP (단일 단위, 직접 AD)
+- **STEP 6 Application Design**: 완료 — application-design-fc12-vote-participants.md (V30, MeetingParticipant 메타필드, 쓰기3경로, 거리보기 리팩터, 신규 getVoteParticipants)
+- **STEP 7 Units Generation**: SKIP (단일 단위)
+- **Review Artifacts**: 완료 — fc12 각4(rules/api/erd/flow) + project-erd 갱신 (새 폴더 미생성)
+- **CONSTRUCTION**: 완료 — V30, MeetingParticipant 메타필드/departureName(), JpaEntity 매핑, 쓰기3경로(GroupService/GroupInviteService/PlaceSelectionService), getPlaceTravelBurden 좌표역매칭 제거, 신규 getVoteParticipants + VoteParticipantsResponse + Controller. Build & Test 96 passed.
+
+### 확정된 결정사항 (이번 사이클)
+1. 출발지 이름을 meeting_participant에 **직접 저장**(V30: departure_label/place_name/address). 좌표 역매칭 폐기.
+2. 쓰기 3경로(GroupService/GroupInviteService/PlaceSelectionService) 모두 DeparturePlace 메타 함께 저장.
+3. departureName() = placeName→label. 참여 당시 스냅샷(이후 출발지 수정 무관).
+4. getPlaceTravelBurden 리팩터 — resolveDepartureName/좌표매칭 제거, 저장값 사용.
+5. 신규 API GET /place-vote/participants — VOTING 필수, 활성참여자 전원, 멤버별 {name, profileImageUrl(원본key), departureName, isMe, voted}.
+6. 기존 행 V30 best-effort 백필(기본 출발지 기준), 매칭 불가 시 null.
+7. MeetingParticipant.create 시그니처 변경 → 기존 테스트 호출부 수정 필요.
 
 ## Phase
-- phase: INCEPTION
-- stage: REQUIREMENTS_ANALYSIS
-- status: AWAITING_ANSWERS
+- phase: OPERATIONS
+- stage: READY
+- status: AWAITING_START
 - last_updated: 2026-06-25T00:00:00+09:00
-- note: FC-12 "현재 장소 참여중인 팀원" 조회 API — 요구사항 질문지 답변 대기.
+- note: FC-12 출발지 메타 저장(V30) + 장소투표 참여 팀원 조회 API 구현 완료. Build & Test 96 passed. @operations에서 배포 진행.

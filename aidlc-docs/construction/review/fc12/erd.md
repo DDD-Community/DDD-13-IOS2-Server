@@ -6,7 +6,20 @@ erDiagram
     place ||--o{ meeting_place_vote : voted
     member ||--o{ meeting_place_vote : casts
     meeting ||--o{ meeting_travel_burden : has
+    meeting ||--o{ meeting_participant : has
     subway_edge }o--|| subway_station : connects
+
+    meeting_participant {
+        bigint id PK
+        bigint meeting_id FK
+        bigint member_id FK
+        double latitude "출발 위도 nullable"
+        double longitude "출발 경도 nullable"
+        varchar attendance_status "JOIN/LATE/ABSENT"
+        varchar departure_label "출발지 별칭 ⭐V30 nullable"
+        varchar departure_place_name "카카오 장소명 ⭐V30 nullable"
+        varchar departure_address "주소 ⭐V30 nullable"
+    }
 
     meeting_place_vote {
         bigint id PK
@@ -33,3 +46,5 @@ erDiagram
   - 담기 현황/함께담기 N/완료 구성원 = source='USER' 만 (FC-9 참조)
 - ⭐ V29: `meeting_travel_burden` 에 `station_path JSONB` 추가 (이동경로 스냅샷, 반정규화)
   - 값 = `[{stationId, latitude, longitude}, ...]` 출발→도착 순서. 친구들 거리보기 지도 표시용.
+- ⭐ V30: `meeting_participant` 에 출발지 메타 3컬럼 추가 (`departure_label`, `departure_place_name`, `departure_address`, 모두 nullable)
+  - 출발지 이름을 쓰기 시점 스냅샷으로 직접 저장(좌표 역매칭 폐기). 기본 출발지 기준 best-effort 백필.

@@ -64,3 +64,19 @@
   ]
 }
 ```
+
+## GET /api/v1/meetings/{meetingId}/place-vote/participants ⭐ (2026-06-25 신규 — 장소투표 참여 팀원 조회)
+- 현재 **VOTING 상태** 모임의 **활성 참여자(ABSENT 제외) 전원** 목록.
+- 멤버별: `memberId`, `name`(nickname), `profileImageUrl`(원본 object key — 클라이언트 resolve), `departureName`(저장된 출발지 메타, nullable), `isMe`(본인여부), `voted`(현재 세션에 1표+ 제출 여부).
+- 권한: 모임 그룹원. 상태: VOTING 아니면 `PLACE_VOTE_NOT_IN_PROGRESS`.
+- `departureName`은 `meeting_participant`에 저장된 메타(placeName→label) 기반. 좌표 역매칭 없음.
+```json
+{
+  "participants": [
+    { "memberId": 1, "name": "홍길동", "profileImageUrl": "profile/1/abc.jpg", "departureName": "집",  "isMe": true,  "voted": true },
+    { "memberId": 2, "name": "김철수", "profileImageUrl": "profile/2/def.jpg", "departureName": "회사", "isMe": false, "voted": false },
+    { "memberId": 3, "name": "이영희", "profileImageUrl": null,                "departureName": null,   "isMe": false, "voted": false }
+  ]
+}
+```
+- 에러: 404 `MEETING_NOT_FOUND` / 403 `NOT_GROUP_MEMBER` / 409 `PLACE_VOTE_NOT_IN_PROGRESS`
