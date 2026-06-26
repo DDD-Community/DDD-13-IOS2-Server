@@ -157,17 +157,35 @@ WHERE status = 'ACTIVE' AND confirmed_date < 오늘
 
 ---
 
-## 8. 새 모임 생성
+## 8. 새 모임 생성 (참여자 명단 선택)
 
 `POST /api/v1/groups/{groupId}/meetings`  
-body: `{ "name": "2차 회식", "themeTagCode": "DINING" }`
+body: `{ "name": "2차 회식", "themeTagCode": "DINING", "participantMemberIds": [12, 34] }`
 
 1. JWT → memberId 추출
 2. groupMember 조회 → HOST 확인 (아니면 403)
 3. 해당 그룹의 최신 meeting 조회
 4. `meeting.status == CLOSED` 확인 (아니면 400 — 현재 모임 진행 중)
-5. 새 meeting 생성 (`status=ACTIVE`, `dateVoteStatus=BEFORE`, `locationStatus=BEFORE`)
-6. meetingId 반환
+5. 현재 그룹 구성원 id 집합 조회
+6. 참여자 집합 구성: **호스트 자동 포함** + `participantMemberIds` (중복 제거)
+7. 참여자가 모두 현재 그룹 구성원인지 검증 (아니면 403 NOT_GROUP_MEMBER)
+8. 새 meeting 생성 (`status=ACTIVE`, `dateVoteStatus=BEFORE`, `locationStatus=BEFORE`)
+9. **선택된 참여자 각각 `meeting_participant` 시딩** (attendance=JOIN, 각자 default 출발지 좌표; 없으면 null)
+10. meetingId 반환
+
+> 핵심: 2번째 이후 모임은 **그룹 전원이 아니라 호스트가 고른 명단**만 참여자로 들어간다.  
+> 첫 모임(`POST /groups/create`)은 그 시점 구성원이 호스트뿐이라 호스트만 시딩됨.  
+> 합류(`POST /groups/join`)는 가입 시점의 열린 미팅에 자동 참여(현행 유지).
+
+### 참여자 선택용 — 그룹 구성원 목록 조회
+
+`GET /api/v1/groups/{groupId}/members`
+
+1. JWT → memberId 추출
+2. groupMember 조회 → 구성원 확인 (아니면 403 NOT_GROUP_MEMBER)
+3. 그룹 구성원 목록 반환 (joinedAt 오름차순)
+   - `{ memberId, nickname, profileImageUrl, role, joinedAt }`
+   - 탈퇴 회원은 nickname/profileImageUrl null
 
 ---
 

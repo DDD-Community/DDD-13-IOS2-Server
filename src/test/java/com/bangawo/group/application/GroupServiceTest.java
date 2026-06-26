@@ -108,6 +108,7 @@ class GroupServiceTest {
                 .joinedAt(LocalDateTime.now())
                 .build();
         when(groupMemberRepository.findByGroupIdAndMemberId(10L, 20L)).thenReturn(Optional.of(host));
+        when(groupMemberRepository.findByGroupId(10L)).thenReturn(List.of(host));
 
         Meeting closedMeeting = Meeting.builder()
                 .id(5L).groupId(10L).name("이전 모임").themeTagCode("DINING")
@@ -127,7 +128,7 @@ class GroupServiceTest {
         });
 
         groupService.createNextMeeting(10L, 20L, "다음 모임", "DINING",
-                List.of("카페"), List.of("조용한"), null, false);
+                List.of("카페"), List.of("조용한"), null, false, List.of());
 
         ArgumentCaptor<Meeting> captor = ArgumentCaptor.forClass(Meeting.class);
         verify(meetingRepository).save(captor.capture());
