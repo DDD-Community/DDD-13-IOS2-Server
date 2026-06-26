@@ -1,6 +1,7 @@
 # ERD — FC-7-1 내 정보 수정
 
-FC-7-1은 신규 테이블 없음. 기존 `group_member`(참석여부 UPDATE), `departure_place`(INSERT/UPDATE) 사용.
+FC-7-1은 신규 테이블 없음. 기존 `departure_place`(INSERT/UPDATE), `meeting_participant`(출발지 UPDATE) 사용.
+> 참석여부 수정 기능은 제거됨 — `group_member.attendance_status`는 V31에서 DROP, 참석여부는 `meeting_participant`로 관리.
 
 ```mermaid
 erDiagram
@@ -28,13 +29,12 @@ erDiagram
         TIMESTAMPTZ updated_at "수정 시각"
     }
 
-    %% [기존, FC-7-1 수정 대상] group_member — 그룹 구성원 (attendance_status UPDATE)
+    %% [기존] group_member — 그룹 구성원 (attendance_status 제거됨, V31 DROP)
     group_member {
         BIGINT id PK "auto increment, PK"
         BIGINT group_id FK "소속 그룹 ID"
         BIGINT member_id FK "구성원 회원 ID"
         VARCHAR role "HOST / MEMBER"
-        VARCHAR attendance_status "JOIN / LATE / ABSENT ← FC-7-1에서 UPDATE"
         TIMESTAMPTZ joined_at "그룹 합류 시각"
     }
 

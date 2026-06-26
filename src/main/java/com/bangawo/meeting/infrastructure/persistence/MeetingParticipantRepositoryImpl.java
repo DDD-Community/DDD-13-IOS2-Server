@@ -38,6 +38,13 @@ public class MeetingParticipantRepositoryImpl implements MeetingParticipantRepos
     }
 
     @Override
+    public List<MeetingParticipant> findByMeetingIdIn(List<Long> meetingIds) {
+        return jpaRepository.findByMeetingIdIn(meetingIds).stream()
+                .map(MeetingParticipantJpaEntity::toDomain)
+                .toList();
+    }
+
+    @Override
     public boolean existsByMeetingId(Long meetingId) {
         return jpaRepository.existsByMeetingId(meetingId);
     }

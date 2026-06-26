@@ -70,7 +70,7 @@
 | 항목 | 잠금 시점 | MVP |
 |---|---|---|
 | 출발지 수정 | dateVoteStatus = COMPLETED 이후 | MVP1 |
-| 참석여부 수정 | locationStatus = COMPLETED 이후 | MVP2 (MVP1 잠금 없음) |
+| 참석여부 수정 (미팅별, meeting_participant) | locationStatus = COMPLETED 이후 | MVP2 (MVP1 잠금 없음) — 그룹 단위 참석여부 API는 제거됨 |
 
 ---
 

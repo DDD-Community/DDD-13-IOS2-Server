@@ -51,13 +51,12 @@ erDiagram
         TIMESTAMPTZ updated_at "수정 시각"
     }
 
-    %% [기존] group_member
+    %% [기존] group_member (참석여부는 meeting_participant로 이전, V31에서 attendance_status 제거)
     group_member {
         BIGINT id PK "구성원 고유 ID"
         BIGINT group_id FK "소속 그룹 ID"
         BIGINT member_id FK "구성원 회원 ID"
         VARCHAR(10) role "역할 (HOST/MEMBER)"
-        VARCHAR(10) attendance_status "참석여부 (JOIN/LATE/ABSENT)"
         TIMESTAMPTZ joined_at "그룹 합류 시각"
     }
 

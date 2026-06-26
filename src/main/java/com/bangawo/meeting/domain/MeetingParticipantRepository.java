@@ -9,5 +9,6 @@ public interface MeetingParticipantRepository {
     void saveAll(List<MeetingParticipant> participants);
     Optional<MeetingParticipant> findByMeetingIdAndMemberId(Long meetingId, Long memberId);
     List<MeetingParticipant> findByMeetingId(Long meetingId);
+    List<MeetingParticipant> findByMeetingIdIn(List<Long> meetingIds);
     boolean existsByMeetingId(Long meetingId);
 }

@@ -81,7 +81,7 @@
 | `members[].memberId` | Long | 구성원 회원 ID |
 | `members[].nickname` | String? | 닉네임 (탈퇴 회원은 null) |
 | `members[].profileImageUrl` | String? | 프로필 이미지 URL |
-| `members[].attendanceStatus` | String | 참석여부 (JOIN / LATE / ABSENT) |
+| `members[].attendanceStatus` | String? | 참석여부 (JOIN / LATE / ABSENT) — 최신 미팅의 `meeting_participant` 기준, 참여 기록 없으면 null |
 
 ### 정렬 규칙
 

@@ -22,7 +22,8 @@
 | 출발지 없는 참여자 | ABSENT 제외 후 좌표 없으면 에러 | 400 PARTICIPANT_DEPARTURE_NOT_SET |
 | 근처 역 없음 | 2km 이내 subway_station 없으면 에러 | 400 MIDPOINT_STATION_NOT_FOUND |
 
-## meeting_participant 생성 규칙
-- location/start 호출 시 group_member(attendance_status != ABSENT) 기준으로 생성
+## meeting_participant 참여자 규칙
+- meeting_participant 행은 그룹 생성/합류 시점에 생성됨 (attendance_status 기본 JOIN)
+- 좌표 집계는 meeting_participant(attendance_status != ABSENT) 기준 — 참석여부는 group_member가 아닌 meeting_participant에서 관리
 - 각 멤버의 is_default=true departure_place 좌표 사용
 - is_default departure_place 없는 멤버 존재 시 에러

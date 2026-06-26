@@ -105,13 +105,12 @@ erDiagram
         TIMESTAMPTZ updated_at "수정 시각"
     }
 
-    %% [FC-4] group_member — FC-6에서 소속 그룹 탐색 및 구성원 목록 조회
+    %% [FC-4] group_member — FC-6에서 소속 그룹 탐색 및 구성원 목록 조회 (참석여부는 meeting_participant 참조)
     group_member {
         BIGINT id PK "구성원 고유 ID"
         BIGINT group_id FK "소속 그룹 ID"
         BIGINT member_id FK "구성원 회원 ID"
         VARCHAR(10) role "역할 (HOST/MEMBER)"
-        VARCHAR(10) attendance_status "참석여부 (JOIN/LATE/ABSENT)"
         TIMESTAMPTZ joined_at "그룹 합류 시각 — 구성원 정렬 기준"
     }
 
@@ -133,7 +132,8 @@ erDiagram
 group_member (memberId=나)
   → group_info (name, themeTagCode)
   → meeting (최신 1개, locationStatus, dateVoteStatus, confirmedDate)
-  → group_member (전체 구성원, attendanceStatus, joinedAt)
+  → group_member (전체 구성원, joinedAt)
+  → meeting_participant (최신 미팅 기준 attendanceStatus)
   → member (nickname, profileImageUrl)
   → theme_tag (displayName)
 ```

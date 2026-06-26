@@ -1,6 +1,5 @@
 package com.bangawo.group.infrastructure.persistence;
 
-import com.bangawo.group.domain.AttendanceStatus;
 import com.bangawo.group.domain.GroupMember;
 import com.bangawo.group.domain.GroupMemberRole;
 import jakarta.persistence.*;
@@ -31,10 +30,6 @@ public class GroupMemberJpaEntity {
     @Column(nullable = false, length = 10)
     private GroupMemberRole role;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "attendance_status", nullable = false, length = 10)
-    private AttendanceStatus attendanceStatus;
-
     @Column(nullable = false)
     private LocalDateTime joinedAt;
 
@@ -44,7 +39,6 @@ public class GroupMemberJpaEntity {
         entity.groupId = groupMember.getGroupId();
         entity.memberId = groupMember.getMemberId();
         entity.role = groupMember.getRole();
-        entity.attendanceStatus = groupMember.getAttendanceStatus();
         entity.joinedAt = groupMember.getJoinedAt();
         return entity;
     }
@@ -55,7 +49,6 @@ public class GroupMemberJpaEntity {
                 .groupId(groupId)
                 .memberId(memberId)
                 .role(role)
-                .attendanceStatus(attendanceStatus)
                 .joinedAt(joinedAt)
                 .build();
     }

@@ -50,6 +50,10 @@ public class MeetingParticipant {
         return latitude != null && longitude != null;
     }
 
+    public void updateAttendance(String attendanceStatus) {
+        this.attendanceStatus = attendanceStatus;
+    }
+
     public void updateDeparture(double latitude, double longitude,
                                 String departureLabel, String departurePlaceName, String departureAddress) {
         this.latitude = latitude;

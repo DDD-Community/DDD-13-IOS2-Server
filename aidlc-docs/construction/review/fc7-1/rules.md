@@ -1,23 +1,22 @@
 # 비즈니스 규칙 — FC-7-1 내 정보 수정
 
-## 참석여부 수정 규칙
+## 참석여부 수정 규칙 (미팅 단위)
+
+> 그룹 단위 참석여부는 폐기됨. 참석여부는 **미팅 단위(`meeting_participant.attendance_status`)** 로 관리한다 — 같은 회원이라도 미팅마다 다를 수 있기 때문.
+> `group_member.attendance_status` 컬럼은 V31에서 DROP, 그룹 단위 API/서비스/DTO도 삭제됨.
 
 ### 변경 규칙
-- 요청자 본인의 참석여부만 수정 가능하다
-- `attendance_status`는 그룹 단위로 관리된다 (meeting과 무관)
-- 유효한 값: `JOIN` (참여) / `LATE` (늦참) / `ABSENT` (불참)
+- 요청자 본인의 참석여부만 수정 가능
+- 유효 값: `JOIN` (참여) / `LATE` (늦참) / `ABSENT` (불참)
+- 대상: 해당 미팅의 `meeting_participant` 레코드 (JOIN으로 시딩됨 — 그룹 생성/합류, 그리고 새 모임 생성 시 호스트가 선택한 참여자)
 
-### 인가 규칙
-- JWT 인증 필수
-- JWT의 memberId가 해당 groupId의 group_member로 등록되어 있어야 한다
-- 타인의 참석여부는 수정 불가
-
-### 제약사항
+### 인가 / 제약
 
 | 항목 | 제약 | 위반 시 |
 |---|---|---|
 | JWT | 필수 | 401 AUTH_001 |
-| 그룹 멤버 여부 | group_member 레코드 존재 필수 | 403 GROUP_003 |
+| 모임 존재 | meeting 레코드 필수 | 404 MEETING_001 |
+| 참여자 여부 | meeting_participant 레코드 필수 | 404 MEETING_013 |
 | attendanceStatus | JOIN / LATE / ABSENT | 400 COMMON_001 |
 
 ---

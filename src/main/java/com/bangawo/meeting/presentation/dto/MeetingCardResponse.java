@@ -3,7 +3,6 @@ package com.bangawo.meeting.presentation.dto;
 import com.bangawo.meeting.domain.DateVoteStatus;
 import com.bangawo.meeting.domain.LocationStatus;
 import com.bangawo.meeting.domain.MeetingListStatus;
-import com.bangawo.group.domain.AttendanceStatus;
 
 import java.util.List;
 
@@ -24,6 +23,6 @@ public record MeetingCardResponse(
             Long memberId,
             String nickname,
             String profileImageUrl,
-            AttendanceStatus attendanceStatus
+            String attendanceStatus
     ) {}
 }

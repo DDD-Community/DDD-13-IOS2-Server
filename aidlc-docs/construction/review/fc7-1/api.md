@@ -1,8 +1,11 @@
 # API 명세 — FC-7-1 내 정보 수정
 
-## 1. 참석여부 수정
+## 1. 참석여부 수정 (미팅 단위로 이전)
 
-### `PATCH /api/v1/groups/{groupId}/members/me/attendance`
+> 그룹 레벨 `PATCH /api/v1/groups/{groupId}/members/me/attendance` 는 **삭제됨**.
+> 참석여부는 `group_member.attendance_status`(V31 DROP)가 아니라 **미팅 레벨 `meeting_participant.attendance_status`** 로 관리한다.
+
+### `PATCH /api/v1/meetings/{meetingId}/participants/me/attendance`
 
 **인증**: JWT 필수 (Authorization: Bearer {token})
 
@@ -10,13 +13,13 @@
 
 | 파라미터 | 타입 | 설명 |
 |---|---|---|
-| groupId | Long | 그룹 ID |
+| meetingId | Long | 모임 ID |
 
 **Request Body**
 
 ```json
 {
-  "attendanceStatus": "JOIN"
+  "attendanceStatus": "LATE"
 }
 ```
 
@@ -28,10 +31,11 @@
 
 | 상태코드 | 설명 |
 |---|---|
-| 200 OK | 수정 성공 (body 없음) |
+| 204 No Content | 수정 성공 (body 없음) |
 | 400 COMMON_001 | attendanceStatus 값 누락 또는 유효하지 않은 값 |
 | 401 AUTH_001 | JWT 없음 |
-| 403 GROUP_003 | 해당 그룹의 구성원이 아님 |
+| 404 MEETING_001 | 모임 없음 |
+| 404 MEETING_013 | meeting_participant 레코드 없음 (합류 안 된 상태) |
 
 ---
 
