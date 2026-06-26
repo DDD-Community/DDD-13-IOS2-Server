@@ -7,7 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -49,5 +51,17 @@ public class SubwayStationRepositoryImpl implements SubwayStationRepository {
                         ((Number) row[2]).doubleValue()
                 ))
                 .toList();
+    }
+
+    @Override
+    public Map<Long, String> findNamesByIds(List<Long> stationIds) {
+        if (stationIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, String> result = new LinkedHashMap<>();
+        for (Object[] row : jpaRepository.findNamesByIds(stationIds)) {
+            result.put(((Number) row[0]).longValue(), (String) row[1]);
+        }
+        return result;
     }
 }

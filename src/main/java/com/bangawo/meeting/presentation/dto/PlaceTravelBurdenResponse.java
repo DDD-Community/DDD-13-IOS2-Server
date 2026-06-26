@@ -22,10 +22,14 @@ public record PlaceTravelBurdenResponse(
             List<PathPoint> path
     ) {}
 
-    /** 이동 경로의 한 지점 (지하철 역). 출발역→도착역 순서. */
+    /** 이동 경로의 한 지점 (지하철 역). order=출발(0)→도착 순서 인덱스. isDeparture=첫 역, isArrival=마지막(도착) 역. */
     public record PathPoint(
             Long stationId,
+            String stationName,
             double latitude,
-            double longitude
+            double longitude,
+            int order,
+            boolean isDeparture,
+            boolean isArrival
     ) {}
 }

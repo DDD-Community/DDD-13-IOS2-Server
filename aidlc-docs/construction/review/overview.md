@@ -82,8 +82,8 @@ stateDiagram-v2
 | FC-5 | 초대 & 합류 | `POST /groups/{id}/invite`<br>`POST /groups/join` | group_invite, group_member, meeting_participant |
 | FC-6 | 모임 리스트 (홈) | `GET /meetings` | meeting, group_member, departure_place |
 | FC-7 | 날짜 투표 | `POST /date-vote`<br>`POST /date-vote/host-pick`<br>`POST /date-vote/submit`<br>`PATCH /date-vote/confirm` | date_vote_session, date_vote_option, date_vote_record |
-| FC-7-1 | 내 정보 수정 | `PATCH /groups/{id}/members/me/attendance`<br>`POST /departure-places`<br>`PUT /departure-places/{id}`<br>`PATCH /meetings/{id}/participants/me/departure` | group_member, departure_place, meeting_participant |
-| (그룹 생명주기) | 그룹 종료/새 모임 | `PATCH /groups/{id}/close`<br>`POST /groups/{id}/meetings` | group_info, meeting |
+| FC-7-1 | 내 정보 수정 | `PATCH /meetings/{id}/participants/me/attendance`<br>`POST /departure-places`<br>`PUT /departure-places/{id}`<br>`PATCH /meetings/{id}/participants/me/departure` | departure_place, meeting_participant<br>※ 참석여부는 group_member가 아닌 meeting_participant(미팅 단위)로 관리 |
+| (그룹 생명주기) | 그룹 종료/새 모임 | `PATCH /groups/{id}/close`<br>`GET /groups/{id}/members`<br>`POST /groups/{id}/meetings`(참여자 명단 선택) | group_info, meeting, group_member, meeting_participant |
 | FC-midpoint | 중간지점 역 추천 | `POST /meetings/{id}/location/start`<br>`GET /meetings/{id}/midpoint-stations` | meeting_participant, subway_station, midpoint_station_candidate |
 | **FC-8** | 중간역 반경 장소 추천 15 | `POST /location/start`(확장)<br>`GET /recommendations`<br>`GET /places/options` | place(기존 occasion 재사용, 컬럼 변경 없음), meeting_place_recommendation |
 | **FC-9** | 후보 담기/취소 | `GET /places`<br>`POST·DELETE /places/{id}/pick`<br>`GET /places/pick-status` | meeting_place_pick |
@@ -130,7 +130,7 @@ stateDiagram-v2
 | 날짜 투표 시작 | O | X |
 | 날짜 직접 확정 | O | X |
 | 투표 참여 | O | O |
-| 참석여부 변경 | O (본인) | O (본인) |
+| 참석여부 변경 (미팅별, meeting_participant) | O (본인) | O (본인) |
 | 출발지 추가/수정 | O | O |
 | 모임 출발지 변경 | O | O |
 | 장소 선정 시작 | O | X |

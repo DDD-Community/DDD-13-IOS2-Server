@@ -8,5 +8,6 @@ import java.util.Optional;
 public interface MeetingParticipantJpaRepository extends JpaRepository<MeetingParticipantJpaEntity, Long> {
     Optional<MeetingParticipantJpaEntity> findByMeetingIdAndMemberId(Long meetingId, Long memberId);
     List<MeetingParticipantJpaEntity> findByMeetingId(Long meetingId);
+    List<MeetingParticipantJpaEntity> findByMeetingIdIn(List<Long> meetingIds);
     boolean existsByMeetingId(Long meetingId);
 }

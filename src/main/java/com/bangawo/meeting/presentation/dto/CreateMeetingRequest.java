@@ -11,5 +11,6 @@ public record CreateMeetingRequest(
         List<String> categoryLabels,
         List<String> vibes,
         Boolean reservable,
-        Boolean parking
+        Boolean parking,
+        List<Long> participantMemberIds
 ) {}

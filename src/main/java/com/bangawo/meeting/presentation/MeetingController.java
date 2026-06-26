@@ -3,6 +3,7 @@ package com.bangawo.meeting.presentation;
 import com.bangawo.meeting.application.DateVoteService;
 import com.bangawo.meeting.application.MeetingDetailService;
 import com.bangawo.meeting.application.MeetingListService;
+import com.bangawo.meeting.application.MeetingParticipantService;
 import com.bangawo.meeting.presentation.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,6 +24,7 @@ public class MeetingController {
     private final MeetingListService meetingListService;
     private final MeetingDetailService meetingDetailService;
     private final DateVoteService dateVoteService;
+    private final MeetingParticipantService meetingParticipantService;
 
     @Operation(summary = "내 모임 리스트 조회")
     @GetMapping
@@ -36,6 +38,19 @@ public class MeetingController {
     public MeetingDetailResponse getDetail(@PathVariable Long meetingId, Authentication auth) {
         Long memberId = (Long) auth.getPrincipal();
         return meetingDetailService.getDetail(meetingId, memberId);
+    }
+
+    @Operation(summary = "참석여부 수정 — 본인의 미팅 참석여부를 JOIN/LATE/ABSENT로 변경",
+            description = "참석여부는 그룹(group_member)이 아니라 미팅 단위(meeting_participant)로 관리된다. "
+                    + "본인의 meeting_participant.attendance_status를 변경. 204 No Content. "
+                    + "오류: 404 MEETING_001(모임 없음) / 404 MEETING_013(참여자 아님) / 400 COMMON_001(값 오류).")
+    @PatchMapping("/{meetingId}/participants/me/attendance")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateAttendance(@PathVariable Long meetingId,
+                                 @RequestBody @Valid UpdateAttendanceRequest request,
+                                 Authentication auth) {
+        Long memberId = (Long) auth.getPrincipal();
+        meetingParticipantService.updateAttendance(meetingId, memberId, request.attendanceStatus());
     }
 
     @Operation(summary = "날짜 투표 — 방식 A: 호스트 단독 선택 즉시 확정")

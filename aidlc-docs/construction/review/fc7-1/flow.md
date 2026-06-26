@@ -2,18 +2,20 @@
 
 ---
 
-## 1. 참석여부 수정
+## 1. 참석여부 수정 (미팅 단위)
 
-`PATCH /api/v1/groups/{groupId}/members/me/attendance`  
+`PATCH /api/v1/meetings/{meetingId}/participants/me/attendance`  
 body: `{ "attendanceStatus": "LATE" }`
 
 1. JWT → memberId 추출
-2. groupMember 조회 (groupId + memberId) — 없으면 403
-3. `groupMember.attendanceStatus = status` 업데이트
-4. groupMember 저장
-5. 200 OK (body 없음)
+2. meeting 조회 (없으면 404 MEETING_001)
+3. meeting_participant 조회 (meetingId + memberId) — 없으면 404 MEETING_013
+4. `participant.attendanceStatus = status` 업데이트
+5. meeting_participant 저장
+6. 204 No Content (body 없음)
 
-> 쓰는 테이블: `group_member.attendance_status`
+> 쓰는 테이블: `meeting_participant.attendance_status`  
+> 그룹 단위 `group_member.attendance_status`는 제거됨(V31 DROP). 리스트/상세 읽기도 모두 `meeting_participant` 기준.
 
 ---
 

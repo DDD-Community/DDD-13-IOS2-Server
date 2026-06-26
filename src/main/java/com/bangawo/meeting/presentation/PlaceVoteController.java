@@ -59,7 +59,9 @@ public class PlaceVoteController {
     @Operation(summary = "친구들 거리보기 — 특정 장소 1건에 대한 활성 참여자별 소요시간·환승·경로 조회",
             description = "장소 상세 '친구들 거리보기' 버튼용. 투표 시작 시 저장된 이동부담 스냅샷 기반(신규 계산 없음). "
                     + "활성 참여자(ABSENT 제외) 전원 포함(스냅샷 없으면 seconds/transfers=null, path=[]). "
-                    + "멤버별: name·departureName(저장 출발지명)·isMe(본인여부)·seconds·transfers·isLongest(최장이동자)·path(출발→도착 역 좌표)")
+                    + "멤버별: name·departureName(저장 출발지명)·isMe(본인여부)·seconds·transfers·isLongest(최장이동자)·path(출발→도착 경로). "
+                    + "path[] 각 점: stationId·latitude·longitude·order(0=출발→도착 순서)·isDeparture(첫 역)·isArrival(도착역). "
+                    + "stationName은 도착역(isArrival=true)만 채워지고 나머지 역은 null — 모든 멤버 도착역이 같아 1건만 조회.")
     @GetMapping("/{meetingId}/place-vote/{placeId}/travel-burden")
     public PlaceTravelBurdenResponse getPlaceTravelBurden(@PathVariable Long meetingId,
                                                           @PathVariable Long placeId,

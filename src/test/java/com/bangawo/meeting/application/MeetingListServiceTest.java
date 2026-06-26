@@ -36,6 +36,8 @@ class MeetingListServiceTest {
     @Mock
     private MeetingRepository meetingRepository;
     @Mock
+    private MeetingParticipantRepository meetingParticipantRepository;
+    @Mock
     private MemberRepository memberRepository;
     @Mock
     private ThemeTagRepository themeTagRepository;
@@ -161,7 +163,7 @@ class MeetingListServiceTest {
     private GroupMember membership(Long id, Long groupId, Long memberId, LocalDateTime joinedAt) {
         return GroupMember.builder()
                 .id(id).groupId(groupId).memberId(memberId)
-                .role(GroupMemberRole.MEMBER).attendanceStatus(AttendanceStatus.JOIN)
+                .role(GroupMemberRole.MEMBER)
                 .joinedAt(joinedAt).build();
     }
 

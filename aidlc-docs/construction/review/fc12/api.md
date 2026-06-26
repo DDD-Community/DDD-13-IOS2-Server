@@ -44,6 +44,7 @@
 - ⭐ (2026-06-25) 멤버별 항목에 `path` 추가 — 출발역→도착역 경로(역 좌표 순서 리스트), 지도 표시용. 스냅샷 저장분, 도달 불가 시 `[]`.
 - ⭐ (2026-06-25 보강) 멤버 기준 = 활성 참여자 전원. 스냅샷 없는 멤버도 포함(`seconds`/`transfers`=null, `path`=[]).
 - ⭐ 멤버별 추가 필드: `departureName`(출발지 이름, nullable), `isMe`(요청자 본인 여부). `isLongest`는 소요시간 보유 멤버 중 최대만 true.
+- ⭐ (2026-06-26) `path[]` 항목에 `order`(출발 0→도착 순서 인덱스) + `isDeparture`(첫 역) + `isArrival`(마지막=도착역) 추가. JSON 배열 순서는 보장되지만 클라 polyline 안전장치로 `order` 명시. `stationName`은 **도착역(isArrival)만 채우고 나머지는 null** — 모든 멤버 도착역은 같은 장소 최근접역이라 역명 조회 1건이면 충분(전 구간 조회 안 함). 도착역 역명은 `subway_station` 조회, 미존재 시 null.
 ```json
 {
   "place": { "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ...", "latitude": 37.5, "longitude": 127.0 },
@@ -52,9 +53,9 @@
       "memberId": 1, "name": "홍길동", "departureName": "집", "isMe": true,
       "seconds": 1800, "transfers": 1, "isLongest": false,
       "path": [
-        { "stationId": 201, "latitude": 37.49, "longitude": 127.02 },
-        { "stationId": 202, "latitude": 37.50, "longitude": 127.01 },
-        { "stationId": 245, "latitude": 37.50, "longitude": 127.00 }
+        { "stationId": 201, "stationName": null,   "latitude": 37.49, "longitude": 127.02, "order": 0, "isDeparture": true,  "isArrival": false },
+        { "stationId": 202, "stationName": null,   "latitude": 37.50, "longitude": 127.01, "order": 1, "isDeparture": false, "isArrival": false },
+        { "stationId": 245, "stationName": "선릉", "latitude": 37.50, "longitude": 127.00, "order": 2, "isDeparture": false, "isArrival": true  }
       ]
     },
     { "memberId": 2, "name": "김철수", "departureName": "회사", "isMe": false,

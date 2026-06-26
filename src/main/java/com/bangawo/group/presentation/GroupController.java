@@ -3,8 +3,11 @@ package com.bangawo.group.presentation;
 import com.bangawo.group.application.GroupService;
 import com.bangawo.group.presentation.dto.CreateGroupRequest;
 import com.bangawo.group.presentation.dto.CreateGroupResponse;
+import com.bangawo.group.presentation.dto.GroupMemberResponse;
 import com.bangawo.meeting.presentation.dto.CreateMeetingRequest;
 import com.bangawo.meeting.presentation.dto.CreateMeetingResponse;
+
+import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -44,7 +47,12 @@ public class GroupController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "새 모임 생성 — 현재 모임이 종료된 그룹에서 다음 모임 생성 (호스트 전용)")
+    @Operation(summary = "새 모임 생성 — 종료된 그룹에서 다음 모임 생성 + 참여자 명단 선택 (호스트 전용)",
+            description = "최신 모임이 CLOSED일 때만 생성 가능. body.participantMemberIds로 이번 모임 참여자를 선택한다 "
+                    + "(GET /groups/{id}/members 로 후보 조회). 호스트는 명단에 없어도 자동 포함, 중복 제거. "
+                    + "선택 멤버는 모두 현재 그룹 구성원이어야 함(아니면 403). 선택된 각 멤버는 meeting_participant로 "
+                    + "시딩됨(참석여부 JOIN, 각자 기본 출발지 좌표; 없으면 null). 오류: 403 GROUP_004(호스트 아님)/"
+                    + "403 GROUP_003(비구성원 포함), 404 MEETING_001(이전 모임 없음), 400 MEETING_009(미종료).")
     @PostMapping("/{groupId}/meetings")
     @ResponseStatus(HttpStatus.CREATED)
     public CreateMeetingResponse createNextMeeting(@PathVariable Long groupId,
@@ -52,7 +60,17 @@ public class GroupController {
                                                    Authentication auth) {
         Long memberId = (Long) auth.getPrincipal();
         Long meetingId = groupService.createNextMeeting(groupId, memberId, request.name(), request.themeTagCode(),
-                request.categoryLabels(), request.vibes(), request.reservable(), request.parking());
+                request.categoryLabels(), request.vibes(), request.reservable(), request.parking(),
+                request.participantMemberIds());
         return new CreateMeetingResponse(meetingId);
+    }
+
+    @Operation(summary = "그룹 구성원 목록 조회 — 새 모임 생성 시 참여자 선택용 (구성원만 호출 가능)",
+            description = "joinedAt 오름차순. 항목: memberId·nickname·profileImageUrl·role(HOST/MEMBER)·joinedAt. "
+                    + "탈퇴 회원은 nickname/profileImageUrl이 null. 비구성원 호출 시 403 GROUP_003.")
+    @GetMapping("/{groupId}/members")
+    public List<GroupMemberResponse> getGroupMembers(@PathVariable Long groupId, Authentication auth) {
+        Long memberId = (Long) auth.getPrincipal();
+        return groupService.getGroupMembers(groupId, memberId);
     }
 }

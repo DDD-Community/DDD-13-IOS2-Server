@@ -9,6 +9,8 @@ import com.bangawo.group.domain.GroupRepository;
 import com.bangawo.group.domain.ThemeTag;
 import com.bangawo.group.domain.ThemeTagRepository;
 import com.bangawo.meeting.domain.Meeting;
+import com.bangawo.meeting.domain.MeetingParticipant;
+import com.bangawo.meeting.domain.MeetingParticipantRepository;
 import com.bangawo.meeting.domain.MeetingRepository;
 import com.bangawo.meeting.presentation.dto.MeetingCardResponse;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class MeetingListService {
     private final GroupMemberRepository groupMemberRepository;
     private final GroupRepository groupRepository;
     private final MeetingRepository meetingRepository;
+    private final MeetingParticipantRepository meetingParticipantRepository;
     private final MemberRepository memberRepository;
     private final ThemeTagRepository themeTagRepository;
 
@@ -48,6 +51,16 @@ public class MeetingListService {
 
         Map<Long, Meeting> latestMeetingMap = meetingRepository.findLatestByGroupIdIn(groupIds)
                 .stream().collect(Collectors.toMap(Meeting::getGroupId, m -> m));
+
+        List<Long> latestMeetingIds = latestMeetingMap.values().stream()
+                .map(Meeting::getId)
+                .toList();
+
+        Map<Long, Map<Long, String>> attendanceByMeeting = meetingParticipantRepository
+                .findByMeetingIdIn(latestMeetingIds).stream()
+                .collect(Collectors.groupingBy(
+                        MeetingParticipant::getMeetingId,
+                        Collectors.toMap(MeetingParticipant::getMemberId, MeetingParticipant::getAttendanceStatus)));
 
         Map<Long, List<GroupMember>> membersByGroup = groupMemberRepository.findByGroupIdIn(groupIds)
                 .stream().collect(Collectors.groupingBy(GroupMember::getGroupId));
@@ -77,6 +90,8 @@ public class MeetingListService {
                     Meeting meeting = latestMeetingMap.get(groupId);
                     ThemeTag themeTag = themeTagMap.get(group.getThemeTagCode());
                     List<GroupMember> groupMembers = membersByGroup.getOrDefault(groupId, List.of());
+                    Map<Long, String> attendanceByMember = attendanceByMeeting
+                            .getOrDefault(meeting.getId(), Map.of());
 
                     List<MeetingCardResponse.MemberInfo> memberInfos = groupMembers.stream()
                             .sorted(Comparator.comparing(GroupMember::getJoinedAt))
@@ -87,7 +102,7 @@ public class MeetingListService {
                                         gm.getMemberId(),
                                         active ? m.getNickname() : null,
                                         active ? m.getProfileImageUrl() : null,
-                                        gm.getAttendanceStatus()
+                                        attendanceByMember.get(gm.getMemberId())
                                 );
                             })
                             .toList();
