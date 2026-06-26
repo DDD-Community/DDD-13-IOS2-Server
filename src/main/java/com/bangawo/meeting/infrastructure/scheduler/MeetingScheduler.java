@@ -10,6 +10,8 @@ import com.bangawo.meeting.domain.Meeting;
 import com.bangawo.meeting.domain.MeetingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -28,12 +30,34 @@ public class MeetingScheduler {
     private final PlacePickSchedulerService placePickSchedulerService;
     private final PlaceVoteSchedulerService placeVoteSchedulerService;
 
+    @EventListener(ApplicationReadyEvent.class)
+    public void processOnStartup() {
+        log.info("[서버 기동] 마감이 지났지만 아직 종료 처리 안 된 건들을 먼저 정리합니다.");
+        try {
+            processScheduled();
+            log.info("[서버 기동] 밀린 만료 건 정리 완료. 이후부터는 스케줄러가 매일 자정 자동 처리합니다.");
+        } catch (Exception e) {
+            log.error("[서버 기동] 밀린 만료 건 정리 중 오류 발생 - 서버 기동은 정상 진행합니다.", e);
+        }
+    }
+
     @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
     public void processScheduled() {
-        processExpiredVoteSessions();
-        processExpiredMeetings();
-        processExpiredPlacePicks();
-        processExpiredPlaceVoteSessions();
+        runStep("(1/4) 날짜 투표 마감 건 자동 확정", this::processExpiredVoteSessions);
+        runStep("(2/4) 확정일 지난 모임 자동 종료", this::processExpiredMeetings);
+        runStep("(3/4) 장소 담기 마감 건 투표 단계 전환", this::processExpiredPlacePicks);
+        runStep("(4/4) 장소 투표 마감 건 종료 및 장소 확정", this::processExpiredPlaceVoteSessions);
+        log.info("[만료 처리] 전체 단계 완료");
+    }
+
+    private void runStep(String stepName, Runnable step) {
+        log.info("[만료 처리] {} 시작", stepName);
+        try {
+            step.run();
+            log.info("[만료 처리] {} 완료", stepName);
+        } catch (Exception e) {
+            log.error("[만료 처리] {} 단계 실패 - 다음 단계는 계속 진행합니다.", stepName, e);
+        }
     }
 
     private void processExpiredVoteSessions() {
