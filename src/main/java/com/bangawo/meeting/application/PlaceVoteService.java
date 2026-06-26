@@ -329,6 +329,15 @@ public class PlaceVoteService {
 
                 Place place = placeRepository.findByIds(List.of(placeId)).stream().findFirst().orElse(null);
 
+                // 4-1. 도착역(경로 마지막 역) 역명만 조회 — 모든 멤버 도착역은 같은 장소 최근접역이라 보통 1건
+                List<Long> arrivalStationIds = burdenByMemberId.values().stream()
+                                .map(MeetingTravelBurden::getStationPath)
+                                .filter(sp -> !sp.isEmpty())
+                                .map(sp -> sp.get(sp.size() - 1).stationId())
+                                .distinct()
+                                .toList();
+                Map<Long, String> arrivalNameById = subwayStationRepository.findNamesByIds(arrivalStationIds);
+
                 // 5. 참여자별 DTO 조립 (스냅샷 없는 멤버는 seconds/transfers=null, path=[])
                 List<PlaceTravelBurdenResponse.MemberBurden> memberBurdens = activeParticipants.stream()
                                 .map(p -> {
@@ -340,13 +349,21 @@ public class PlaceVoteService {
                                         Integer seconds = b != null ? b.getSeconds() : null;
                                         Integer transfers = b != null ? b.getTransfers() : null;
                                         boolean isLongest = b != null && b.getSeconds() == maxSec;
-                                        List<PlaceTravelBurdenResponse.PathPoint> path = b != null
-                                                        ? b.getStationPath().stream()
-                                                                        .map(pt -> new PlaceTravelBurdenResponse.PathPoint(
-                                                                                        pt.stationId(), pt.latitude(),
-                                                                                        pt.longitude()))
-                                                                        .toList()
-                                                        : List.of();
+                                        List<TravelPathPoint> pts = b != null ? b.getStationPath() : List.of();
+                                        List<PlaceTravelBurdenResponse.PathPoint> path = java.util.stream.IntStream
+                                                        .range(0, pts.size())
+                                                        .mapToObj(i -> {
+                                                                TravelPathPoint pt = pts.get(i);
+                                                                boolean isArrival = i == pts.size() - 1;
+                                                                return new PlaceTravelBurdenResponse.PathPoint(
+                                                                                pt.stationId(),
+                                                                                isArrival ? arrivalNameById.get(pt.stationId()) : null,
+                                                                                pt.latitude(), pt.longitude(),
+                                                                                i,
+                                                                                i == 0,
+                                                                                isArrival);
+                                                        })
+                                                        .toList();
                                         String departureName = p.departureName();
 
                                         return new PlaceTravelBurdenResponse.MemberBurden(

@@ -79,4 +79,11 @@ public interface SubwayStationJpaRepository extends JpaRepository<SubwayStationJ
             WHERE s.station_id IN (:ids)
             """)
     List<Object[]> findCoordinatesByIds(@Param("ids") List<Long> ids);
+
+    @Query(nativeQuery = true, value = """
+            SELECT s.station_id, s.station_name
+            FROM subway_station s
+            WHERE s.station_id IN (:ids)
+            """)
+    List<Object[]> findNamesByIds(@Param("ids") List<Long> ids);
 }
