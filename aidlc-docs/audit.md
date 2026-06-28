@@ -638,3 +638,9 @@ Clarification 2 원문: "A가 가장 괜찮아보이네 역 후보도 보여줘�
 - 신규 GET /place-vote/participants — getVoteParticipants + VoteParticipantsResponse + Controller.
 - 테스트: 5-arg create 호출 수정, 거리보기 테스트 메타 기반 전환, 신규 API 2테스트 추가.
 - Build & Test: 96 passed, 0 failures.
+
+## New Cycle: Radius-based Nearby Place Search API
+**Timestamp**: 2026-06-28T00:00:00+09:00
+**User Input**: "지도에서 반경(radius)에 따라 주변 장소를 검색하는 API"
+**Decision**: Brownfield, 260 Java files, 31 Flyway migrations, RE artifacts current -> RE SKIP
+**Next**: Requirements Analysis

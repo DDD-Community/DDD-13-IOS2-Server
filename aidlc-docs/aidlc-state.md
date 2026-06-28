@@ -155,9 +155,15 @@
 6. 기존 행 V30 best-effort 백필(기본 출발지 기준), 매칭 불가 시 null.
 7. MeetingParticipant.create 시그니처 변경 → 기존 테스트 호출부 수정 필요.
 
+## New Cycle (진행중) — 반경 기반 주변 장소 검색 API
+- **Feature**: 지도에서 반경(radius)에 따라 주변 장소를 검색하는 API
+- **Type**: Brownfield 신규 엔드포인트 (기존 place 컨텍스트 확장 가능성)
+- **Session Start**: 2026-06-28
+- **STEP 1 Workspace Detection**: 완료 — Brownfield, 260 Java files, 31 Flyway migrations, RE 아티팩트 존재·현행 유지 → RE SKIP
+
 ## Phase
-- phase: OPERATIONS
-- stage: READY
-- status: AWAITING_START
-- last_updated: 2026-06-25T00:00:00+09:00
-- note: FC-12 출발지 메타 저장(V30) + 장소투표 참여 팀원 조회 API 구현 완료. Build & Test 96 passed. @operations에서 배포 진행.
+- phase: INCEPTION
+- stage: REQUIREMENTS_ANALYSIS
+- status: IN_PROGRESS
+- last_updated: 2026-06-28T00:00:00+09:00
+- note: 반경 기반 주변 장소 검색 API inception 시작
