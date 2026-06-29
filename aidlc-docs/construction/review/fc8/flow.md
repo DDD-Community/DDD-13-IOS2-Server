@@ -27,3 +27,16 @@ sequenceDiagram
 - 역 0개 → MIDPOINT_STATION_NOT_FOUND
 - 장소 0개(6km) → PLACE_RECOMMENDATION_EMPTY
 - 15 미만 → 가능한 만큼
+
+## 장소 상세 조회 흐름 (`GET /api/v1/places?ids=`) — [V32 보강]
+```mermaid
+sequenceDiagram
+    Client->>API: GET /places?ids=12,7,99
+    API->>PlaceRepo: findByIds([12,7,99])
+    PlaceRepo-->>API: Place[] (미존재 99 제외)
+    API->>API: 요청 순서대로 정렬 + PlaceDetailResponse.from 매핑
+    API-->>Client: [{...address(지번),roadAddress,businessHours,holiday,naverUrl...}]
+```
+- 단계: ids 수신 → findByIds 조회 → 요청 순서 보존 정렬(미존재 제외) → DTO 매핑(상세필드 포함) → 반환
+- 상태 전이: 없음 (read-only, 모임 상태 무관)
+- 엣지: 전부 미존재 → 빈 배열 / 미적재 필드 → null

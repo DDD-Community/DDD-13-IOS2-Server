@@ -644,3 +644,15 @@ Clarification 2 원문: "A가 가장 괜찮아보이네 역 후보도 보여줘�
 **User Input**: "지도에서 반경(radius)에 따라 주변 장소를 검색하는 API"
 **Decision**: Brownfield, 260 Java files, 31 Flyway migrations, RE artifacts current -> RE SKIP
 **Next**: Requirements Analysis
+
+---
+## 2026-06-29 — New Cycle: FC-8 보완 (장소 상세 응답 보강)
+- STEP 1 Workspace Detection: 완료 — Brownfield, 262 Java files, 31 migrations, RE 현행 유지 → RE SKIP
+- STEP 2 Reverse Engineering: SKIP (아티팩트 존재)
+- STEP 3 Requirements Analysis: IN_PROGRESS — requirement-verification-questions-fc8-place-detail.md 생성, 사용자 답변 대기(GATE)
+- STEP 3 Requirements Analysis: 완료 — 답변 수령(B-1 거리 제외, B-2 함께담기N 제외, B-3 naver_url 원본, C-3 export 사용자), requirements-fc8-place-detail.md 확정. 승인 대기.
+- STEP 4/5/7: SKIP. STEP 6 Application Design: 완료 — application-design-fc8-place-detail.md
+- Review Artifacts: 완료 — fc8 rules/api/erd/flow 갱신, overview.md·project-erd.md 갱신, PRD mvp3.md §9-3 / mvp3-1.md §12-1.1 데이터소스 주석. 승인 대기(GATE).
+- 승인: 사용자 "승인하고 코드구현" → Inception 완료 처리, CONSTRUCTION 진행.
+- CONSTRUCTION 완료: V32__add_place_detail_fields.sql + Place/PlaceJpaEntity/PlaceDetailResponse 4필드(roadAddress/businessHours/holiday/naverUrl). Build & Test 94 passed, 0 failures.
+- 남은 작업(사용자): V32 배포 후 데이터 적재(콘솔 TRUNCATE+import 또는 UPDATE), export_for_gcp.py 수정.

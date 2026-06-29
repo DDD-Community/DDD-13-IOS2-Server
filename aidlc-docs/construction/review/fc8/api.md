@@ -47,13 +47,31 @@
 
 ## GET /api/v1/places?ids={id1,id2,...}
 - 장소 상세 **1~N건 일괄 조회**: `ids` 쿼리파라미터로 placeId 목록 전달 → `PlaceDetailResponse` 배열 반환
-- 각 항목: `placeId, name, categoryLabel, address, latitude, longitude, vibe[], occasion[], reservable, hasParking, rating`
+- 각 항목: `placeId, name, categoryLabel, address, roadAddress, latitude, longitude, vibe[], occasion[], reservable, hasParking, rating, businessHours, holiday, naverUrl`
 - **요청 순서 보존**, 존재하지 않는 placeId는 결과에서 제외(에러 아님). id 1개만 넘기면 단건 조회로 동작
+- 장소 상세 바텀시트(PRD §9-3 / §12-1.1) 데이터 소스
+
+### [V32 보강] 추가/변경 필드
+| 필드 | 의미 | 비고 |
+|---|---|---|
+| `address` | **지번주소** | 의미 변경(기존=도로명) |
+| `roadAddress` | 도로명주소 | 신규(V32), nullable |
+| `businessHours` | 영업시간 표시용 원문 | 신규(V32), 백엔드 파싱 없음, nullable |
+| `holiday` | 휴무 표시용 원문 | 신규(V32), nullable |
+| `naverUrl` | 네이버 지도 https URL | 기존 컬럼 매핑만 신규. 딥링크(`nmap://place?id=`)는 프론트가 `placeId`로 조립 |
+
+> 스코프 제외: **출발지 기준 거리**(범용 API·리소스 부담), **함께 담기 N**(모임 맥락 — 담기현황 API 책임)
+
 ```json
 [
-  { "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ...",
+  { "placeId": 12, "name": "○○식당", "categoryLabel": "한식",
+    "address": "서울특별시 성동구 성수동2가 315-29",
+    "roadAddress": "서울특별시 성동구 연무장5가길 20-1",
     "latitude": 37.5, "longitude": 127.0, "vibe": ["분위기좋은"], "occasion": ["회식"],
-    "reservable": true, "hasParking": false, "rating": 4.3 }
+    "reservable": true, "hasParking": false, "rating": 4.3,
+    "businessHours": "월~금 11:00-20:30 (브레이크 15:30-17:00), 토~일 11:30-20:30",
+    "holiday": "연중무휴",
+    "naverUrl": "https://map.naver.com/p/entry/place/12" }
 ]
 ```
 
