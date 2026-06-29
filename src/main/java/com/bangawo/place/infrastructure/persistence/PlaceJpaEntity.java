@@ -32,6 +32,9 @@ public class PlaceJpaEntity {
     @Column
     private String address;
 
+    @Column(name = "road_address")
+    private String roadAddress;
+
     private Double latitude;
 
     private Double longitude;
@@ -53,6 +56,15 @@ public class PlaceJpaEntity {
     @Column
     private java.math.BigDecimal rating;
 
+    @Column(name = "business_hours")
+    private String businessHours;
+
+    @Column
+    private String holiday;
+
+    @Column(name = "naver_url")
+    private String naverUrl;
+
     public Place toDomain() {
         return Place.builder()
                 .id(id)
@@ -60,6 +72,7 @@ public class PlaceJpaEntity {
                 .name(name)
                 .categoryLabel(categoryLabel)
                 .address(address)
+                .roadAddress(roadAddress)
                 .latitude(latitude)
                 .longitude(longitude)
                 .vibe(vibe)
@@ -67,6 +80,9 @@ public class PlaceJpaEntity {
                 .reservable(reservable)
                 .hasParking(hasParking)
                 .rating(rating != null ? rating.doubleValue() : null)
+                .businessHours(businessHours)
+                .holiday(holiday)
+                .naverUrl(naverUrl)
                 .build();
     }
 }
