@@ -155,15 +155,40 @@
 6. 기존 행 V30 best-effort 백필(기본 출발지 기준), 매칭 불가 시 null.
 7. MeetingParticipant.create 시그니처 변경 → 기존 테스트 호출부 수정 필요.
 
-## New Cycle (진행중) — 반경 기반 주변 장소 검색 API
+## New Cycle (완료) — 반경 기반 주변 장소 검색 API
 - **Feature**: 지도에서 반경(radius)에 따라 주변 장소를 검색하는 API
 - **Type**: Brownfield 신규 엔드포인트 (기존 place 컨텍스트 확장 가능성)
 - **Session Start**: 2026-06-28
 - **STEP 1 Workspace Detection**: 완료 — Brownfield, 260 Java files, 31 Flyway migrations, RE 아티팩트 존재·현행 유지 → RE SKIP
+- **CONSTRUCTION**: 완료 — GET /api/v1/places/nearby (commit 5bad2cb)
+
+## New Cycle (진행중) — FC-8 보완: 장소 상세 응답 보강 (영업시간·도로명/지번·네이버링크)
+- **Feature**: 장소 상세 조회 API(`GET /api/v1/places?ids=`) 응답에 영업시간·휴무·도로명/지번 주소·네이버 지도링크 추가. 기존 FC-8 확장(새 폴더 금지, fc8 갱신).
+- **Type**: Brownfield 수정/확장 (place 컨텍스트 + place 테이블 컬럼 추가)
+- **Session Start**: 2026-06-29
+- **STEP 1 Workspace Detection**: 완료 — Brownfield, 262 Java files, 31 Flyway migrations, RE 아티팩트 존재·현행 유지 → RE SKIP
+- **STEP 2 Reverse Engineering**: SKIP (아티팩트 존재, place 컨텍스트 직접 검토 완료)
+- **STEP 3 Requirements Analysis**: 완료(승인) — requirements-fc8-place-detail.md (거리·함께담기N 제외, naver_url 원본, export 사용자)
+- **STEP 4 User Stories**: SKIP (백엔드 API·read-only 필드 추가)
+- **STEP 5 Workflow Planning**: SKIP (단일 단위)
+- **STEP 6 Application Design**: 완료 — application-design-fc8-place-detail.md (V32 + 엔티티/도메인/DTO 4필드, 새 컴포넌트 없음)
+- **STEP 7 Units Generation**: SKIP (단일 단위)
+- **Review Artifacts**: 완료 — fc8 각4(rules/api/erd/flow) 갱신 + overview/project-erd 갱신 + PRD(mvp3 §9-3 / mvp3-1 §12-1.1) 데이터소스 주석. 승인 대기.
+
+### 확정된 결정사항 (이번 사이클)
+1. 신규 Flyway V32 — `ALTER TABLE place ADD COLUMN IF NOT EXISTS road_address/business_hours/holiday TEXT`. 기존 V12 불변.
+2. `address` 의미 도로명→지번, `road_address`=도로명. (타입 동일, 데이터 재적재 시 값 교체)
+3. `naver_url`은 기존 컬럼 — 응답 매핑만 신규.
+4. `PlaceDetailResponse`에 `roadAddress/businessHours/holiday/naverUrl` 추가. `GET /api/v1/places?ids=`에만 적용.
+5. 거리(좌표 비의존 유지)·함께담기 N(모임 맥락) 스코프 제외.
+6. export 스크립트(Data/pipeline)·데이터 적재는 사용자 직접.
+
+- **CONSTRUCTION**: 완료 — V32 마이그레이션 + Place 도메인/PlaceJpaEntity/PlaceDetailResponse에 roadAddress·businessHours·holiday·naverUrl 추가. Build & Test 94 passed, 0 failures.
+- **남은 작업(사용자)**: 컬럼 생성(배포 시 V32 자동) 후 콘솔에서 데이터 적재(TRUNCATE+import 또는 UPDATE), export 스크립트 수정.
 
 ## Phase
-- phase: INCEPTION
-- stage: REQUIREMENTS_ANALYSIS
-- status: IN_PROGRESS
-- last_updated: 2026-06-28T00:00:00+09:00
-- note: 반경 기반 주변 장소 검색 API inception 시작
+- phase: CONSTRUCTION
+- stage: COMPLETE
+- status: DONE
+- last_updated: 2026-06-29T00:00:00+09:00
+- note: FC-8 장소상세 보강 코드 구현 완료(94 tests passed). 데이터 적재는 사용자 콘솔 작업.

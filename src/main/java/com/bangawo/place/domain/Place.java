@@ -16,6 +16,7 @@ public class Place {
     private String name;
     private String categoryLabel;
     private String address;
+    private String roadAddress;
     private Double latitude;
     private Double longitude;
     private List<String> vibe;
@@ -23,16 +24,21 @@ public class Place {
     private Boolean reservable;
     private Boolean hasParking;
     private Double rating;
+    private String businessHours;
+    private String holiday;
+    private String naverUrl;
 
     @Builder
     public Place(Long id, Long placeId, String name, String categoryLabel, String address,
-                 Double latitude, Double longitude, List<String> vibe, List<String> occasion,
-                 Boolean reservable, Boolean hasParking, Double rating) {
+                 String roadAddress, Double latitude, Double longitude, List<String> vibe,
+                 List<String> occasion, Boolean reservable, Boolean hasParking, Double rating,
+                 String businessHours, String holiday, String naverUrl) {
         this.id = id;
         this.placeId = placeId;
         this.name = name;
         this.categoryLabel = categoryLabel;
         this.address = address;
+        this.roadAddress = roadAddress;
         this.latitude = latitude;
         this.longitude = longitude;
         this.vibe = vibe;
@@ -40,6 +46,9 @@ public class Place {
         this.reservable = reservable;
         this.hasParking = hasParking;
         this.rating = rating;
+        this.businessHours = businessHours;
+        this.holiday = holiday;
+        this.naverUrl = naverUrl;
     }
 
     /**

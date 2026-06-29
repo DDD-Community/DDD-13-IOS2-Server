@@ -34,3 +34,12 @@
 
 ## 결과
 - meeting_place_recommendation 15건 스냅샷 저장, locationStatus → RECOMMENDED
+
+## 장소 상세 조회 (`GET /api/v1/places?ids=`) — [V32 보강]
+- read-only 범용 조회. 권한/상태 가드 없음(인증만). 비즈니스 로직 없음 — place 마스터 데이터 그대로 노출
+- 응답에 영업시간(`businessHours`)·휴무(`holiday`)·도로명(`roadAddress`)·지번(`address`)·네이버링크(`naverUrl`) 포함
+- `address` 의미 = **지번주소** (V32에서 도로명→지번 변경). 도로명은 `roadAddress`
+- `businessHours`/`holiday`는 **표시용 원문 텍스트** — 서버는 "영업중 여부" 등 판단 안 함
+- 값 미적재 시 `null` (에러 아님). 미존재 placeId는 결과에서 제외, 요청 순서 보존
+- place 데이터는 read-only(외부 파이프라인 적재) — 애플리케이션 쓰기 경로 없음
+- 스코프 제외: 거리(좌표 비의존 유지), 함께담기 N(모임 맥락)
