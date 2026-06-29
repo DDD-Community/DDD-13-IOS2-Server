@@ -48,4 +48,26 @@ public interface PlaceJpaRepository extends JpaRepository<PlaceJpaEntity, Long> 
             ORDER BY v
             """)
     List<String> findDistinctVibes();
+
+    @Query(nativeQuery = true, value = """
+            SELECT p.id AS place_id,
+                   ST_DistanceSphere(
+                       p.location_point::geometry,
+                       ST_MakePoint(:longitude, :latitude)
+                   ) AS distance_meters
+            FROM place p
+            WHERE ST_DWithin(
+                p.location_point,
+                ST_MakePoint(:longitude, :latitude)::geography,
+                :radiusMeters
+            )
+            AND (:categoryLabel IS NULL OR p.category_label = :categoryLabel)
+            ORDER BY distance_meters ASC
+            LIMIT :limit
+            """)
+    List<Object[]> findNearbyRaw(@Param("latitude") double latitude,
+                                 @Param("longitude") double longitude,
+                                 @Param("radiusMeters") double radiusMeters,
+                                 @Param("categoryLabel") String categoryLabel,
+                                 @Param("limit") int limit);
 }

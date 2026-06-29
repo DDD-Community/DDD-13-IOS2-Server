@@ -4,10 +4,12 @@ import com.bangawo.place.domain.Place;
 import com.bangawo.place.domain.PlaceOption;
 import com.bangawo.place.domain.PlaceRepository;
 import com.bangawo.place.presentation.dto.PlaceDetailResponse;
+import com.bangawo.place.presentation.dto.PlaceNearbyResponse;
 import com.bangawo.place.presentation.dto.PlaceOptionsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,6 +44,22 @@ public class PlaceController {
                 .map(placeById::get)
                 .filter(Objects::nonNull)
                 .map(PlaceDetailResponse::from)
+                .toList();
+    }
+
+    private static final int NEARBY_LIMIT = 50;
+
+    @Operation(summary = "반경 기반 주변 장소 검색 — 기준 좌표·반경(미터) 기준 거리순, 최대 50건. category 필터 선택")
+    @GetMapping("/nearby")
+    public List<PlaceNearbyResponse> getNearby(
+            @RequestParam Double latitude,
+            @RequestParam Double longitude,
+            @RequestParam Double radiusMeters,
+            @RequestParam(required = false) String category,
+            Authentication authentication) {
+        return placeRepository.findNearby(latitude, longitude, radiusMeters, category, NEARBY_LIMIT)
+                .stream()
+                .map(PlaceNearbyResponse::from)
                 .toList();
     }
 }

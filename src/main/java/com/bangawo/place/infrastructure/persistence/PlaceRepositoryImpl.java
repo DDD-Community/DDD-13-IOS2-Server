@@ -2,6 +2,7 @@ package com.bangawo.place.infrastructure.persistence;
 
 import com.bangawo.place.domain.Place;
 import com.bangawo.place.domain.PlaceRepository;
+import com.bangawo.place.domain.PlaceWithDistance;
 import com.bangawo.place.domain.RecommendationCandidate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -58,5 +59,31 @@ public class PlaceRepositoryImpl implements PlaceRepository {
     @Override
     public java.util.Optional<Place> findById(Long id) {
         return jpaRepository.findById(id).map(PlaceJpaEntity::toDomain);
+    }
+
+    @Override
+    public List<PlaceWithDistance> findNearby(double latitude, double longitude,
+                                               double radiusMeters, String categoryLabel, int limit) {
+        List<Object[]> rows = jpaRepository.findNearbyRaw(latitude, longitude, radiusMeters, categoryLabel, limit);
+        if (rows.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, Double> distanceById = new LinkedHashMap<>();
+        for (Object[] row : rows) {
+            Long id = ((Number) row[0]).longValue();
+            double distance = ((Number) row[1]).doubleValue();
+            distanceById.put(id, distance);
+        }
+
+        Map<Long, Place> placeById = jpaRepository.findAllById(distanceById.keySet())
+                .stream()
+                .map(PlaceJpaEntity::toDomain)
+                .collect(java.util.stream.Collectors.toMap(Place::getId, p -> p));
+
+        return distanceById.entrySet().stream()
+                .filter(e -> placeById.containsKey(e.getKey()))
+                .map(e -> new PlaceWithDistance(placeById.get(e.getKey()), e.getValue()))
+                .toList();
     }
 }

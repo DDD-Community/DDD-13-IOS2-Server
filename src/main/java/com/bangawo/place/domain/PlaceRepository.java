@@ -12,4 +12,7 @@ public interface PlaceRepository {
     List<Place> findByIds(List<Long> ids);
 
     Optional<Place> findById(Long id);
+
+    List<PlaceWithDistance> findNearby(double latitude, double longitude,
+                                       double radiusMeters, String categoryLabel, int limit);
 }
