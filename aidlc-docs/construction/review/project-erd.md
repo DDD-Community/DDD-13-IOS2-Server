@@ -201,7 +201,7 @@ erDiagram
     member ||--o{ group_member : "1회원 N그룹참여"
     member ||--o{ meeting_participant : "1회원 N모임참여"
     group_info ||--o{ group_invite : "1그룹 N초대코드"
-    %% [V12] place — 장소 마스터 (네이버 place_id 기준)
+    %% [V12 + V32] place — 장소 마스터 (네이버 place_id 기준)
     place {
         BIGINT id PK "장소 고유 ID"
         BIGINT place_id UK "네이버 place_id (NOT NULL UNIQUE)"
@@ -209,7 +209,10 @@ erDiagram
         VARCHAR(50) branch "지점명 (nullable)"
         VARCHAR(100) category "네이버 원본 카테고리"
         VARCHAR(20) category_label "한식/일식/중식/양식/카페/디저트/주점/분식/아시아음식/기타"
-        TEXT address "주소"
+        TEXT address "지번주소 (V32: 의미 변경 도로명→지번)"
+        TEXT road_address "도로명주소 (V32 신규, nullable)"
+        TEXT business_hours "영업시간 표시용 원문 (V32 신규, nullable)"
+        TEXT holiday "휴무 표시용 원문 (V32 신규, nullable)"
         DOUBLE latitude "위도"
         DOUBLE longitude "경도"
         GEOGRAPHY location_point "PostGIS geography(Point,4326)"
@@ -333,7 +336,7 @@ erDiagram
 | `date_vote_option` | V8 (FC-7) | 투표 후보 날짜 |
 | `date_vote_record` | V8 (FC-7) | 투표 기록 |
 | `meeting_participant` | V11 + V15 + V30 | 모임별 참여자 출발지 (합류 시 생성, V15 lat/lng nullable, V30 출발지 메타 label/place_name/address 추가) |
-| `place` | V12 (MVP2) | 장소 마스터 (네이버 place_id, PostGIS) |
+| `place` | V12 (MVP2) + **V32** | 장소 마스터 (네이버 place_id, PostGIS). V32: `road_address`/`business_hours`/`holiday` 추가 + `address` 의미 도로명→지번. 장소 상세 바텀시트용 |
 | `midpoint_station_candidate` | V13 (MVP2), V27 | 중간지점 역 후보 (rank 1~3) — V27에서 station_id·latitude·longitude 추가 |
 | `group_invite` | V14 (FC-5) | 그룹 초대 코드 (48시간 만료) |
 | `subway_station` | V16 (MVP2) | 지하철역 마스터 (PostGIS) |
