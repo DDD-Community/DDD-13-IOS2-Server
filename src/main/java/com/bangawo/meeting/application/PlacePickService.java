@@ -4,7 +4,7 @@ import com.bangawo.auth.domain.Member;
 import com.bangawo.auth.domain.MemberRepository;
 import com.bangawo.global.error.BusinessException;
 import com.bangawo.global.error.ErrorCode;
-import com.bangawo.group.domain.GroupMemberRepository;
+import com.bangawo.group.domain.AttendanceStatus;
 import com.bangawo.meeting.domain.*;
 import com.bangawo.meeting.presentation.dto.MemberPickStatus;
 import com.bangawo.meeting.presentation.dto.PickStatusResponse;
@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 public class PlacePickService {
 
     private final MeetingRepository meetingRepository;
-    private final GroupMemberRepository groupMemberRepository;
     private final MeetingParticipantRepository meetingParticipantRepository;
     private final MeetingPlacePickRepository meetingPlacePickRepository;
     private final MeetingPlaceRecommendationRepository meetingPlaceRecommendationRepository;
@@ -39,8 +38,7 @@ public class PlacePickService {
                                               Boolean reservable, Boolean parking) {
         Meeting meeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEETING_NOT_FOUND));
-        groupMemberRepository.findByGroupIdAndMemberId(meeting.getGroupId(), memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_GROUP_MEMBER));
+        requireParticipant(meetingId, memberId);
 
         List<MeetingPlaceRecommendation> recommendations =
                 meetingPlaceRecommendationRepository.findByMeetingIdOrderByRank(meetingId);
@@ -85,8 +83,7 @@ public class PlacePickService {
     public void pickPlace(Long meetingId, Long memberId, Long placeId) {
         Meeting meeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEETING_NOT_FOUND));
-        groupMemberRepository.findByGroupIdAndMemberId(meeting.getGroupId(), memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_GROUP_MEMBER));
+        requireActiveParticipant(meetingId, memberId);
 
         if (meeting.getLocationStatus() != LocationStatus.RECOMMENDED) {
             throw new BusinessException(ErrorCode.LOCATION_NOT_RECOMMENDED);
@@ -106,8 +103,7 @@ public class PlacePickService {
     public void cancelPick(Long meetingId, Long memberId, Long placeId) {
         Meeting meeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEETING_NOT_FOUND));
-        groupMemberRepository.findByGroupIdAndMemberId(meeting.getGroupId(), memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_GROUP_MEMBER));
+        requireActiveParticipant(meetingId, memberId);
 
         if (meeting.getLocationStatus() != LocationStatus.RECOMMENDED) {
             throw new BusinessException(ErrorCode.LOCATION_NOT_RECOMMENDED);
@@ -123,8 +119,7 @@ public class PlacePickService {
     public PickStatusResponse getPickStatus(Long meetingId, Long memberId) {
         Meeting meeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEETING_NOT_FOUND));
-        groupMemberRepository.findByGroupIdAndMemberId(meeting.getGroupId(), memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_GROUP_MEMBER));
+        requireParticipant(meetingId, memberId);
 
         List<MeetingParticipant> participants = meetingParticipantRepository.findByMeetingId(meetingId);
         List<MeetingPlacePick> allPicks = meetingPlacePickRepository.findByMeetingId(meetingId);
@@ -160,6 +155,21 @@ public class PlacePickService {
                 .toList();
 
         return new PickStatusResponse(memberStatuses, myPicks);
+    }
+
+    private MeetingParticipant requireActiveParticipant(Long meetingId, Long memberId) {
+        MeetingParticipant participant = meetingParticipantRepository
+                .findByMeetingIdAndMemberId(meetingId, memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_MEETING_PARTICIPANT));
+        if (AttendanceStatus.ABSENT.name().equals(participant.getAttendanceStatus())) {
+            throw new BusinessException(ErrorCode.ABSENT_PARTICIPANT_CANNOT_ACT);
+        }
+        return participant;
+    }
+
+    private void requireParticipant(Long meetingId, Long memberId) {
+        meetingParticipantRepository.findByMeetingIdAndMemberId(meetingId, memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_MEETING_PARTICIPANT));
     }
 
     private void checkAndAutoTransitionToVoting(Meeting meeting) {

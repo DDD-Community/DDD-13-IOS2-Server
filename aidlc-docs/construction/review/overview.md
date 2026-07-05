@@ -71,6 +71,10 @@ stateDiagram-v2
 ```
 
 > 가드: 장소축 시작은 `dateVoteStatus == COMPLETED` AND `locationStatus == BEFORE` 일 때만.
+>
+> ⭐ **참석여부 잠금 (2026-07-05)**: 참석여부(JOIN/LATE/ABSENT) 변경은 `locationStatus == BEFORE`에서만 가능. 장소 단계 진입(`RECOMMENDED` 이상) 후에는 잠금(400 MEETING_026). 담기·투표 완료 판정의 분모(활성 참여자=ABSENT 제외)를 장소 단계 도중 안정화하기 위함.
+>
+> ⭐ **담기·투표 인가 (2026-07-05)**: 담기·날짜투표·장소투표는 **그룹원이 아니라 해당 모임의 참여자(`meeting_participant`)** 기준으로 인가한다(비참여자 403 MEETING_024). 쓰기(담기/투표 제출)는 `ABSENT` 참여자 거부(403 MEETING_025). 새 모임은 그룹원 일부만 참여자로 뽑을 수 있어 "그룹원 ≠ 모임 참여자"가 정상 존재하기 때문.
 
 ---
 
@@ -130,7 +134,7 @@ stateDiagram-v2
 | 날짜 투표 시작 | O | X |
 | 날짜 직접 확정 | O | X |
 | 투표 참여 | O | O |
-| 참석여부 변경 (미팅별, meeting_participant) | O (본인) | O (본인) |
+| 참석여부 변경 (미팅별, meeting_participant) | O (본인, `locationStatus=BEFORE`만) | O (본인, `locationStatus=BEFORE`만) |
 | 출발지 추가/수정 | O | O |
 | 모임 출발지 변경 | O | O |
 | 장소 선정 시작 | O | X |

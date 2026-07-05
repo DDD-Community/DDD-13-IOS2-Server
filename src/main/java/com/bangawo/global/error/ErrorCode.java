@@ -63,6 +63,9 @@ public enum ErrorCode {
     PLACE_NOT_CONFIRMED(HttpStatus.BAD_REQUEST, "MEETING_021", "아직 장소가 확정되지 않았습니다"),
     PLACE_VOTE_ALREADY_STARTED(HttpStatus.BAD_REQUEST, "MEETING_022", "이미 장소 투표가 시작되었습니다"),
     PLACE_VOTE_INVALID_CANDIDATE(HttpStatus.BAD_REQUEST, "MEETING_023", "후보에 없는 장소에 투표할 수 없습니다"),
+    NOT_MEETING_PARTICIPANT(HttpStatus.FORBIDDEN, "MEETING_024", "이 모임의 참여자가 아닙니다"),
+    ABSENT_PARTICIPANT_CANNOT_ACT(HttpStatus.FORBIDDEN, "MEETING_025", "불참으로 표시한 참여자는 담기·투표에 참여할 수 없습니다"),
+    ATTENDANCE_LOCKED(HttpStatus.BAD_REQUEST, "MEETING_026", "장소 선정 단계가 시작되어 참석 여부를 변경할 수 없습니다"),
 
     // Place
     PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "PLACE_001", "장소를 찾을 수 없습니다"),

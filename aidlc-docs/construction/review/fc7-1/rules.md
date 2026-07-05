@@ -9,6 +9,9 @@
 - 요청자 본인의 참석여부만 수정 가능
 - 유효 값: `JOIN` (참여) / `LATE` (늦참) / `ABSENT` (불참)
 - 대상: 해당 미팅의 `meeting_participant` 레코드 (JOIN으로 시딩됨 — 그룹 생성/합류, 그리고 새 모임 생성 시 호스트가 선택한 참여자)
+- **참석여부 변경은 장소 선정 단계 진입 전(`location_status = BEFORE`)까지만 가능하다.** 장소 추천이 완료(`RECOMMENDED` 이상)되면 참석여부는 **잠금**되어 변경할 수 없다.
+  - 이유: 담기/투표 완료 판정의 분모(활성 참여자 = ABSENT 제외)가 장소 단계 도중 바뀌면 "전원 완료" 자동 전환/확정 로직이 어긋난다. 장소 단계 진입 시점에 참석 인원을 고정하여 분모를 안정화한다.
+  - 참석여부는 날짜 투표 확정 후 ~ 장소 추천 시작 전 사이에 정하는 것이 정상 플로우다.
 
 ### 인가 / 제약
 
@@ -18,6 +21,7 @@
 | 모임 존재 | meeting 레코드 필수 | 404 MEETING_001 |
 | 참여자 여부 | meeting_participant 레코드 필수 | 404 MEETING_013 |
 | attendanceStatus | JOIN / LATE / ABSENT | 400 COMMON_001 |
+| 장소 단계 잠금 | `location_status = BEFORE`일 때만 변경 가능 | 400 MEETING_026 |
 
 ---
 

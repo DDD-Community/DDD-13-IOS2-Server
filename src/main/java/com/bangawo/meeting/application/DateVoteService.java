@@ -29,6 +29,7 @@ public class DateVoteService {
 
     private final MeetingRepository meetingRepository;
     private final GroupMemberRepository groupMemberRepository;
+    private final MeetingParticipantRepository meetingParticipantRepository;
     private final DateVoteSessionRepository dateVoteSessionRepository;
     private final DateVoteOptionRepository dateVoteOptionRepository;
     private final DateVoteRecordRepository dateVoteRecordRepository;
@@ -98,8 +99,7 @@ public class DateVoteService {
     public void submitVote(Long meetingId, Long memberId, SubmitVoteRequest request) {
         Meeting meeting = getMeeting(meetingId);
 
-        groupMemberRepository.findByGroupIdAndMemberId(meeting.getGroupId(), memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_GROUP_MEMBER));
+        requireParticipant(meetingId, memberId);
 
         if (meeting.getDateVoteStatus() != DateVoteStatus.IN_PROGRESS) {
             throw new BusinessException(ErrorCode.VOTE_NOT_IN_PROGRESS);
@@ -137,8 +137,7 @@ public class DateVoteService {
     public VoteStatusResponse getVoteStatus(Long meetingId, Long memberId) {
         Meeting meeting = getMeeting(meetingId);
 
-        groupMemberRepository.findByGroupIdAndMemberId(meeting.getGroupId(), memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_GROUP_MEMBER));
+        requireParticipant(meetingId, memberId);
 
         DateVoteSession session = dateVoteSessionRepository.findByMeetingId(meetingId)
                 .orElse(null);
@@ -230,7 +229,7 @@ public class DateVoteService {
     }
 
     private void checkEarlyCompletion(Meeting meeting, DateVoteSession session, List<DateVoteOption> options) {
-        int totalMembers = groupMemberRepository.countByGroupId(meeting.getGroupId());
+        long totalMembers = meetingParticipantRepository.findByMeetingId(meeting.getId()).size();
         List<Long> optionIds = options.stream().map(DateVoteOption::getId).toList();
         long votedMembers = dateVoteRecordRepository.countDistinctMemberIdByOptionIdIn(optionIds);
 
@@ -268,6 +267,11 @@ public class DateVoteService {
     private Meeting getMeeting(Long meetingId) {
         return meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEETING_NOT_FOUND));
+    }
+
+    private void requireParticipant(Long meetingId, Long memberId) {
+        meetingParticipantRepository.findByMeetingIdAndMemberId(meetingId, memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_MEETING_PARTICIPANT));
     }
 
     private void requireHost(Long groupId, Long memberId) {

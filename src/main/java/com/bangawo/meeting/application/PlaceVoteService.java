@@ -4,6 +4,7 @@ import com.bangawo.auth.domain.Member;
 import com.bangawo.auth.domain.MemberRepository;
 import com.bangawo.global.error.BusinessException;
 import com.bangawo.global.error.ErrorCode;
+import com.bangawo.group.domain.AttendanceStatus;
 import com.bangawo.group.domain.GroupMember;
 import com.bangawo.group.domain.GroupMemberRepository;
 import com.bangawo.group.domain.GroupMemberRole;
@@ -164,8 +165,7 @@ public class PlaceVoteService {
                 // 1. 모임 + 그룹원 검증
                 Meeting meeting = meetingRepository.findById(meetingId)
                                 .orElseThrow(() -> new BusinessException(ErrorCode.MEETING_NOT_FOUND));
-                groupMemberRepository.findByGroupIdAndMemberId(meeting.getGroupId(), memberId)
-                                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_GROUP_MEMBER));
+                requireActiveParticipant(meetingId, memberId);
 
                 // 2. 투표 진행 중 상태 확인
                 if (meeting.getLocationStatus() != LocationStatus.VOTING) {
@@ -224,8 +224,7 @@ public class PlaceVoteService {
                 // 1. 모임 + 그룹원 + 투표 진행 상태 검증
                 Meeting meeting = meetingRepository.findById(meetingId)
                                 .orElseThrow(() -> new BusinessException(ErrorCode.MEETING_NOT_FOUND));
-                groupMemberRepository.findByGroupIdAndMemberId(meeting.getGroupId(), memberId)
-                                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_GROUP_MEMBER));
+                requireParticipant(meetingId, memberId);
 
                 if (meeting.getLocationStatus() != LocationStatus.VOTING) {
                         throw new BusinessException(ErrorCode.PLACE_VOTE_NOT_IN_PROGRESS);
@@ -305,8 +304,7 @@ public class PlaceVoteService {
                 // 1. 모임 + 그룹원 검증
                 Meeting meeting = meetingRepository.findById(meetingId)
                                 .orElseThrow(() -> new BusinessException(ErrorCode.MEETING_NOT_FOUND));
-                groupMemberRepository.findByGroupIdAndMemberId(meeting.getGroupId(), requestMemberId)
-                                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_GROUP_MEMBER));
+                requireParticipant(meetingId, requestMemberId);
 
                 // 2. 멤버 기준 = 활성 참여자(ABSENT 제외) 전원
                 List<MeetingParticipant> activeParticipants = meetingParticipantRepository.findByMeetingId(meetingId)
@@ -385,8 +383,7 @@ public class PlaceVoteService {
                 // 1. 모임 + 그룹원 검증
                 Meeting meeting = meetingRepository.findById(meetingId)
                                 .orElseThrow(() -> new BusinessException(ErrorCode.MEETING_NOT_FOUND));
-                groupMemberRepository.findByGroupIdAndMemberId(meeting.getGroupId(), memberId)
-                                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_GROUP_MEMBER));
+                requireParticipant(meetingId, memberId);
 
                 // 2. 투표 진행 중 상태 + 세션 확인
                 if (meeting.getLocationStatus() != LocationStatus.VOTING) {
@@ -423,6 +420,21 @@ public class PlaceVoteService {
                                 .toList();
 
                 return new VoteParticipantsResponse(participants);
+        }
+
+        private MeetingParticipant requireActiveParticipant(Long meetingId, Long memberId) {
+                MeetingParticipant participant = meetingParticipantRepository
+                                .findByMeetingIdAndMemberId(meetingId, memberId)
+                                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_MEETING_PARTICIPANT));
+                if (AttendanceStatus.ABSENT.name().equals(participant.getAttendanceStatus())) {
+                        throw new BusinessException(ErrorCode.ABSENT_PARTICIPANT_CANNOT_ACT);
+                }
+                return participant;
+        }
+
+        private void requireParticipant(Long meetingId, Long memberId) {
+                meetingParticipantRepository.findByMeetingIdAndMemberId(meetingId, memberId)
+                                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_MEETING_PARTICIPANT));
         }
 
         /** 세션 존재 시 활성 참여자 전원이 투표했는지 외부 노출용 판정. (세션 없으면 false) */

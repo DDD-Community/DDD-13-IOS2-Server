@@ -28,7 +28,7 @@ sequenceDiagram
 - 저장값은 참여 당시 스냅샷(이후 회원 출발지 수정과 무관).
 
 ## 장소투표 참여 팀원 조회 ⭐ (2026-06-25 추가)
-1. 모임 조회 + 그룹원 검증 + VOTING 상태 확인 + 세션 확인.
+1. 모임 조회 + **참여자 검증**(그룹원 아님, 없으면 403 MEETING_024) + VOTING 상태 확인 + 세션 확인.
 2. 활성 참여자(ABSENT 제외) 조회.
 3. 세션 표 조회 → distinct voterIds.
 4. 활성 memberIds → 회원(nickname/profileImageUrl) 배치 조회.
@@ -41,6 +41,7 @@ sequenceDiagram
 - 모든 시작 경로(호스트 수동/전원 담기/마감 자동) 공통
 
 ## 투표
+0. ⭐ 인가: 모임 참여자 검증(없으면 403 MEETING_024) + `ABSENT`면 거부(403 MEETING_025). 조회는 참여자면 상태 무관 허용.
 1. submit: ⭐ placeId 후보소속 검증 + 담긴후보 50% 제한 → 익명 저장 → 1개이상=완료
 2. 전원 투표완료 시 CONFIRMED 트리거(FC-13)
 3. 마감 배치 시 CONFIRMED 트리거
