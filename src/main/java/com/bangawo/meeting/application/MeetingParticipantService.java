@@ -3,6 +3,8 @@ package com.bangawo.meeting.application;
 import com.bangawo.global.error.BusinessException;
 import com.bangawo.global.error.ErrorCode;
 import com.bangawo.group.domain.AttendanceStatus;
+import com.bangawo.meeting.domain.LocationStatus;
+import com.bangawo.meeting.domain.Meeting;
 import com.bangawo.meeting.domain.MeetingParticipant;
 import com.bangawo.meeting.domain.MeetingParticipantRepository;
 import com.bangawo.meeting.domain.MeetingRepository;
@@ -20,8 +22,12 @@ public class MeetingParticipantService {
 
     @Transactional
     public void updateAttendance(Long meetingId, Long memberId, AttendanceStatus status) {
-        meetingRepository.findById(meetingId)
+        Meeting meeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEETING_NOT_FOUND));
+
+        if (meeting.getLocationStatus() != LocationStatus.BEFORE) {
+            throw new BusinessException(ErrorCode.ATTENDANCE_LOCKED);
+        }
 
         MeetingParticipant participant = meetingParticipantRepository
                 .findByMeetingIdAndMemberId(meetingId, memberId)

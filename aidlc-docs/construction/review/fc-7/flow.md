@@ -62,18 +62,20 @@ body: `{ "optionIds": [1, 3] }`
 
 1. JWT → memberId 추출
 2. meeting 조회 (없으면 404)
-3. groupMember 조회 → 멤버 확인 (아니면 403)
+3. ⭐ **meeting_participant 조회 → 이 모임 참여자 확인 (아니면 403 MEETING_024)** — 그룹원 검증 아님
 4. `meeting.dateVoteStatus == IN_PROGRESS` 확인 (아니면 400)
 5. session 조회 → `deadline >= 오늘` 확인 (마감이면 400)
 6. optionIds가 이 session 소속인지 확인 (아니면 400)
 7. 이 멤버의 기존 투표 기록 전부 삭제 (재투표 허용)
 8. date_vote_record 저장 (optionId별, DB UNIQUE(option_id, member_id)로 중복 방지)
 
-**전원 투표 조기 종료 체크**
+**전원 투표 조기 종료 체크** ⭐ (2026-07-05 분모 수정)
 
-9. 그룹 전체 멤버 수(N) 조회
+9. **이 모임의 참여자 수(N) 조회** (`meeting_participant` 기준) — ~~기존: group_member 전체 수~~
 10. 이번 session에서 투표한 distinct 멤버 수(M) 조회
 11. `N == M` 이면 스케줄러 동일 로직 즉시 실행 → [5번 스케줄러 Case A/B/C 참고]
+
+> 기존엔 분모를 그룹원 전체 수로 잡아, 모임이 그룹원 일부만 참여자로 가지면 `N > M`이 유지돼 조기 확정이 트리거되지 않았다. 분모를 모임 참여자 수로 교정.
 
 ---
 
@@ -83,7 +85,7 @@ body: `{ "optionIds": [1, 3] }`
 
 1. JWT → memberId 추출
 2. meeting 조회 (없으면 404)
-3. groupMember 조회 → 멤버 확인 (아니면 403)
+3. ⭐ meeting_participant 조회 → 이 모임 참여자 확인 (아니면 403 MEETING_024)
 4. session 조회 (없으면 빈 options 반환)
 5. option 목록 조회
 6. record 목록 조회 (option_id IN 목록)

@@ -84,6 +84,9 @@ class PlaceVoteServiceTest {
                 .build();
         hostGroupMember = GroupMember.builder()
                 .groupId(10L).memberId(1L).role(GroupMemberRole.HOST).build();
+        // 담기/투표 인가는 그룹원이 아니라 모임 참여자 기준 — 호출자(1L)는 활성 참여자
+        given(meetingParticipantRepository.findByMeetingIdAndMemberId(1L, 1L))
+                .willReturn(Optional.of(MeetingParticipant.create(1L, 1L, 37.5, 127.0, "JOIN", null, null, null)));
     }
 
     private MeetingPlacePick userPick(Long placeId) {

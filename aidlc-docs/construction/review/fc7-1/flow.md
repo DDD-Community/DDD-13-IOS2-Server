@@ -9,13 +9,15 @@ body: `{ "attendanceStatus": "LATE" }`
 
 1. JWT → memberId 추출
 2. meeting 조회 (없으면 404 MEETING_001)
-3. meeting_participant 조회 (meetingId + memberId) — 없으면 404 MEETING_013
-4. `participant.attendanceStatus = status` 업데이트
-5. meeting_participant 저장
-6. 204 No Content (body 없음)
+3. **장소 단계 잠금 검증**: `meeting.locationStatus != BEFORE`이면 400 MEETING_026 (ATTENDANCE_LOCKED) — 장소 추천이 시작된 뒤에는 참석여부 변경 불가
+4. meeting_participant 조회 (meetingId + memberId) — 없으면 404 MEETING_013
+5. `participant.attendanceStatus = status` 업데이트
+6. meeting_participant 저장
+7. 204 No Content (body 없음)
 
 > 쓰는 테이블: `meeting_participant.attendance_status`  
-> 그룹 단위 `group_member.attendance_status`는 제거됨(V31 DROP). 리스트/상세 읽기도 모두 `meeting_participant` 기준.
+> 그룹 단위 `group_member.attendance_status`는 제거됨(V31 DROP). 리스트/상세 읽기도 모두 `meeting_participant` 기준.  
+> **잠금 규칙**: 참석여부는 `location_status = BEFORE`(장소 단계 진입 전)에서만 변경 가능. 진입 후에는 활성 참여자 수(완료 판정 분모)를 고정하기 위해 잠긴다.
 
 ---
 
