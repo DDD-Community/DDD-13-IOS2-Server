@@ -20,8 +20,22 @@ sequenceDiagram
 1. 가드 통과 → 2. 참여자 출발지 검증 → 3. 중간역3(2→4→6km)
 4. 후보 수집(HARD: 반경+예약/주차) → 5. SOFT 점수 → 6. top15+귀속역 → 7. 스냅샷 + RECOMMENDED
 
+## 추천 결과 조회 흐름 (`GET /{meetingId}/recommendations`) — [2026-07-08 상세화]
+```mermaid
+sequenceDiagram
+    Client->>API: GET /recommendations
+    API->>RecoRepo: findByMeetingIdOrderByRank
+    RecoRepo-->>API: 추천[](placeId,rank,score,nearestStationId)
+    API->>PlaceRepo: findByIds(placeId[]) (기존 1회 조회 그대로)
+    PlaceRepo-->>API: Place[] 전체 필드
+    API->>API: PlaceDetailResponse.from 매핑 (추가 조회 없음)
+    API-->>Client: [{rank, place(상세), score, nearestStationId}]
+```
+- 이미 수행하던 `findByIds` 결과에서 매핑 DTO만 `PlaceSummary`→`PlaceDetailResponse`로 교체. 신규 쿼리 없음.
+
 ## 상태 전이
 - BEFORE → RECOMMENDED
+- (추천 조회는 read-only, 상태 전이 없음)
 
 ## 엣지
 - 역 0개 → MIDPOINT_STATION_NOT_FOUND

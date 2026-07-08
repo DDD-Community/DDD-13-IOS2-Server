@@ -29,11 +29,18 @@
 | 400 | PLACE_RECOMMENDATION_EMPTY | 6km까지 장소 0개 |
 
 ## GET /api/v1/meetings/{meetingId}/recommendations
-- 추천 15 조회: `rank`, `place`(PlaceSummary), `score`, `nearestStationId`
+- 추천 15 조회: `rank`, `place`(**PlaceDetailResponse**), `score`, `nearestStationId`
 - 장소 정보는 평탄 필드가 아니라 `place` 객체로 내려감
+- **[2026-07-08 변경]** `place`를 요약(PlaceSummary)에서 **상세(`PlaceDetailResponse`, `/api/v1/places` 동일 객체)** 로 확장. 이미 로딩된 `Place`에서 매핑만 교체 → **추가 DB 조회 0건**. roadAddress·vibe·occasion·reservable·hasParking·rating·businessHours·holiday·naverUrl 포함. rank/score/nearestStationId 불변.
 ```json
 [
-  { "rank": 1, "place": { "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT", "address": "서울 ...", "latitude": 37.5, "longitude": 127.0 }, "score": 0.87, "nearestStationId": 240 }
+  { "rank": 1,
+    "place": { "placeId": 12, "name": "○○식당", "categoryLabel": "RESTAURANT",
+               "address": "서울 ... (지번)", "roadAddress": "서울 ... (도로명)",
+               "latitude": 37.5, "longitude": 127.0,
+               "vibe": ["아늑한"], "occasion": ["회식"], "reservable": true, "hasParking": false,
+               "rating": 4.3, "businessHours": "11:00~22:00", "holiday": "일요일", "naverUrl": "https://..." },
+    "score": 0.87, "nearestStationId": 240 }
 ]
 ```
 

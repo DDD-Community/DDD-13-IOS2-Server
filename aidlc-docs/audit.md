@@ -656,3 +656,46 @@ Clarification 2 원문: "A가 가장 괜찮아보이네 역 후보도 보여줘�
 - 승인: 사용자 "승인하고 코드구현" → Inception 완료 처리, CONSTRUCTION 진행.
 - CONSTRUCTION 완료: V32__add_place_detail_fields.sql + Place/PlaceJpaEntity/PlaceDetailResponse 4필드(roadAddress/businessHours/holiday/naverUrl). Build & Test 94 passed, 0 failures.
 - 남은 작업(사용자): V32 배포 후 데이터 적재(콘솔 TRUNCATE+import 또는 UPDATE), export_for_gcp.py 수정.
+
+---
+
+## 2026-07-08 — New Cycle: 담기 수동 종료 API + 추천 응답 장소상세 확장 (FC-9/FC-8)
+
+### STEP 1 Workspace Detection — 완료
+- Brownfield, 262 Java files, 32 Flyway migrations. RE 아티팩트 존재·현행 유지 → RE SKIP.
+
+### STEP 2 Reverse Engineering — SKIP (직접 검토)
+- 담기 종료(RECOMMENDED→VOTING) 트리거 3종 확인:
+  1) 전원 담기완료 `PlacePickService.checkAndAutoTransitionToVoting` (기본기간 백필)
+  2) 3일 마감 `PlacePickSchedulerService.processExpiredPickDeadlines` (기본기간 백필)
+  3) 호스트 수동 `POST /place-vote` `PlaceVoteService.startVoting` (durationDays 지정+백필)
+- 공통 백필 MIN_CANDIDATES=3, `createSession`/`createSessionWithDefaultDuration` 단일진입점.
+- 추천 응답: `getRecommendations`가 `placeRepository.findByIds`로 Place 전체 로딩 후 `PlaceSummary`로 축약 → 추가조회 0건으로 `PlaceDetailResponse` 매핑 확장 가능.
+
+### STEP 3 Requirements Analysis — 진행중(승인 대기)
+- 산출물: requirements-fc9-manual-pick-close-and-reco-detail.md
+- R1 담기 수동종료 / R2 추천 상세화. 확인질문 Q1(기존 startVoting 관계)·Q2(상세범위)·Q3(스키마 하위호환)·Q4(rank/score/station 유지).
+
+### STEP 3 Requirements Analysis — 완료(승인)
+- R1 확정: 후보등록 종료=투표시작=동일 상태전이. 기존 `POST /place-vote`(startVoting)로 충족, 코드 변경 없음. durationDays 필수 유지(Q1'=A).
+- R2 확정: 추천 응답 place를 PlaceSummary→PlaceDetailResponse 매핑 교체. 추가 DB 조회 0건, 스키마 변경 없음. rank/score/nearestStationId 유지.
+
+### STEP 4/5/7 — SKIP (백엔드 단일 단위)
+
+### STEP 6 Application Design — 완료
+- 산출물: application-design-fc8-reco-place-detail.md
+- 변경: RecommendationItemResponse.place 타입 PlaceSummary→PlaceDetailResponse, PlaceSelectionService.getRecommendations 매핑 1줄 교체, PlaceDetailResponse.from null 가드.
+- 무변경: PlaceSummary(타 응답 계속 사용), DB/마이그레이션/리포지토리/도메인/인가.
+
+### Review Artifacts — 완료
+- fc8/api.md, fc8/flow.md 갱신(추천 응답 상세화 + 추가조회 0 흐름). overview.md 갱신(FC-8 recommendations 상세, FC-9/11 담기종료=투표시작 주석).
+- project-erd.md / fc8-erd.md 변경 없음(스키마 무변경).
+
+### Inception 완료 — 승인 대기
+- 실제 구현 범위: R2 매핑 교체 1건(+테스트 갱신). R1 개발 없음.
+
+### CONSTRUCTION — 완료 (2026-07-08)
+- 구현(R2): RecommendationItemResponse.place 타입 PlaceSummary→PlaceDetailResponse. PlaceSelectionService.getRecommendations 매핑 PlaceDetailResponse.from으로 교체. PlaceDetailResponse.from null 가드 추가.
+- R1: 코드 변경 없음(기존 startVoting 사용).
+- Build & Test: BUILD SUCCESSFUL, 0 failures.
+- dev 브랜치 커밋/푸시/PR(템플릿) 진행.
