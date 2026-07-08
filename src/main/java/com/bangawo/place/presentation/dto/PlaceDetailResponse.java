@@ -22,6 +22,9 @@ public record PlaceDetailResponse(
         String naverUrl
 ) {
     public static PlaceDetailResponse from(Place place) {
+        if (place == null) {
+            return null;
+        }
         return new PlaceDetailResponse(
                 place.getId(),
                 place.getName(),

@@ -166,7 +166,7 @@ public class PlaceSelectionService {
                 return recommendations.stream()
                                 .map(r -> new RecommendationItemResponse(
                                                 r.getRank(),
-                                                com.bangawo.place.presentation.dto.PlaceSummary
+                                                com.bangawo.place.presentation.dto.PlaceDetailResponse
                                                                 .from(placeById.get(r.getPlaceId())),
                                                 r.getScore(),
                                                 r.getNearestStationId()))

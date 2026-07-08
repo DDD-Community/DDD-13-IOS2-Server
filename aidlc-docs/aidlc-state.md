@@ -186,9 +186,24 @@
 - **CONSTRUCTION**: 완료 — V32 마이그레이션 + Place 도메인/PlaceJpaEntity/PlaceDetailResponse에 roadAddress·businessHours·holiday·naverUrl 추가. Build & Test 94 passed, 0 failures.
 - **남은 작업(사용자)**: 컬럼 생성(배포 시 V32 자동) 후 콘솔에서 데이터 적재(TRUNCATE+import 또는 UPDATE), export 스크립트 수정.
 
+## New Cycle (진행중) — 담기 수동 종료 API + 추천 응답 장소상세 확장 (FC-9/FC-8)
+- **Feature**: (1) 호스트가 담기(후보 등록)를 API로 직접 종료 — 자동종료와 동일 백필 로직. (2) 추천 응답 장소정보를 `/api/v1/places`처럼 상세화(추가 DB 조회 없이). 기존 fc9·fc8 확장(새 폴더 금지).
+- **Type**: Brownfield 수정/확장 (meeting·place 컨텍스트, DTO 매핑 확장, 스키마 변경 없음)
+- **Session Start**: 2026-07-08
+- **STEP 1 Workspace Detection**: 완료 — Brownfield, 262 Java files, 32 Flyway migrations, RE 아티팩트 존재·현행 유지 → RE SKIP
+- **STEP 2 Reverse Engineering**: SKIP (meeting/place 컨텍스트 직접 검토 완료 — 담기 종료 트리거 3종·추천 DTO 매핑 확인)
+- **STEP 3 Requirements Analysis**: 완료(승인) — requirements-fc9-manual-pick-close-and-reco-detail.md
+  - 확정: R1(담기 수동종료)=기존 `startVoting`(POST /place-vote)로 충족, **코드 변경 없음**(Q1'=A). 후보등록 종료=투표시작=동일 전이(RECOMMENDED→VOTING).
+  - 확정: R2=`getRecommendations`의 `place`를 `PlaceSummary`→`PlaceDetailResponse` 매핑 교체. 추가 DB 조회 0건, 스키마 변경 없음.
+- **STEP 4/5/7**: SKIP (백엔드 단일 단위)
+- **STEP 6 Application Design**: 완료 — application-design-fc8-reco-place-detail.md (RecommendationItemResponse.place 타입 교체 + getRecommendations 매핑 1줄 + null 가드)
+- **Review Artifacts**: 완료 — fc8 api.md/flow.md 갱신 + overview.md 갱신. project-erd/erd 변경 없음(스키마 무변경). fc9/fc11은 overview에 "담기종료=투표시작" 주석.
+
+- **CONSTRUCTION**: 완료 — R2 구현: RecommendationItemResponse.place PlaceSummary→PlaceDetailResponse, PlaceSelectionService.getRecommendations 매핑 교체, PlaceDetailResponse.from null 가드. R1 코드 변경 없음. Build & Test 성공(0 failures).
+
 ## Phase
 - phase: CONSTRUCTION
 - stage: COMPLETE
 - status: DONE
-- last_updated: 2026-06-29T00:00:00+09:00
-- note: FC-8 장소상세 보강 코드 구현 완료(94 tests passed). 데이터 적재는 사용자 콘솔 작업.
+- last_updated: 2026-07-08T21:05:00+09:00
+- note: 추천 응답 장소상세화(R2) 구현 완료(빌드/테스트 통과). R1 무변경. dev 커밋/푸시/PR 진행.

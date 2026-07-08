@@ -89,9 +89,9 @@ stateDiagram-v2
 | FC-7-1 | 내 정보 수정 | `PATCH /meetings/{id}/participants/me/attendance`<br>`POST /departure-places`<br>`PUT /departure-places/{id}`<br>`PATCH /meetings/{id}/participants/me/departure` | departure_place, meeting_participant<br>※ 참석여부는 group_member가 아닌 meeting_participant(미팅 단위)로 관리 |
 | (그룹 생명주기) | 그룹 종료/새 모임 | `PATCH /groups/{id}/close`<br>`GET /groups/{id}/members`<br>`POST /groups/{id}/meetings`(참여자 명단 선택) | group_info, meeting, group_member, meeting_participant |
 | FC-midpoint | 중간지점 역 추천 | `POST /meetings/{id}/location/start`<br>`GET /meetings/{id}/midpoint-stations` | meeting_participant, subway_station, midpoint_station_candidate |
-| **FC-8** | 중간역 반경 장소 추천 15 + 장소 상세 조회(상세필드 보강) | `POST /location/start`(확장)<br>`GET /recommendations`<br>`GET /places/options`<br>`GET /places?ids=`(상세, V32 보강)<br>`GET /places/nearby` | place(추천=기존 occasion 재사용 / **V32: road_address·business_hours·holiday 추가 + address 의미 지번 + naver_url 응답 매핑**), meeting_place_recommendation |
-| **FC-9** | 후보 담기/취소 | `GET /places`<br>`POST·DELETE /places/{id}/pick`<br>`GET /places/pick-status` | meeting_place_pick |
-| **FC-11** | 투표 세션·마감일 | `POST /place-vote` | meeting_place_vote_session |
+| **FC-8** | 중간역 반경 장소 추천 15 + 장소 상세 조회(상세필드 보강) | `POST /location/start`(확장)<br>`GET /recommendations`(**place=상세 PlaceDetailResponse, 추가조회 0**)<br>`GET /places/options`<br>`GET /places?ids=`(상세, V32 보강)<br>`GET /places/nearby` | place(추천=기존 occasion 재사용 / **V32: road_address·business_hours·holiday 추가 + address 의미 지번 + naver_url 응답 매핑**), meeting_place_recommendation |
+| **FC-9** | 후보 담기/취소 (**담기 종료 = 투표 시작 `POST /place-vote` 단일 전이**) | `GET /places`<br>`POST·DELETE /places/{id}/pick`<br>`GET /places/pick-status` | meeting_place_pick |
+| **FC-11** | 투표 세션·마감일 (**호출 즉시 담기 종료 RECOMMENDED→VOTING + <3 백필**) | `POST /place-vote` | meeting_place_vote_session |
 | **FC-12** | 익명 다중 투표(후보=담긴장소, <3 추천백필) + 투표현황(득표·참여인원) + 참여팀원 + 친구들 거리보기(이동부담·경로) | `POST /place-vote/submit`<br>`GET /place-vote`<br>`GET /place-vote/participants`<br>`GET /place-vote/{placeId}/travel-burden` | meeting_place_vote, meeting_travel_burden, subway_edge, meeting_place_pick(+source), meeting_participant(+출발지메타) |
 | **FC-13** | 4단계 순위 자동확정 + 1~3위 + 수동확정 | `GET /place-result`<br>`POST /place-confirm` | meeting_confirmed_place |
 
