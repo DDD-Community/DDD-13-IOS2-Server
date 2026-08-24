@@ -318,6 +318,30 @@ erDiagram
     subway_station ||--o{ subway_edge : "역 그래프 엣지"
 ```
 
+## 회원 탈퇴 시 데이터 처리 (FC-14, 2026-08-24)
+
+> **스키마 변경 없음.** 기존 `member.status` / `member.deleted_at` (V2), `meeting_participant` nullable 컬럼(V15·V30)만 활용하므로 신규 Flyway 마이그레이션이 없다.
+
+| 테이블 | 탈퇴 시 처리 | 근거 |
+|---|---|---|
+| `member` | **익명화** — `status=WITHDRAWN`, `deleted_at=now()`, `nickname`/`email`/`profile_image_url`=NULL, `social_user_id`=`withdrawn_{UUID}` | 방침: 제공자별 회원식별정보·닉네임 = 탈퇴 처리 완료 시까지 |
+| `refresh_token` | **DELETE** | 방침: 인증 토큰은 탈퇴 시 파기 |
+| `departure_place` | **DELETE** | 방침: 출발지 삭제 또는 탈퇴 처리 완료 시까지 |
+| `terms_agreement` | **DELETE** | 방침: 약관 동의 이력 = 탈퇴 처리 완료 시까지 |
+| `meeting_travel_burden` | **DELETE** | `station_path` 에 출발역 노출 → 출발지 파생 위치정보 |
+| `meeting_participant` | 행 유지 / `latitude`·`longitude`·`departure_label`·`departure_place_name`·`departure_address` = **NULL** | 참여 이력은 타 이용자 권리 보호, 출발지는 파기 대상 |
+| `group_member` | 행 유지. `role=HOST` 면 `joined_at` 최소 구성원에게 이전 | 방침 예외: 타 이용자 권리 보호 |
+| `group_info` | 잔여 구성원 0명이면 `status=CLOSED` | 호스트 부재 그룹 방지 |
+| `date_vote_record` | 유지 | 투표 집계 정합성 |
+| `meeting_place_pick` | 유지 | 투표 후보 집계 정합성 |
+| `meeting_place_vote` | 유지 | 익명 집계, 개인 귀속 미노출 |
+| `device_token` | ⚠️ **미처리** — 자바 코드 미구현(테이블만 존재) | **푸시 알림 구현 시 DELETE 추가 필수** |
+| GCS `profiles/*` | 객체 삭제 (best-effort) | 프로필 이미지 파기 |
+
+> `member.social_user_id` 는 `NOT NULL` + `uk_member_social UNIQUE(social_provider, social_user_id)` 제약이 있어 NULL 대신 UUID 난수로 치환한다. 이로 인해 동일 소셜 계정 재로그인 시 기존 행과 매칭되지 않아 **새 회원으로 가입**된다.
+
+---
+
 ## 테이블 목록
 
 | 테이블 | 마이그레이션 | 설명 |
