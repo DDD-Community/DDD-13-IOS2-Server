@@ -31,4 +31,9 @@ public class MeetingTravelBurdenRepositoryImpl implements MeetingTravelBurdenRep
                 .map(MeetingTravelBurdenJpaEntity::toDomain)
                 .toList();
     }
+
+    @Override
+    public void deleteAllByMemberId(Long memberId) {
+        jpaRepository.deleteAllByMemberId(memberId);
+    }
 }

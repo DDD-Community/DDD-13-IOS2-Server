@@ -39,4 +39,9 @@ public class GroupMember {
                 .joinedAt(LocalDateTime.now())
                 .build();
     }
+
+    /** 호스트 승계 — 역할을 HOST로 전환 */
+    public void promoteToHost() {
+        this.role = GroupMemberRole.HOST;
+    }
 }

@@ -27,4 +27,9 @@ public class TermsAgreementRepositoryImpl implements TermsAgreementRepository {
     public boolean existsByMemberIdAndTermsId(Long memberId, Long termsId) {
         return jpaRepository.existsByMemberIdAndTermsId(memberId, termsId);
     }
+
+    @Override
+    public void deleteAllByMemberId(Long memberId) {
+        jpaRepository.deleteAllByMemberId(memberId);
+    }
 }

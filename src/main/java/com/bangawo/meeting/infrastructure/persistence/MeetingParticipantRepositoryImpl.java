@@ -48,4 +48,11 @@ public class MeetingParticipantRepositoryImpl implements MeetingParticipantRepos
     public boolean existsByMeetingId(Long meetingId) {
         return jpaRepository.existsByMeetingId(meetingId);
     }
+
+    @Override
+    public List<MeetingParticipant> findByMemberId(Long memberId) {
+        return jpaRepository.findByMemberId(memberId).stream()
+                .map(MeetingParticipantJpaEntity::toDomain)
+                .toList();
+    }
 }

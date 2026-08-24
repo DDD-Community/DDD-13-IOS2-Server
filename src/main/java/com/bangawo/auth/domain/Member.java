@@ -23,12 +23,13 @@ public class Member {
     private boolean isRegistered;  // 회원가입 완료 여부
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime deletedAt;
 
     @Builder
     public Member(Long id, SocialProvider socialProvider, String socialUserId,
                   String email, String nickname, String profileImageUrl,
                   MemberStatus status, boolean isRegistered,
-                  LocalDateTime createdAt, LocalDateTime updatedAt) {
+                  LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime deletedAt) {
         this.id = id;
         this.socialProvider = socialProvider;
         this.socialUserId = socialUserId;
@@ -39,6 +40,7 @@ public class Member {
         this.isRegistered = isRegistered;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.deletedAt = deletedAt;
     }
 
     /** 소셜 로그인으로 신규 회원 생성 (닉네임/프로필은 회원가입 단계에서 설정) */
@@ -73,5 +75,20 @@ public class Member {
 
     public boolean isActive() {
         return this.status == MemberStatus.ACTIVE;
+    }
+
+    public boolean isWithdrawn() {
+        return this.status == MemberStatus.WITHDRAWN;
+    }
+
+    /** 탈퇴 처리 — 상태 전이 + 개인정보 익명화 (뼈대만 유지) */
+    public void withdraw(String anonymizedSocialUserId) {
+        this.status = MemberStatus.WITHDRAWN;
+        this.deletedAt = LocalDateTime.now();
+        this.nickname = null;
+        this.email = null;
+        this.profileImageUrl = null;
+        this.socialUserId = anonymizedSocialUserId;
+        this.updatedAt = LocalDateTime.now();
     }
 }

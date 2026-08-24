@@ -67,4 +67,13 @@ public class MeetingParticipant {
     public String departureName() {
         return departurePlaceName != null ? departurePlaceName : departureLabel;
     }
+
+    /** 출발지 정보 파기 — 좌표 및 출발지 메타를 모두 제거 (참여 이력은 유지) */
+    public void clearDeparture() {
+        this.latitude = null;
+        this.longitude = null;
+        this.departureLabel = null;
+        this.departurePlaceName = null;
+        this.departureAddress = null;
+    }
 }

@@ -17,4 +17,9 @@ public interface DeparturePlaceJpaRepository extends JpaRepository<DeparturePlac
     void clearDefaultByMemberId(Long memberId);
 
     Optional<DeparturePlaceJpaEntity> findByMemberIdAndIsDefaultTrue(Long memberId);
+
+    /** 해당 회원의 출발지를 물리 삭제 (탈퇴 시 파기 전용) */
+    @Modifying
+    @Query("DELETE FROM DeparturePlaceJpaEntity d WHERE d.memberId = :memberId")
+    void deleteAllByMemberId(Long memberId);
 }

@@ -66,6 +66,7 @@ public class MemberJpaEntity {
         entity.isRegistered = domain.isRegistered();
         entity.createdAt = domain.getCreatedAt();
         entity.updatedAt = domain.getUpdatedAt();
+        entity.deletedAt = domain.getDeletedAt();
         return entity;
     }
 
@@ -82,6 +83,7 @@ public class MemberJpaEntity {
                 .isRegistered(isRegistered)
                 .createdAt(createdAt)
                 .updatedAt(updatedAt)
+                .deletedAt(deletedAt)
                 .build();
     }
 }

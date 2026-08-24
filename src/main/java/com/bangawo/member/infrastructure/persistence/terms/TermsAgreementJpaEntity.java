@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
-/** DELETE 금지 — INSERT만 허용 (법적 증적) */
+/** 일반 DELETE 금지 — INSERT만 허용(법적 증적). 단, 회원 탈퇴 시 파기는 예외. */
 @Entity
 @Table(name = "terms_agreement",
         uniqueConstraints = @UniqueConstraint(columnNames = {"member_id", "terms_id"}))
