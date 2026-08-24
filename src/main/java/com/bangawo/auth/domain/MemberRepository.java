@@ -10,4 +10,6 @@ public interface MemberRepository {
     Optional<Member> findById(Long id);
     Member save(Member member);
     List<Member> findAllById(Set<Long> ids);
+    /** 활성 회원 존재 여부. 인증 필터 전용 경량 조회 */
+    boolean existsActiveById(Long memberId);
 }

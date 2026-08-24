@@ -699,3 +699,122 @@ Clarification 2 원문: "A가 가장 괜찮아보이네 역 후보도 보여줘�
 - R1: 코드 변경 없음(기존 startVoting 사용).
 - Build & Test: BUILD SUCCESSFUL, 0 failures.
 - dev 브랜치 커밋/푸시/PR(템플릿) 진행.
+
+---
+
+## Cycle: 회원 탈퇴 기능 (2026-08-24)
+
+### STEP 1 Workspace Detection — 완료
+- Brownfield 확인: src/main/java 262 files, Gradle, Spring Boot 3.4.4 / Java 17, Flyway V1~V32.
+- 기존 자산 확인:
+  - `member.status`(ACTIVE/SUSPENDED/WITHDRAWN) + `member.deleted_at` 컬럼 이미 존재(V2) — 코드상 WITHDRAWN 전이 로직 없음.
+  - member(id) FK/참조 테이블: refresh_token, departure_place, terms_agreement, device_token, group_member, meeting_participant, date_vote_record, meeting_place_pick(nullable), meeting_place_vote(FK 없음), meeting_travel_burden(FK 없음).
+  - group_member.role(HOST/MEMBER) — 호스트 승계 이슈 존재. PRD mvp1 §6-7 "우선 호스트 탈퇴 개념 없음"(미결).
+- RE 아티팩트 존재(2026-06-21 갱신) + 코드 규모 변동 없음 → STEP 2 Reverse Engineering SKIP.
+
+### STEP 3 Requirements Analysis — 질문 생성(답변 대기)
+- 산출물: requirement-verification-questions-member-withdrawal.md (Q1~Q14)
+- 핵심 미결: 탈퇴방식(soft/hard/유예), 익명화 범위, 호스트 그룹 승계, 진행중 투표 데이터, 재가입 정책, 소셜 unlink 호출, 인증 즉시차단.
+
+### STEP 3 — 1차 답변 접수 + 방침 정합성 검토 (2차 질문 생성)
+- 1차 답변: Q1=C, Q2=A, Q4=A, Q6=A, Q9=A, Q11=A, Q12=A, Q13=A, Q14=A / Q3·Q5·Q7·Q8·Q10 재질문 요청.
+- 사용자 제공 개인정보 수집·이용 동의표와 대조 → 충돌 3건 발견:
+  1. Q1=C 유예기간 중 개인정보 보유 = 방침("탈퇴 처리 완료 시까지") 위반 → 즉시 파기 + 뼈대 유지로 조정.
+  2. Q2=A social_user_id 유지 = 방침("제공자별 회원식별정보") 위반 → B(난수 치환) 필요.
+  3. Q6=A 전부 유지 = 출발지/이동경로 파생 데이터(meeting_participant 좌표·출발지명, meeting_travel_burden) 파기 대상 누락.
+- 2차 질문 Q15~Q21 추가(파기범위 통합안, 스토리지 객체, 호스트 승계 B 확정+규칙, 재가입 A 확정, revoke 설명, 인증차단 A 권장, 배치 불요).
+- 참고 코드 확인: access-token 1h / refresh 30d, JwtAuthenticationFilter는 상태 미검증, meeting_participant 좌표 V15 nullable.
+
+### STEP 3 Requirements Analysis — 완료 (2차 답변 접수)
+- 2차 답변: Q15=A(권장 파기안), Q16=A(스토리지 객체 삭제), Q17=권장(자동승계 joined_at 최소, 잔여0명→CLOSED), Q18=A(재가입=신규), Q19=B(Apple revoke 포함), Q20=A(필터 상태검증), Q21=A(배치 없음).
+- 산출물: requirements-member-withdrawal.md (R1~R10, NFR, 스코프제외, 전제조건 4건)
+- 핵심 결정: Flyway 마이그레이션 불필요(기존 컬럼 활용). 파기=5테이블 DELETE + member 5필드 익명화 + meeting_participant 5필드 NULL + GCS 객체.
+- 코드 조사 결과 기록: 중간지점 SQL은 ST_Collect가 NULL 자동제외 → 수정 불요. PlaceVoteService:486 hasCoordinate 필터 기존재. 미보호 지점은 getVoteParticipants(PlaceVoteService:412) 1곳뿐.
+- 전제조건: Apple 자격증명 4종(환경변수), iOS 앱의 appleAuthorizationCode 전달, DELETE 바디 대신 쿼리파라미터 검토, terms_agreement 삭제 시 동의증빙 소멸.
+
+### R7 보강 — Apple revoke 심사 필수 확인 (2026-08-24)
+- Apple Developer News(Guideline 5.1.1(v)) 원문 확인: "If your app offers Sign in with Apple, you'll need to use the Sign in with Apple REST API to revoke user tokens when deleting an account."
+- 판정: revoke = App Store 심사 필수. Q19=B 유지 확정.
+- 보강: code 누락 시에도 탈퇴 진행(차단 시 5.1.1(v) 위반), iOS 재인증 필요성 명시, AppleAuthClient JWKS 서명검증 미구현(TODO) 별도 리스크로 기록.
+
+### STEP 5 Workflow Planning — 완료
+- 산출물: execution-plan-member-withdrawal.md
+- 결정: AD EXECUTE / Review EXECUTE, RE·US·UG SKIP. 리스크 Medium(파기 누락, 전역 필터 변경, 비가역성, 외부 의존).
+- 영향: 6개 컨텍스트(member/auth/group/meeting/storage/global), 마이그레이션 없음.
+- 구현 순서 7단계 제시(ErrorCode+도메인 → Repository → Apple client → 오케스트레이션 → 필터 → 가드 → 테스트).
+
+### STEP 6 Application Design — 계획 수립(답변 대기)
+- 산출물: application-design-plan-member-withdrawal.md (D1~D3)
+- D1 코드 전달방식(권장 C 헤더), D2 오케스트레이션 위치(권장 B 신규 MemberWithdrawalService), D3 크로스컨텍스트 파기(권장 A 리포지토리 직접주입).
+
+### STEP 6 Application Design — 완료 (2026-08-24)
+- 답변: D1=권장 C(X-Apple-Authorization-Code 헤더), D2=권장 B(신규 MemberWithdrawalService), D3=권장 A(리포지토리 직접 주입).
+- 산출물: application-design-member-withdrawal.md
+- 설계 중 발견 이슈 2건:
+  1. device_token — 테이블(V5)만 존재하고 Entity/Repository/Service 자바 코드 전무 → 파기 대상에서 제외, 푸시 구현 시 추가하도록 문서화.
+  2. TermsAgreementRepository 주석 "DELETE 금지. INSERT만 허용" 과 방침 충돌 → 방침 우선, deleteAllByMemberId 추가 + 주석 갱신.
+- 신규 컴포넌트 4종: MemberWithdrawalService, AppleTokenRevoker(+Impl), AppleRevokeProperties.
+- 변경 컴포넌트: Member.withdraw(), GroupMember.promoteToHost(), MeetingParticipant.clearDeparture(), MemberController, JwtAuthenticationFilter, PlaceVoteService, StorageService/GcsStorageClient.delete, ErrorCode MEMBER_007.
+- 리포지토리 추가 메서드 5건(RefreshToken/DeparturePlace/TermsAgreement/TravelBurden deleteAllByMemberId + MeetingParticipant findByMemberId).
+- 트랜잭션 경계: 승계→참여파기→개인데이터파기→익명화 = TX 내 / GCS·Apple = TX 외 best-effort.
+
+### Review Artifacts — 완료
+- 신규 fc14/{rules,api,erd,flow}.md 4종 생성 (기존 FC 번호 체계 확장, 최대 fc13 다음).
+- overview.md 갱신: FC별 요약표 FC-14 행, "회원 생명주기(FC-14)" 섹션 신규, 권한표 탈퇴 행, FC 폴더 목록.
+- project-erd.md 갱신: "회원 탈퇴 시 데이터 처리(FC-14)" 파기 매트릭스 섹션 추가. 스키마 변경 없음 명시.
+- 게이트 검증: fc14 4종 파일 존재 확인, overview/project-erd 갱신 확인.
+
+### R9 성능 검토 반영 (2026-08-24)
+- 사용자 우려: 인증 필터 DB 조회가 모든 요청에 추가되는 부담.
+- 검토: PK 인덱스 조회 0.5~1ms, 기존 API가 요청당 5~6쿼리 사용 → 영향 미미. 필터는 트랜잭션 밖이라 서비스 트랜잭션과 커넥션 동시 점유 없음(Hikari 기본 10 충분).
+- 설계 개선: findById 전체 엔티티 로드 → existsActiveById(count 프로젝션)로 변경. 필터 @Transactional 금지 명시. Caffeine 캐시는 YAGNI로 미도입(확장 여지만 기록).
+- 반영 파일: application-design-member-withdrawal.md §7, fc14/rules.md 인증 차단 규칙.
+
+### INCEPTION 완료 — 승인됨 (2026-08-24T22:30:00+09:00)
+- 사용자 승인 완료. phase=CONSTRUCTION / stage=READY / status=AWAITING_START.
+- 구현은 사용자가 별도 @construction 에이전트 세션에서 진행 예정 (이번 세션에서 코드 변경 없음).
+- 인계 문서: fc14/{rules,api,erd,flow}.md + application-design-member-withdrawal.md + requirements-member-withdrawal.md
+- 선행 조건: Apple 자격증명 4종(환경변수 주입), iOS 앱의 X-Apple-Authorization-Code 헤더 전달.
+
+### 문서 보강 — 착수 조건 명확화 (2026-08-24)
+- 사용자 지적: Apple 자격증명·iOS 작업이 마치 construction 선행 조건처럼 읽힘.
+- 실제 설계: 미설정 시 revoke 자동 skip이므로 선행 조건 아님. 문서에 명시 누락되어 보강.
+- 반영: fc14/rules.md 최상단 "구현 착수 조건 — 선행 조건 없음" 표 추가 / application-design §0-0 신설 / requirements §6 경고문 + 표기 수정 / aidlc-state.md note 수정.
+
+### CONSTRUCTION — Code Generation Plan 수립 (2026-08-24T13:38:27Z)
+- 산출물: `aidlc-docs/construction/internal/plans/fc14-member-withdrawal-code-generation-plan.md`
+- 총 15 Step (도메인 → 리포지토리 → Storage delete → Apple revoke 클라이언트 → 오케스트레이션 → Controller → 인증필터(R9) → 투표참여자가드(R8) → 빌드확인 → API문서 재검토)
+- 승인 프롬프트 로그: 사용자에게 계획 승인 요청 전송
+
+### CONSTRUCTION — Code Generation Plan 승인 (2026-08-24T13:38:59Z)
+- 사용자 응답: "승인"
+- 승인 대상: fc14-member-withdrawal-code-generation-plan.md (전체 15 Step)
+- 상태: Part 2 Generation 착수
+
+### CONSTRUCTION — Code Generation 완료 (2026-08-24T13:48:32Z)
+- 계획: fc14-member-withdrawal-code-generation-plan.md 전체 15 Step 완료
+- 신규 파일: MemberWithdrawalService, AppleTokenRevoker(+Impl), AppleRevokeProperties, MemberTest, GroupMemberTest, MeetingParticipantTest, MemberWithdrawalServiceTest, AppleTokenRevokerImplTest, JwtAuthenticationFilterTest
+- 수정 파일: ErrorCode(MEMBER_007), Member(+deletedAt/withdraw/isWithdrawn), MemberJpaEntity, GroupMember(+promoteToHost), MeetingParticipant(+clearDeparture), MemberRepository/JpaRepository/Impl(+existsActiveById), RefreshTokenRepository 3종(+deleteAllByMemberId), DeparturePlaceRepository 3종(+deleteAllByMemberId), TermsAgreementRepository 3종(+deleteAllByMemberId, 주석 갱신), MeetingParticipantRepository 3종(+findByMemberId), MeetingTravelBurdenRepository 3종(+deleteAllByMemberId), GcsStorageClient/StorageService(+delete), MemberController(+DELETE /me), JwtAuthenticationFilter(+existsActiveById 가드), PlaceVoteService(getVoteParticipants isActive 가드), application.yml(apple.revoke.*), PlaceVoteServiceTest(member 헬퍼 ACTIVE 기본값 + withdrawnMember 헬퍼 + 신규 테스트)
+- 검증: ./gradlew compileJava compileTestJava BUILD SUCCESSFUL. 신규/변경 테스트 7개 클래스 35건 전체 통과(0 failures).
+- fc14/api.md 실제 구현과 일치 확인, 변경 불필요.
+- 마이그레이션 없음 (기존 컬럼 재사용, 설계 그대로).
+
+### CONSTRUCTION — Code Generation 승인 (2026-08-24T13:50:18Z)
+- 사용자 응답: "개발 다한거아니야? 테스트해야지 그럼" — 승인으로 간주, Build & Test 진행 요청
+- 상세 구현 요약을 재설명(요구사항별 매핑, TransactionTemplate 선택 이유, 테스트 커버리지)
+- 상태: Build & Test 착수
+
+## Build and Test Stage
+**Timestamp**: 2026-08-24T13:52:18Z
+**Build Status**: Success
+**Test Status**: Pass (118/118, 0 failures, 0 errors, 0 skipped)
+**Files Generated**:
+- build-instructions.md (갱신)
+- unit-test-instructions.md (갱신)
+- integration-test-instructions.md (갱신 — FC-14 수동 통합 검증 체크리스트 추가)
+- build-and-test-summary.md (갱신)
+
+- ./gradlew clean build --no-daemon 실행 → BUILD SUCCESSFUL, JAR 생성 확인
+- 이전 사이클 96 tests → 이번 118 tests (+22, FC-14 회원 탈퇴 신규/변경 테스트)
+- 마이그레이션 없음 확인
+- phase: OPERATIONS / stage: READY / status: AWAITING_START 로 갱신

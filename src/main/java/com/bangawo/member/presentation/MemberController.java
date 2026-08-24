@@ -2,6 +2,7 @@ package com.bangawo.member.presentation;
 
 import com.bangawo.auth.domain.Member;
 import com.bangawo.member.application.MemberService;
+import com.bangawo.member.application.MemberWithdrawalService;
 import com.bangawo.member.presentation.dto.MemberResponse;
 import com.bangawo.member.presentation.dto.RegisterRequest;
 import com.bangawo.member.presentation.dto.UpdateProfileImageRequest;
@@ -14,13 +15,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "회원", description = "회원가입, 프로필 조회/수정")
+@Tag(name = "회원", description = "회원가입, 프로필 조회/수정, 탈퇴")
 @RestController
 @RequestMapping("/api/v1/members")
 @RequiredArgsConstructor
 public class MemberController {
 
     private final MemberService memberService;
+    private final MemberWithdrawalService memberWithdrawalService;
     private final StorageService storageService;
 
     @Operation(summary = "닉네임 금칙어 검증", description = "닉네임 입력 화면에서 사용. 통과 시 200, 금칙어 시 400")
@@ -74,5 +76,15 @@ public class MemberController {
         Long memberId = (Long) auth.getPrincipal();
         memberService.updateNickname(memberId, body.get("nickname"));
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "회원 탈퇴", description = "본인 계정을 탈퇴 처리한다. 개인정보는 즉시 파기되고 뼈대만 유지된다. Apple 로그인 회원은 X-Apple-Authorization-Code 헤더로 재인증 코드를 전달하면 연동 해제(revoke)까지 함께 처리된다.")
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> withdraw(
+            Authentication auth,
+            @RequestHeader(value = "X-Apple-Authorization-Code", required = false) String appleAuthorizationCode) {
+        Long memberId = (Long) auth.getPrincipal();
+        memberWithdrawalService.withdraw(memberId, appleAuthorizationCode);
+        return ResponseEntity.noContent().build();
     }
 }

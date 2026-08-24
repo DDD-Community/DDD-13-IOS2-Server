@@ -40,4 +40,9 @@ public class MemberRepositoryImpl implements MemberRepository {
                 .map(MemberJpaEntity::toDomain)
                 .toList();
     }
+
+    @Override
+    public boolean existsActiveById(Long memberId) {
+        return jpaRepository.existsActiveById(memberId);
+    }
 }

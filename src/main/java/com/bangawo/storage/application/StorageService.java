@@ -35,4 +35,12 @@ public class StorageService {
         }
         return objectKey;
     }
+
+    /** 프로필 이미지 객체 삭제 (best-effort). profiles/ 접두사가 아니면 삭제하지 않는다. */
+    public boolean delete(String objectKey) {
+        if (objectKey == null || !objectKey.startsWith("profiles/")) {
+            return false;
+        }
+        return gcsStorageClient.delete(objectKey);
+    }
 }

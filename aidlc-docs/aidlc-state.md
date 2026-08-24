@@ -201,9 +201,39 @@
 
 - **CONSTRUCTION**: 완료 — R2 구현: RecommendationItemResponse.place PlaceSummary→PlaceDetailResponse, PlaceSelectionService.getRecommendations 매핑 교체, PlaceDetailResponse.from null 가드. R1 코드 변경 없음. Build & Test 성공(0 failures).
 
+### 확정된 결정사항 (회원 탈퇴 사이클)
+1. 파기 방식 = soft delete(뼈대 유지) + 개인정보 즉시 파기. 물리삭제 배치 없음.
+2. member 익명화 5필드 (social_user_id는 NOT NULL이라 withdrawn_{UUID} 치환) → 재가입 시 자동 신규 회원.
+3. 물리삭제 4테이블: refresh_token, departure_place, terms_agreement, meeting_travel_burden.
+4. meeting_participant 행 유지 + 좌표2·출발지메타3 NULL. group_member/date_vote_record/place_pick/place_vote 유지.
+5. 호스트 탈퇴 차단 금지 → joined_at 최소 구성원 자동 승계, 잔여 0명이면 group CLOSED.
+6. Apple revoke = App Store 5.1.1(v) 필수. X-Apple-Authorization-Code 헤더 수신. 자격증명 미설정/실패 시 skip(탈퇴는 진행).
+7. JwtAuthenticationFilter에서 existsActiveById 경량조회로 탈퇴 즉시 401. @Transactional 금지, 캐시 미도입.
+8. device_token = 자바코드 전무 → 이번 범위 제외, 푸시 구현 시 파기 추가 필수(문서 경고 기재).
+9. terms_agreement "DELETE 금지" 주석 → 방침 우선으로 삭제 허용(주석 갱신).
+10. Flyway 마이그레이션 없음.
+
 ## Phase
-- phase: CONSTRUCTION
-- stage: COMPLETE
-- status: DONE
-- last_updated: 2026-07-08T21:05:00+09:00
-- note: 추천 응답 장소상세화(R2) 구현 완료(빌드/테스트 통과). R1 무변경. dev 커밋/푸시/PR 진행.
+- phase: OPERATIONS
+- stage: READY
+- status: AWAITING_START
+- last_updated: 2026-08-24T14:20:00Z
+- note: 회원 탈퇴(FC-14) CONSTRUCTION 완료 — Code Generation + Build & Test(118 tests, 0 failures) 모두 승인됨. 운영 전환 전 확인 필요: Apple 자격증명 4종(배포 환경 시크릿), iOS의 X-Apple-Authorization-Code 헤더 전달. 둘 다 없어도 배포·운영 가능(revoke만 skip).
+
+## New Cycle (진행중) — 회원 탈퇴 기능
+- **Feature**: 회원 탈퇴(계정 삭제/비활성) API. auth/member 컨텍스트 확장.
+- **Type**: Brownfield 신규 엔드포인트 + 회원 상태/연관 데이터 처리
+- **Session Start**: 2026-08-24
+- **STEP 1 Workspace Detection**: 완료 — Brownfield, 262 Java files, 32 Flyway migrations(V32), 컨텍스트 8종(auth/member/group/meeting/place/subway/storage/global). RE 아티팩트 존재·현행 유지 → RE SKIP
+- **STEP 2 Reverse Engineering**: SKIP (auth/member 컨텍스트 직접 검토 완료 — member.status/deleted_at, MemberStatus.WITHDRAWN 이미 정의, member(id) 참조 8개 테이블 확인)
+- **STEP 3 Requirements Analysis**: 완료(승인 대기) — requirements-member-withdrawal.md
+- **Extension Configuration (이번 사이클)**: Security baseline=Yes, PBT=No, TDD=No
+- **STEP 4 User Stories**: SKIP (백엔드 API 1개, 역할 단순)
+- **STEP 5 Workflow Planning**: 완료 — execution-plan-member-withdrawal.md (AD·Review EXECUTE / RE·US·UG SKIP, 리스크 Medium)
+- **STEP 6 Application Design**: 완료 — application-design-member-withdrawal.md (D1=C 헤더 / D2=B 신규 MemberWithdrawalService / D3=A 리포지토리 직접주입)
+- **Review Artifacts**: 완료 — fc14 각4(rules/api/erd/flow) 신규 + overview.md 갱신(FC-14 행·회원 생명주기·권한) + project-erd.md 갱신(파기 매트릭스). 스키마 변경 없어 마이그레이션 없음
+- **STEP 7 Units Generation**: SKIP (단일 단위)
+- **Review 대상 FC**: fc14 (신규, 기존 최대 fc13 다음 번호)
+- **CONSTRUCTION — Code Generation**: 완료 — `fc14-member-withdrawal-code-generation-plan.md` 전체 15 Step 완료. `DELETE /api/v1/members/me`, `MemberWithdrawalService`(TransactionTemplate 기반 TX 경계 분리), `AppleTokenRevoker`(+Impl, ES256 client_secret), `AppleRevokeProperties`, 파기용 리포지토리 메서드 6종, `JwtAuthenticationFilter` R9 가드, `PlaceVoteService.getVoteParticipants` R8 가드. 컴파일 성공 + 신규/변경 테스트 7클래스 35건 전체 통과. 마이그레이션 없음. 사용자 승인 완료.
+- **CONSTRUCTION — Build and Test**: 완료 — `./gradlew clean build` BUILD SUCCESSFUL, 전체 118 tests / 0 failures (이전 96 → +22). 산출물: `aidlc-docs/construction/build-and-test/{build-instructions,unit-test-instructions,integration-test-instructions,build-and-test-summary}.md` 갱신.
+- current_unit: fc14 (단일 단위) — COMPLETE

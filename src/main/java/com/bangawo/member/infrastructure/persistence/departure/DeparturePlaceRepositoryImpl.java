@@ -55,4 +55,9 @@ public class DeparturePlaceRepositoryImpl implements DeparturePlaceRepository {
         return jpaRepository.findByMemberIdAndIsDefaultTrue(memberId)
                 .map(DeparturePlaceJpaEntity::toDomain);
     }
+
+    @Override
+    public void deleteAllByMemberId(Long memberId) {
+        jpaRepository.deleteAllByMemberId(memberId);
+    }
 }

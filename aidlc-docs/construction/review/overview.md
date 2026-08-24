@@ -94,10 +94,34 @@ stateDiagram-v2
 | **FC-11** | 투표 세션·마감일 (**호출 즉시 담기 종료 RECOMMENDED→VOTING + <3 백필**) | `POST /place-vote` | meeting_place_vote_session |
 | **FC-12** | 익명 다중 투표(후보=담긴장소, <3 추천백필) + 투표현황(득표·참여인원) + 참여팀원 + 친구들 거리보기(이동부담·경로) | `POST /place-vote/submit`<br>`GET /place-vote`<br>`GET /place-vote/participants`<br>`GET /place-vote/{placeId}/travel-burden` | meeting_place_vote, meeting_travel_burden, subway_edge, meeting_place_pick(+source), meeting_participant(+출발지메타) |
 | **FC-13** | 4단계 순위 자동확정 + 1~3위 + 수동확정 | `GET /place-result`<br>`POST /place-confirm` | meeting_confirmed_place |
+| **FC-14** | 회원 탈퇴 (개인정보 파기 + 호스트 자동승계 + Apple revoke) | `DELETE /members/me` | member(익명화), refresh_token·departure_place·terms_agreement·meeting_travel_burden(삭제), meeting_participant(출발지 NULL), group_member·group_info(승계/CLOSED) |
 
 > ⭐ 2026-06-24 mvp3-1 갭 보완: FC-12 후보 = 담긴 장소(추천15 아님)·placeId 검증·정렬·호스트 완료현황 / FC-13 동점4=최초담은시각·1~3위·수동확정. 푸시·실시간·H3 제외. 상세: `docs/prd/mvp3-1-gap-analysis.md`.
 
-> FC 폴더: `review/fc8`·`fc9`·`fc11`·`fc12`·`fc13` (PRD mvp3.md 번호). 기존 그룹 생명주기는 번호 충돌 회피로 `review/fc-group-lifecycle` 로 보관(과거 'FC-8' 라벨이었음).
+> FC 폴더: `review/fc8`·`fc9`·`fc11`·`fc12`·`fc13`·`fc14` (PRD mvp3.md 번호, fc14는 탈퇴 신규). 기존 그룹 생명주기는 번호 충돌 회피로 `review/fc-group-lifecycle` 로 보관(과거 'FC-8' 라벨이었음).
+
+---
+
+## 회원 생명주기 (FC-14)
+
+```
+소셜 로그인 → member 생성(ACTIVE, is_registered=false)
+   → 회원가입 완료(is_registered=true)
+   → [서비스 이용]
+   → 탈퇴 요청 DELETE /members/me
+        · 호스트 그룹 자동 승계 (없으면 그룹 CLOSED)
+        · 출발지/약관/토큰/이동부담 물리 삭제
+        · meeting_participant 출발지 필드 NULL
+        · member 익명화 (status=WITHDRAWN, social_user_id 치환)
+        · GCS 프로필 이미지 삭제 / Apple revoke (best-effort)
+   → WITHDRAWN [종료, 복구 없음]
+   → 동일 소셜 계정 재로그인 시 **새 member 행 생성**(ACTIVE)
+```
+
+- 탈퇴 즉시 인증 차단: `JwtAuthenticationFilter` 가 상태를 확인하여 비활성이면 401 (Access Token 만료 대기 없음)
+- 탈퇴자는 조회 API 전반에서 `nickname`·`profileImageUrl` = `null`
+- 투표·담기 집계는 유지되어 다른 구성원의 결과가 변하지 않음
+- ⚠️ `device_token` 은 자바 코드 미구현으로 파기 대상에서 제외 — **푸시 알림 구현 시 반드시 추가**
 
 ---
 
@@ -144,3 +168,6 @@ stateDiagram-v2
 | 장소 투표 | O | O |
 | 그룹 종료 | O | X |
 | 새 모임 생성 | O | X |
+| **회원 탈퇴 (본인)** | **O** | **O** |
+
+> 회원 탈퇴는 호스트여도 차단하지 않는다. 호스트인 그룹은 `joined_at` 최소 구성원에게 자동 승계되며, 잔여 구성원이 없으면 그룹이 `CLOSED` 된다. (App Store 5.1.1(v) 계정 삭제 의무)

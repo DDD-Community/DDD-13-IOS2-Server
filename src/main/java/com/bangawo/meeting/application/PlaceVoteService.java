@@ -407,12 +407,14 @@ public class PlaceVoteService {
                                 .collect(Collectors.toMap(Member::getId, m -> m));
 
                 // 5. 참여자별 DTO 조립 (참여 등록순 유지)
+                // 탈퇴 회원은 닉네임·프로필을 노출하지 않는다 (GroupService 등 기존 4곳과 동일 가드)
                 List<VoteParticipantsResponse.Participant> participants = activeParticipants.stream()
                                 .map(p -> {
                                         Long mid = p.getMemberId();
                                         Member m = memberById.get(mid);
-                                        String name = m != null ? m.getNickname() : "";
-                                        String profileImageUrl = m != null ? m.getProfileImageUrl() : null;
+                                        boolean active = m != null && m.isActive();
+                                        String name = active ? m.getNickname() : null;
+                                        String profileImageUrl = active ? m.getProfileImageUrl() : null;
                                         return new VoteParticipantsResponse.Participant(
                                                         mid, name, profileImageUrl, p.departureName(),
                                                         mid.equals(memberId), voterIds.contains(mid));

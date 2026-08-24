@@ -106,7 +106,13 @@ class PlaceVoteServiceTest {
     }
 
     private Member member(Long id, String nickname) {
-        return Member.builder().id(id).nickname(nickname).build();
+        return Member.builder().id(id).nickname(nickname)
+                .status(com.bangawo.auth.domain.MemberStatus.ACTIVE).build();
+    }
+
+    private Member withdrawnMember(Long id) {
+        return Member.builder().id(id).nickname(null)
+                .status(com.bangawo.auth.domain.MemberStatus.WITHDRAWN).build();
     }
 
     private MeetingParticipant participant(Long memberId, Double lat, Double lng) {
@@ -385,6 +391,30 @@ class PlaceVoteServiceTest {
                     assertThat(p.departureName()).isEqualTo("회사");
                     assertThat(p.isMe()).isFalse();
                     assertThat(p.voted()).isFalse();
+                });
+    }
+
+    @Test
+    void getVoteParticipants_탈퇴한_회원은_닉네임과_프로필이미지가_null이다() {
+        given(meetingRepository.findById(1L)).willReturn(Optional.of(votingMeeting));
+        given(groupMemberRepository.findByGroupIdAndMemberId(10L, 1L))
+                .willReturn(Optional.of(hostGroupMember));
+        given(voteSessionRepository.findByMeetingId(1L))
+                .willReturn(Optional.of(MeetingPlaceVoteSession.builder().id(99L).meetingId(1L).build()));
+        given(meetingParticipantRepository.findByMeetingId(1L)).willReturn(List.of(
+                participant(1L, 37.49, 127.02, "라벨무시", "집"),
+                participant(2L, 37.60, 127.10, "회사", null)));
+        given(voteRepository.findBySessionId(99L)).willReturn(List.of());
+        given(memberRepository.findAllById(any()))
+                .willReturn(List.of(member(1L, "홍길동"), withdrawnMember(2L)));
+
+        VoteParticipantsResponse res = service.getVoteParticipants(1L, 1L);
+
+        assertThat(res.participants())
+                .anySatisfy(p -> {
+                    assertThat(p.memberId()).isEqualTo(2L);
+                    assertThat(p.name()).isNull();
+                    assertThat(p.profileImageUrl()).isNull();
                 });
     }
 
