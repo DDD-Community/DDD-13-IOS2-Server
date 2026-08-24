@@ -29,5 +29,13 @@ jwt:
 gcs:
   bucket-name: bangawo-storage
 
+# Apple 연동 해제(revoke, 회원 탈퇴 시 사용). 미설정 시 자동 skip — App Store 심사 제출 전까지만 주입하면 됨.
+apple:
+  revoke:
+    team-id: ${APPLE_TEAM_ID:}
+    key-id: ${APPLE_KEY_ID:}
+    client-id: ${APPLE_CLIENT_ID:}
+    private-key: ${APPLE_PRIVATE_KEY:}
+
 server:
   port: 8080
