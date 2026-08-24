@@ -1,5 +1,6 @@
 package com.bangawo.global.security;
 
+import com.bangawo.auth.domain.MemberRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,6 +24,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtProvider jwtProvider;
+    private final MemberRepository memberRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -32,9 +34,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null && jwtProvider.validateToken(token)) {
             Long memberId = jwtProvider.getMemberId(token);
-            Authentication authentication = new UsernamePasswordAuthenticationToken(
-                    memberId, null, Collections.emptyList());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            // 탈퇴(비활성) 회원은 토큰이 만료 전이어도 인증을 부여하지 않는다 (R9).
+            // 전체 엔티티를 로드하지 않고 status만 조회하는 경량 프로젝션을 사용하며, 트랜잭션으로 감싸지 않는다.
+            if (memberRepository.existsActiveById(memberId)) {
+                Authentication authentication = new UsernamePasswordAuthenticationToken(
+                        memberId, null, Collections.emptyList());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
         }
 
         filterChain.doFilter(request, response);
